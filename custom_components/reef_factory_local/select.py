@@ -1,0 +1,158 @@
+"""Level keeper refill cycle; Reef Flare mode, program and manual preset."""
+from __future__ import annotations
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import ReefConfigEntry
+from . import protocol as pr
+from .entity import ReefEntity
+from .platform_setup import setup_entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ReefConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
+) -> None:
+    def factory(c):
+        kind = pr.device_type(c.serial)
+        if kind == pr.DEVICE_LEVEL_KEEPER:
+            return [ReefRefillCycle(c)]
+        if kind == pr.DEVICE_FLARE:
+            return [ReefFlareMode(c), ReefFlareProgram(c), ReefFlarePreset(c)]
+        if kind == pr.DEVICE_FEEDER:
+            return [ReefFeederMode(c)]
+        return []
+
+    setup_entities(hass, entry, async_add_entities, factory)
+
+
+class ReefRefillCycle(ReefEntity, SelectEntity):
+    _attr_translation_key = "refill_cycle"
+    _attr_options = list(pr.LK_CYCLES.values())
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "refill_cycle")
+
+    @property
+    def current_option(self) -> str | None:
+        return (self.coordinator.data or {}).get("cycle")
+
+    async def async_select_option(self, option: str) -> None:
+        try:
+            await self.coordinator.client.async_set_lk_cycle(option)
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Level keeper not connected: {err}") from err
+
+
+class ReefFlareMode(ReefEntity, SelectEntity):
+    """Program / manual / off."""
+
+    _attr_translation_key = "flare_mode"
+    _attr_options = list(pr.FLARE_MODE_CMD)
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "flare_mode")
+
+    @property
+    def current_option(self) -> str | None:
+        mode = (self.coordinator.data or {}).get("mode")
+        return mode if mode in pr.FLARE_MODE_CMD else None
+
+    async def async_select_option(self, option: str) -> None:
+        try:
+            await self.coordinator.client.async_send(pr.frame_rf_mode(self.coordinator.serial, option))
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Reef Flare not connected: {err}") from err
+
+
+class ReefFlareProgram(ReefEntity, SelectEntity):
+    """Active stored program. Selecting one switches the light to program mode."""
+
+    _attr_translation_key = "flare_program"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "flare_program")
+
+    @property
+    def options(self) -> list[str]:
+        return [p for p in (self.coordinator.data or {}).get("programs") or [] if p]
+
+    @property
+    def available(self) -> bool:
+        return super().available and bool(self.options)
+
+    @property
+    def current_option(self) -> str | None:
+        data = self.coordinator.data or {}
+        return data.get("program") if data.get("mode") == "program" else None
+
+    async def async_select_option(self, option: str) -> None:
+        programs = (self.coordinator.data or {}).get("programs") or []
+        if option not in programs:
+            raise HomeAssistantError(f"Unknown program {option!r}")
+        frames = []
+        if (self.coordinator.data or {}).get("mode") != "program":
+            frames.append(pr.frame_rf_mode(self.coordinator.serial, "program"))
+        frames.append(pr.frame_rf_select_program(self.coordinator.serial, programs.index(option)))
+        try:
+            for frame in frames:
+                await self.coordinator.client.async_send(frame)
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Reef Flare not connected: {err}") from err
+
+
+class ReefFlarePreset(ReefEntity, SelectEntity):
+    """Active manual preset; only available while the light is in manual mode."""
+
+    _attr_translation_key = "flare_preset"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "flare_preset")
+
+    @property
+    def options(self) -> list[str]:
+        return [p["name"] for p in (self.coordinator.data or {}).get("manual_presets") or [] if p["name"]]
+
+    @property
+    def available(self) -> bool:
+        return super().available and (self.coordinator.data or {}).get("mode") == "manual" and bool(self.options)
+
+    @property
+    def current_option(self) -> str | None:
+        return (self.coordinator.data or {}).get("program")
+
+    async def async_select_option(self, option: str) -> None:
+        presets = [dict(p) for p in (self.coordinator.data or {}).get("manual_presets") or []]
+        if option not in [p["name"] for p in presets]:
+            raise HomeAssistantError(f"Unknown preset {option!r}")
+        hit = False
+        for p in presets:
+            p["active"] = (p["name"] == option and not hit)
+            hit = hit or p["active"]
+        try:
+            await self.coordinator.client.async_send(pr.frame_rf_manual_update(self.coordinator.serial, presets))
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Reef Flare not connected: {err}") from err
+
+
+class ReefFeederMode(ReefEntity, SelectEntity):
+    """Smart feeder: schedule (fixed times) or interval (every n minutes)."""
+
+    _attr_translation_key = "feeder_mode"
+    _attr_options = list(pr.FEEDER_MODES.values())
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "feeder_mode")
+
+    @property
+    def current_option(self) -> str | None:
+        return (self.coordinator.data or {}).get("mode")
+
+    async def async_select_option(self, option: str) -> None:
+        d = self.coordinator.device
+        try:
+            await d.async_send(pr.frame_sf_set_mode(d.serial, option, d.join_id))
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Smart feeder not connected: {err}") from err

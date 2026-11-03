@@ -1,0 +1,543 @@
+{
+  "config": {
+    "step": {
+      "device": {
+        "title": "Reef Factory device",
+        "description": "IP address of the device in your network. Serial number and type are read from the device.",
+        "data": {
+          "host": "IP address"
+        }
+      },
+      "user": {
+        "title": "What do you want to add?",
+        "menu_options": {
+          "device": "A device by IP address (Level keeper, Thermo control, Reef Flare)",
+          "cloud": "Cloud replacement for cloud-only devices (Smart feeder, pumps)"
+        }
+      },
+      "cloud": {
+        "title": "Cloud replacement",
+        "description": "Home Assistant answers on ports 442 and 444 as if it were api.reeffactory.com. Point that name to this host in your router or DNS filter (see README). Passthrough keeps the official app working while the real cloud exists.",
+        "data": {
+          "cloud_mode": "Mode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No answer. Check the IP address and whether another program is already connected to the device.",
+      "unsupported_device": "Device {serial} is not supported (so far: Level keeper, Thermo control, Reef Flare)."
+    },
+    "abort": {
+      "already_configured": "Device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pump actions",
+        "description": "Manual refill, calibration run and filling the hose run the pump. Used wrongly, the tank can overflow. Stop actions always work.",
+        "data": {
+          "allow_pump_actions": "Allow pump actions"
+        }
+      },
+      "cloud": {
+        "title": "Cloud replacement",
+        "data": {
+          "cloud_mode": "Mode",
+          "upstream_ips": "Addresses of the real cloud (optional, comma separated)"
+        },
+        "data_description": {
+          "upstream_ips": "Leave empty to resolve api.reeffactory.com through a public DNS server."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "refilled_today": {
+        "name": "Refilled today"
+      },
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "ok": "O.K.",
+          "refilling": "Refilling",
+          "manual_refill": "Manual refill",
+          "filling_circuit": "Filling hose",
+          "calibrating": "Calibrating",
+          "water_high": "Water level high",
+          "water_low": "Water level low",
+          "temporarily_off": "Temporarily off",
+          "unknown": "Unknown"
+        }
+      },
+      "refill_time": {
+        "name": "Current refill time"
+      },
+      "calibration_date": {
+        "name": "Next calibration"
+      },
+      "thermo_state": {
+        "name": "Output state",
+        "state": {
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "idle": "Idle"
+        }
+      },
+      "housing_temperature": {
+        "name": "Housing temperature"
+      },
+      "intensity": {
+        "name": "Intensity"
+      },
+      "light_mode": {
+        "name": "Mode",
+        "state": {
+          "program": "Program",
+          "off": "Off",
+          "dashboard": "Dashboard",
+          "manual": "Manual"
+        }
+      },
+      "program": {
+        "name": "Program"
+      },
+      "next_feeding": {
+        "name": "Next feeding"
+      },
+      "last_feeding": {
+        "name": "Last feeding"
+      },
+      "days_to_end": {
+        "name": "Days until empty"
+      },
+      "daily_dose": {
+        "name": "Fed today"
+      },
+      "schedule": {
+        "name": "Schedule"
+      }
+    },
+    "select": {
+      "refill_cycle": {
+        "name": "Refill cycle",
+        "state": {
+          "off": "Off",
+          "every_60_min": "60 min",
+          "every_30_min": "30 min",
+          "every_10_min": "10 min",
+          "constant": "Constant",
+          "hysteresis": "Hysteresis"
+        }
+      },
+      "flare_mode": {
+        "name": "Mode",
+        "state": {
+          "program": "Program",
+          "manual": "Manual",
+          "off": "Off"
+        }
+      },
+      "flare_program": {
+        "name": "Program"
+      },
+      "flare_preset": {
+        "name": "Manual preset"
+      },
+      "feeder_mode": {
+        "name": "Feeding mode",
+        "state": {
+          "schedule": "Schedule",
+          "interval": "Interval"
+        }
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "cooling": {
+        "name": "Cooling"
+      },
+      "calibration_needed": {
+        "name": "Calibration due"
+      },
+      "cloud_connected": {
+        "name": "Cloud connected"
+      },
+      "container_empty": {
+        "name": "Container empty"
+      },
+      "cloud_passthrough": {
+        "name": "Real cloud"
+      }
+    },
+    "number": {
+      "max_refill_time": {
+        "name": "Max refill time"
+      },
+      "refill_pause": {
+        "name": "Pause refill"
+      },
+      "alarm_low": {
+        "name": "Alarm below"
+      },
+      "range_low": {
+        "name": "Target range low"
+      },
+      "range_high": {
+        "name": "Target range high"
+      },
+      "alarm_high": {
+        "name": "Alarm above"
+      },
+      "flare_intensity": {
+        "name": "Intensity"
+      },
+      "feeder_container": {
+        "name": "Food in container"
+      },
+      "feeder_container_size": {
+        "name": "Container capacity"
+      },
+      "feeder_single_dose": {
+        "name": "Dose per rotation"
+      },
+      "feeder_interval_minutes": {
+        "name": "Interval"
+      },
+      "feeder_interval_rotations": {
+        "name": "Rotations per interval"
+      },
+      "feeder_reminder_days": {
+        "name": "Refill reminder"
+      }
+    },
+    "switch": {
+      "display_light": {
+        "name": "Display light"
+      },
+      "tc_sound": {
+        "name": "Beeper"
+      },
+      "tc_light": {
+        "name": "Display light"
+      },
+      "feeder_led": {
+        "name": "LED backlight"
+      },
+      "feeder_feeding_button": {
+        "name": "Feeding button"
+      }
+    },
+    "button": {
+      "sync_time": {
+        "name": "Set clock"
+      },
+      "stop_pump": {
+        "name": "Stop pump action"
+      },
+      "feed_now": {
+        "name": "Feed now"
+      }
+    }
+  },
+  "selector": {
+    "reminder": {
+      "options": {
+        "1_week": "1 week",
+        "2_weeks": "2 weeks",
+        "1_month": "1 month",
+        "3_months": "3 months"
+      }
+    }
+  },
+  "services": {
+    "manual_refill": {
+      "name": "Manual refill",
+      "description": "Refills the given amount (max 1000 mL). Requires pump actions to be allowed.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        },
+        "amount_ml": {
+          "name": "Amount",
+          "description": "Amount in mL."
+        }
+      }
+    },
+    "manual_refill_stop": {
+      "name": "Stop manual refill",
+      "description": "Stops a running manual refill.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        }
+      }
+    },
+    "calibration_start": {
+      "name": "Start calibration run",
+      "description": "Runs the pump for the given time. Put the hose into a measuring cup first! Requires pump actions to be allowed.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        },
+        "duration_s": {
+          "name": "Duration",
+          "description": "Run time in seconds."
+        }
+      }
+    },
+    "calibration_value": {
+      "name": "Finish calibration",
+      "description": "Enter the amount measured after the calibration run.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        },
+        "measured_ml": {
+          "name": "Measured amount",
+          "description": "Amount in the measuring cup in mL."
+        },
+        "reminder": {
+          "name": "Reminder",
+          "description": "When to be reminded to calibrate again."
+        }
+      }
+    },
+    "calibration_stop": {
+      "name": "Stop calibration",
+      "description": "Stops a running calibration run.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        }
+      }
+    },
+    "fill_hose_start": {
+      "name": "Fill hose",
+      "description": "Runs the pump to fill the hose. Requires pump actions to be allowed.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        }
+      }
+    },
+    "fill_hose_stop": {
+      "name": "Stop filling hose",
+      "description": "Stops filling the hose.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Level keeper."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: manual mode",
+      "description": "Switch the light to manual mode, optionally with a preset and a duration. After the duration the light returns to its program.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Name of the manual preset to activate (optional)."
+        },
+        "duration_min": {
+          "name": "Duration",
+          "description": "Minutes until the light returns to the program; 0 = stay in manual mode."
+        }
+      }
+    },
+    "flare_preset_set": {
+      "name": "Flare: change manual preset",
+      "description": "Change channel levels, intensity or name of a manual preset. The light must be in manual mode.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Name of the preset to change."
+        },
+        "levels": {
+          "name": "Channel levels",
+          "description": "7 values 0–100 % in channel order: UV, violet, indigo, blue, green, red, white."
+        },
+        "intensity": {
+          "name": "Intensity",
+          "description": "Overall intensity of this preset."
+        },
+        "new_name": {
+          "name": "New name",
+          "description": "Up to 16 characters."
+        }
+      }
+    },
+    "flare_program_set": {
+      "name": "Flare: write program",
+      "description": "Replace the points of a stored program. The light must be in program mode; a different program becomes the active one.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Program name (default: the active program)."
+        },
+        "points": {
+          "name": "Points",
+          "description": "List of {time: 'HH:MM', levels: [7 × 0–100]} (channels UV, violet, indigo, blue, green, red, white); first 00:00, last 24:00, at most 31 points."
+        },
+        "intensity": {
+          "name": "Intensity",
+          "description": "Overall intensity (default: keep)."
+        }
+      }
+    },
+    "flare_program_rename": {
+      "name": "Flare: rename program",
+      "description": "Rename a stored program.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Current name."
+        },
+        "new_name": {
+          "name": "New name",
+          "description": "Up to 16 characters."
+        }
+      }
+    },
+    "flare_acclimation_start": {
+      "name": "Flare: start acclimation",
+      "description": "Ramp the active program's intensity from start to end over the given number of days.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        },
+        "days": {
+          "name": "Days",
+          "description": "2–30 days."
+        },
+        "start_pct": {
+          "name": "Start intensity",
+          "description": "Intensity on the first day."
+        },
+        "end_pct": {
+          "name": "End intensity",
+          "description": "Intensity on the last day."
+        }
+      }
+    },
+    "flare_acclimation_stop": {
+      "name": "Flare: stop acclimation",
+      "description": "End a running acclimation.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        }
+      }
+    },
+    "flare_preview_start": {
+      "name": "Flare: start program preview",
+      "description": "Play the active program accelerated (as in the device web page).",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        }
+      }
+    },
+    "flare_preview_stop": {
+      "name": "Flare: stop program preview",
+      "description": "End the program preview.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Reef Flare."
+        }
+      }
+    },
+    "feeder_feed": {
+      "name": "Feeder: feed",
+      "description": "Run the feeder manually.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Smart feeder."
+        },
+        "rotations": {
+          "name": "Rotations",
+          "description": "Number of drum rotations (1 = as the button on the device)."
+        }
+      }
+    },
+    "feeder_set_schedule": {
+      "name": "Feeder: set schedule",
+      "description": "Replace the whole feeding schedule.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Smart feeder."
+        },
+        "entries": {
+          "name": "Entries",
+          "description": "List of {time: 'HH:MM', rotations: n, days: [mon..sun] or bit mask (127 = daily)}."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "pump_actions_disabled": {
+      "message": "Pump actions are not allowed for this device. Enable them under Settings → Devices & services → Reef Factory Local → Configure."
+    },
+    "not_level_keeper": {
+      "message": "This action is only available for the Level keeper."
+    },
+    "unknown_device": {
+      "message": "Device not found or not loaded."
+    },
+    "not_connected": {
+      "message": "Device is not connected right now."
+    },
+    "thermo_order": {
+      "message": "Thresholds must be in this order: alarm below < target range low < target range high < alarm above."
+    },
+    "not_flare": {
+      "message": "This action is only available for the Reef Flare."
+    },
+    "flare_not_manual": {
+      "message": "The light must be in manual mode for this."
+    },
+    "flare_not_program": {
+      "message": "The light must be in program mode for this."
+    },
+    "no_answer": {
+      "message": "The device did not answer in time."
+    },
+    "invalid_value": {
+      "message": "Invalid value: {reason}"
+    },
+    "not_feeder": {
+      "message": "This action is only available for the Smart feeder."
+    }
+  }
+}

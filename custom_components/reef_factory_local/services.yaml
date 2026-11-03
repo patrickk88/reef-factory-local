@@ -1,0 +1,193 @@
+manual_refill:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    amount_ml:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          unit_of_measurement: mL
+          mode: box
+manual_refill_stop:
+  fields: &device_only
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+calibration_start:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    duration_s:
+      default: 10
+      selector:
+        number:
+          min: 10
+          max: 255
+          unit_of_measurement: s
+          mode: box
+calibration_value:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    measured_ml:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100000
+          unit_of_measurement: mL
+          mode: box
+    reminder:
+      selector:
+        select:
+          translation_key: reminder
+          options: ["1_week", "2_weeks", "1_month", "3_months"]
+calibration_stop:
+  fields: *device_only
+fill_hose_start:
+  fields: *device_only
+fill_hose_stop:
+  fields: *device_only
+flare_manual:
+  fields:
+    device_id: &flare_device
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    preset:
+      example: "Preset 1"
+      selector:
+        text:
+    duration_min:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: min
+          mode: box
+flare_preset_set:
+  fields:
+    device_id: *flare_device
+    preset:
+      required: true
+      selector:
+        text:
+    levels:
+      example: "[100, 100, 100, 100, 50, 50, 80]"
+      selector:
+        object:
+    intensity:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    new_name:
+      selector:
+        text:
+flare_program_set:
+  fields:
+    device_id: *flare_device
+    program:
+      selector:
+        text:
+    points:
+      required: true
+      example: '[{"time": "00:00", "levels": [0,0,0,0,0,0,0]}, {"time": "12:00", "levels": [100,100,100,100,50,50,80]}, {"time": "24:00", "levels": [0,0,0,0,0,0,0]}]'
+      selector:
+        object:
+    intensity:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+flare_program_rename:
+  fields:
+    device_id: *flare_device
+    program:
+      required: true
+      selector:
+        text:
+    new_name:
+      required: true
+      selector:
+        text:
+flare_acclimation_start:
+  fields:
+    device_id: *flare_device
+    days:
+      required: true
+      default: 14
+      selector:
+        number:
+          min: 2
+          max: 30
+          unit_of_measurement: d
+          mode: box
+    start_pct:
+      required: true
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    end_pct:
+      required: true
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+flare_acclimation_stop:
+  fields:
+    device_id: *flare_device
+flare_preview_start:
+  fields:
+    device_id: *flare_device
+flare_preview_stop:
+  fields:
+    device_id: *flare_device
+feeder_feed:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    rotations:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 10
+          mode: box
+feeder_set_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    entries:
+      required: true
+      example: '[{"time": "11:00", "rotations": 1, "days": ["mon","tue","wed","thu","fri","sat","sun"]}, {"time": "20:00", "rotations": 1, "days": 127}]'
+      selector:
+        object:

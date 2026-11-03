@@ -1,0 +1,14 @@
+{
+  "domain": "reef_factory_local",
+  "name": "Reef Factory Local (unofficial)",
+  "codeowners": [
+    "@patrickk88"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/patrickk88/reef-factory-local",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/patrickk88/reef-factory-local/issues",
+  "requirements": [],
+  "version": "0.5.0"
+}
