@@ -13,7 +13,8 @@
         "menu_options": {
           "device": "A device by IP address (Level keeper, Thermo control, Reef Flare)",
           "cloud": "Cloud replacement for cloud-only devices (Smart feeder, pumps)"
-        }
+        },
+        "description": "Unofficial community project, not affiliated with Reef Factory. Use at your own risk: these devices run pumps, heaters, lights and dosing pumps - a wrong setting can harm your tank. Pump actions stay off until you enable them in the options."
       },
       "cloud": {
         "title": "Cloud replacement",
@@ -44,10 +45,12 @@
         "title": "Cloud replacement",
         "data": {
           "cloud_mode": "Mode",
-          "upstream_ips": "Addresses of the real cloud (optional, comma separated)"
+          "upstream_ips": "Addresses of the real cloud (optional, comma separated)",
+          "allow_pump_actions": "Allow pump actions"
         },
         "data_description": {
-          "upstream_ips": "Leave empty to resolve api.reeffactory.com through a public DNS server."
+          "upstream_ips": "Leave empty to resolve api.reeffactory.com through a public DNS server.",
+          "allow_pump_actions": "Manual doses and schedule changes of the Dosing pump run the pump and change what goes into the tank. Reading is always allowed."
         }
       }
     }
@@ -545,6 +548,42 @@
           "description": "List of {time: 'HH:MM', rotations: n, days: [mon..sun] or bit mask (127 = daily)}."
         }
       }
+    },
+    "dosing_pump_dose": {
+      "name": "Dosing pump: dose now",
+      "description": "Dose an amount on one channel right now (like the app's manual dose). Needs 'Allow pump actions' in the cloud replacement options.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "1-4 (A-D)."
+        },
+        "ml": {
+          "name": "Amount",
+          "description": "Millilitres."
+        }
+      }
+    },
+    "dosing_pump_set_schedule": {
+      "name": "Dosing pump: set schedule",
+      "description": "Replace the whole schedule of one channel. Needs 'Allow pump actions' in the cloud replacement options.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "1-4 (A-D)."
+        },
+        "entries": {
+          "name": "Entries",
+          "description": "List of {time: 'HH:MM', ml: x, days: [mon..sun] or bit mask (127 = daily)}. An empty list clears the schedule."
+        }
+      }
     }
   },
   "exceptions": {
@@ -580,6 +619,9 @@
     },
     "not_feeder": {
       "message": "This action is only available for the Smart feeder."
+    },
+    "not_dosing_pump": {
+      "message": "This action is only available for the Dosing pump Pro X4."
     }
   }
 }

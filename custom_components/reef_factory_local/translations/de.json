@@ -13,7 +13,8 @@
         "menu_options": {
           "device": "Ein Gerät per IP-Adresse (Level keeper, Thermo control, Reef Flare)",
           "cloud": "Cloud-Ersatz für reine Cloud-Geräte (Smart feeder, Pumpen)"
-        }
+        },
+        "description": "Inoffizielles Community-Projekt, nicht mit Reef Factory verbunden. Nutzung auf eigene Gefahr: Die Geräte steuern Pumpen, Heizung, Licht und Dosierpumpen - eine falsche Einstellung kann dem Becken schaden. Pumpenaktionen bleiben aus, bis du sie in den Optionen erlaubst."
       },
       "cloud": {
         "title": "Cloud-Ersatz",
@@ -44,10 +45,12 @@
         "title": "Cloud-Ersatz",
         "data": {
           "cloud_mode": "Betriebsart",
-          "upstream_ips": "Adressen der echten Cloud (optional, kommagetrennt)"
+          "upstream_ips": "Adressen der echten Cloud (optional, kommagetrennt)",
+          "allow_pump_actions": "Pumpenaktionen erlauben"
         },
         "data_description": {
-          "upstream_ips": "Leer lassen, dann wird api.reeffactory.com über einen öffentlichen DNS-Server aufgelöst."
+          "upstream_ips": "Leer lassen, dann wird api.reeffactory.com über einen öffentlichen DNS-Server aufgelöst.",
+          "allow_pump_actions": "Manuelle Dosen und Zeitplanänderungen der Dosierpumpe lassen die Pumpe laufen und ändern, was ins Becken kommt. Lesen geht immer."
         }
       }
     }
@@ -545,6 +548,42 @@
           "description": "Liste aus {time: 'HH:MM', rotations: n, days: [mon..sun] oder Bitmaske (127 = täglich)}."
         }
       }
+    },
+    "dosing_pump_dose": {
+      "name": "Dosierpumpe: jetzt dosieren",
+      "description": "Dosiert sofort eine Menge auf einem Kanal (wie die manuelle Dosis in der App). Braucht „Pumpenaktionen erlauben“ in den Optionen des Cloud-Ersatzes.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Die Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanal",
+          "description": "1-4 (A-D)."
+        },
+        "ml": {
+          "name": "Menge",
+          "description": "Milliliter."
+        }
+      }
+    },
+    "dosing_pump_set_schedule": {
+      "name": "Dosierpumpe: Zeitplan setzen",
+      "description": "Ersetzt den kompletten Zeitplan eines Kanals. Braucht „Pumpenaktionen erlauben“ in den Optionen des Cloud-Ersatzes.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Die Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanal",
+          "description": "1-4 (A-D)."
+        },
+        "entries": {
+          "name": "Einträge",
+          "description": "Liste aus {time: 'HH:MM', ml: x, days: [mon..sun] oder Bitmaske (127 = täglich)}. Leere Liste löscht den Zeitplan."
+        }
+      }
     }
   },
   "exceptions": {
@@ -580,6 +619,9 @@
     },
     "not_feeder": {
       "message": "Diese Aktion gibt es nur für den Smart feeder."
+    },
+    "not_dosing_pump": {
+      "message": "Diese Aktion gibt es nur für die Dosing pump Pro X4."
     }
   }
 }

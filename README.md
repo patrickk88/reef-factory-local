@@ -3,13 +3,14 @@
 Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 
 > **Unofficial community project. Not affiliated with, endorsed by or supported by Reef Factory.**
-> "Reef Factory", "Smart Reef", "Level keeper", "Thermo control" and "Reef Flare" are used only to
+> "Reef Factory", "Smart Reef", "Level keeper", "Thermo control", "Reef Flare", "Smart feeder",
+> "Base pump" and "Dosing pump Pro X4" are the manufacturer's product names and are used only to
 > describe which devices this integration works with.
 
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v0.5)
+## Supported devices (v0.6)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -18,15 +19,26 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, acclimation, manual presets, cloud connected | mode (program / manual / off), active program, active manual preset, intensity; actions: manual mode with timer, change manual preset, write / rename program, acclimation start / stop, program preview — **experimental, see below** | 1.0.0 |
 
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
-| Base pump (`RFBP…`) - via the **cloud replacement** | mode, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | speed, feed-mode duration and speed, display, backlight (always sent together, like the app does) | - |
-| Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | read-only for now (no write command captured yet - the app's manual dose / schedule frames are welcome in an issue) | - |
+| Base pump (`RFBP…`) - via the **cloud replacement** | mode, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | speed, feed-mode duration and speed, display, backlight (always sent together, like the app does) | 1.x |
+| Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions) | 1.2.3 |
+
+## Use at your own risk
+
+This software is provided "as is", without warranty of any kind (see the MIT license). It talks to
+devices that run pumps, heaters, lights and dosing pumps. A bug, a wrong automation or a lost network
+connection can flood a room, overdose a tank or cook or freeze its inhabitants. **You alone are
+responsible for your tank.** Keep the devices' own safety limits, watch the tank after installing or
+updating, and do not let automations dose or refill without a limit you have checked. The authors are
+not liable for any damage to equipment, livestock or property.
+
+The protocol was reverse engineered from the devices' own web pages and from what the devices send on
+the network (no firmware was decompiled, no keys or manufacturer files are included). Using it may void
+your warranty; check your contract with the manufacturer or dealer if that matters to you.
 
 ## Important
 
 - **One connection per device.** While Home Assistant is connected, the Smart Reef app and other
   local tools cannot connect to that device locally (the cloud keeps working).
-- **No warranty.** These devices run pumps and heaters. A bug can harm livestock. Watch your tank
-  after installing and keep the device's own safety settings.
 - Setup needs only the IP address; serial number and type are read from the device.
   Give the device a fixed IP in your router.
 
@@ -88,10 +100,12 @@ Use a password for Smart Reef that you use nowhere else.
 
 ## Pump actions are off by default
 
-Manual refill, calibration run and filling the hose run the refill pump. They are only available as actions
-(no dashboard button) and only after enabling *Allow pump actions* in the integration options
-(*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping always works
-(button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
+Level keeper: manual refill, calibration run and filling the hose run the refill pump. Dosing pump Pro X4:
+dosing now and replacing a channel's schedule put additives into the tank. These are only available as
+actions (no dashboard button) and only after enabling *Allow pump actions* - for the Level keeper in its
+own entry's options, for the Dosing pump in the options of the *cloud replacement* entry
+(*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
+works (button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
 
 ## Cloud replacement (devices without a local port)
 
@@ -186,4 +200,6 @@ See `custom_components/reef_factory_local/protocol.py` and `cloud.py`.
 
 ## License
 
-MIT. This repository contains only original code - no firmware, app files or keys from the manufacturer.
+MIT - see `LICENSE`. This repository contains only original code: no firmware, app files, certificates
+or keys from the manufacturer. Protocol knowledge comes from the devices' own web pages (served by the
+devices themselves) and from network captures of the author's own devices.

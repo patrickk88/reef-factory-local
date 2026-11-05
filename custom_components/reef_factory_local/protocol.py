@@ -76,8 +76,8 @@ FEEDER_MODES = {"period": "schedule", "sequence": "interval"}
 FEEDER_MODES_REV = {v: k for k, v in FEEDER_MODES.items()}
 FEEDER_GRAM_UNITS = 100  # container/dose values are hundredths of a gram
 FEEDER_MAX_ROTATIONS = 10
-# Dosing pump Pro X4: every volume is in microlitres, four channels
-DOSING_UL = 1000
+# Dosing pump Pro X4: every volume is ml * 10000 (the app shows 2.00 ml for 20000), four channels
+DOSING_ML_UNITS = 10000
 DOSING_CHANNELS = 4
 # "give me everything" request per cloud device: topic, subtopic, payload
 GET_ALL = {
@@ -470,7 +470,11 @@ def frame_bp_set_settings(serial: str, speed: int, feed_mode_time: int, feed_spe
 # --- Dosing pump Pro X4 ---------------------------------------------------------
 
 def _ml(value) -> float | None:
-    return None if value is None else round(value / DOSING_UL, 3)
+    return None if value is None else round(value / DOSING_ML_UNITS, 4)
+
+
+def _dp_units(ml) -> int:
+    return max(0, int(round(float(ml) * DOSING_ML_UNITS)))
 
 
 def _minute_to_hhmm(minute: int) -> str:
@@ -481,10 +485,15 @@ def decode_dosing_pump(frame: "Frame") -> dict | None:
     """dpReport/all of the Dosing pump Pro X4 - one frame per channel, keys prefixed ch<n>_."""
     if (wifi := _decode_wifi(frame)) is not None:
         return wifi
-    if frame.topic != "dpReport" or frame.subtopic != "all":
-        return None
     obj = parse_json(frame)
     if obj is None:
+        return None
+    if frame.topic == "dpLog" and frame.subtopic == "dose":  # a dose just finished
+        cid = obj.get("id")
+        if isinstance(cid, int):
+            return {f"ch{cid}_dose_event_ml": _ml(obj.get("value"))}
+        return None
+    if frame.topic != "dpReport" or frame.subtopic != "all":
         return None
     cid = obj.get("id")
     if not isinstance(cid, int) or not 1 <= cid <= DOSING_CHANNELS:
@@ -915,6 +924,34 @@ def parse_config(frame: Frame) -> dict | None:
         if len(tail) >= 8:
             info["clock_24h"] = tail[7] != 0
     return info
+
+
+def frame_dp_manual_dose(serial: str, channel: int, ml: float, joinid: str = "") -> bytes:
+    """dpManual/set refillStart - dose <ml> now on channel 1-4 (the app's manual dose)."""
+    return frame_json(serial, "dpManual", "set", {
+        "id": int(channel), "command": "refillStart",
+        "refill": {"value": _dp_units(ml), "dir": "f", "days": 0, "delay": 0},
+    }, joinid)
+
+
+def frame_dp_set_schedule(serial: str, channel: int, entries: list[dict], joinid: str = "") -> bytes:
+    """dpSettings/set - replace the schedule of one channel: [{time: 'HH:MM', ml: x, days: [...] | mask}]."""
+    schedule = []
+    for e in entries:
+        minute = parse_hhmm(e.get("minute", e.get("time")))
+        if not 0 <= minute < 1440:
+            raise ValueError(f"time out of range: {e.get('time')!r}")
+        schedule.append({"t": minute, "d": days_to_mask(e.get("days", 127)), "v": _dp_units(e["ml"]), "dir": "f"})
+    schedule.sort(key=lambda x: x["t"])
+    return frame_json(serial, "dpSettings", "set", {"settings": [{"id": int(channel), "schedule": schedule}]}, joinid)
+
+
+def frame_dp_calibration(serial: str, channel: int, start: bool, seconds: int = 30, joinid: str = "") -> bytes:
+    """dpCalibration/set startCalib (pump runs <seconds>) / cancelCalib. Storing the measured amount is not captured yet."""
+    obj = {"id": int(channel), "command": "startCalib" if start else "cancelCalib"}
+    if start:
+        obj["time"] = int(seconds)
+    return frame_json(serial, "dpCalibration", "set", obj, joinid)
 
 
 _DECODERS = {

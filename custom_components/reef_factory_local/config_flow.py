@@ -101,5 +101,6 @@ class ReefOptionsFlow(OptionsFlow):
                 vol.Required(CONF_CLOUD_MODE, default=opts.get(CONF_CLOUD_MODE, MODE_PASSTHROUGH)): vol.In({
                     MODE_PASSTHROUGH: "passthrough", MODE_LOCAL: "local"}),
                 vol.Optional(CONF_UPSTREAM_IPS, default=opts.get(CONF_UPSTREAM_IPS, "")): str,
+                vol.Required(CONF_ALLOW_PUMP_ACTIONS, default=opts.get(CONF_ALLOW_PUMP_ACTIONS, False)): bool,
             }),
         )

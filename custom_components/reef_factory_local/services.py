@@ -24,7 +24,7 @@ BASE = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
 
 
 _WRONG_DEVICE = {pr.DEVICE_LEVEL_KEEPER: "not_level_keeper", pr.DEVICE_FLARE: "not_flare",
-                 pr.DEVICE_FEEDER: "not_feeder"}
+                 pr.DEVICE_FEEDER: "not_feeder", pr.DEVICE_DOSING_PUMP: "not_dosing_pump"}
 
 
 def _coordinator(hass: HomeAssistant, call: ServiceCall, pump: bool = False,
@@ -226,7 +226,32 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise _invalid(str(err)) from err
         await _send(c, frame)
 
+    # --- Dosing pump Pro X4 (cloud replacement, opt-in pump actions of the cloud entry) ------------
+    def _dosing(call: ServiceCall):
+        return _coordinator(hass, call, pump=True, kind=pr.DEVICE_DOSING_PUMP)
+
+    async def dosing_pump_dose(call: ServiceCall) -> None:
+        c = _dosing(call)
+        await _send(c, pr.frame_dp_manual_dose(c.serial, call.data["channel"], call.data["ml"], c.device.join_id))
+
+    async def dosing_pump_set_schedule(call: ServiceCall) -> None:
+        c = _dosing(call)
+        try:
+            frame = pr.frame_dp_set_schedule(c.serial, call.data["channel"], call.data["entries"], c.device.join_id)
+        except (KeyError, TypeError, ValueError) as err:
+            raise _invalid(str(err)) from err
+        await _send(c, frame)
+
     reg = hass.services.async_register
+    channel = vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.DOSING_CHANNELS))
+    reg(DOMAIN, "dosing_pump_dose", dosing_pump_dose, BASE.extend({
+        vol.Required("channel"): channel,
+        vol.Required("ml"): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=500)),
+    }))
+    reg(DOMAIN, "dosing_pump_set_schedule", dosing_pump_set_schedule, BASE.extend({
+        vol.Required("channel"): channel,
+        vol.Required("entries"): vol.All(cv.ensure_list, [dict]),
+    }))
     reg(DOMAIN, "feeder_feed", feeder_feed, BASE.extend(
         {vol.Optional("rotations", default=1): vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.FEEDER_MAX_ROTATIONS))}))
     reg(DOMAIN, "feeder_set_schedule", feeder_set_schedule, BASE.extend(

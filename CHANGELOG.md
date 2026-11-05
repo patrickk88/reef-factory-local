@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 - 2026-11-05
+- Dosing pump Pro X4: unit fix - the device counts in 1/10000 ml (0.6.0 showed ten times too much).
+- Dosing pump Pro X4: actions `dosing_pump_dose` (manual dose) and `dosing_pump_set_schedule`, behind the
+  new "Allow pump actions" option of the cloud replacement entry. Calibration frames documented, not exposed.
+- Dosing pump Pro X4: `dpLog/dose` (a dose finished) decoded as `ch<n>_dose_event_ml`.
+
 ## 0.6.0 - 2026-11-05
 - Base pump (`RFBP…`, via the cloud replacement): mode, alert, speed, feed-mode duration and speed,
   display, backlight - reading and writing (`bpSet/settings`), Wi-Fi signal.

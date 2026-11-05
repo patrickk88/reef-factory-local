@@ -327,18 +327,35 @@ def test_dosing_pump_report():
     d = pr.decode(pr.DEVICE_DOSING_PUMP, pr.parse_frame(DP_REPORT))
     assert d["ch3_present"] and d["ch3_name"] == "All 4 Reef" and d["ch3_mode"] == "dosing"
     assert d["ch3_schedule"] == [
-        {"time": "11:40", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 27.5, "direction": "f"},
-        {"time": "15:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 12.5, "direction": "f"},
-        {"time": "17:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 10.0, "direction": "f"}]
-    assert d["ch3_next_dose"] == "2026-11-05 11:40" and d["ch3_next_dose_ml"] == 27.5
-    assert d["ch3_container_ml"] == 19086.535 and d["ch3_container_size_ml"] == 30000.0 and d["ch3_days_to_replace"] == 381
-    assert d["ch3_daily_target_ml"] == 50.0 and d["ch3_dosed_today_ml"] == 0.0
-    assert d["ch3_pump_max_ml_min"] == 138.12 and d["ch3_calibration_date"] == (2026, 1, 25)
-    assert d["ch3_last_dose"] == "2026-11-04 17:00" and d["ch3_last_dose_ml"] == 10.0 and d["ch3_last_dose_type"] == "auto"
-    assert len(d["ch3_history"]) == 2 and d["ch3_history"][1]["auto_ml"] == 12.494
+        {"time": "11:40", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 2.75, "direction": "f"},
+        {"time": "15:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 1.25, "direction": "f"},
+        {"time": "17:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 1.0, "direction": "f"}]
+    assert d["ch3_next_dose"] == "2026-11-05 11:40" and d["ch3_next_dose_ml"] == 2.75
+    assert d["ch3_container_ml"] == 1908.6535 and d["ch3_container_size_ml"] == 3000.0 and d["ch3_days_to_replace"] == 381
+    assert d["ch3_daily_target_ml"] == 5.0 and d["ch3_dosed_today_ml"] == 0.0
+    assert d["ch3_pump_max_ml_min"] == 13.812 and d["ch3_calibration_date"] == (2026, 1, 25)
+    assert d["ch3_last_dose"] == "2026-11-04 17:00" and d["ch3_last_dose_ml"] == 1.0 and d["ch3_last_dose_type"] == "auto"
+    assert len(d["ch3_history"]) == 2 and d["ch3_history"][1]["auto_ml"] == 1.2494
     e = pr.decode(pr.DEVICE_DOSING_PUMP, pr.parse_frame(DP_EMPTY))
     assert e["ch4_present"] and e["ch4_name"] == "" and e["ch4_calibration_date"] is None and e["ch4_last_dose"] is None
     assert e["ch4_schedule"] == [] and e["ch4_container_size_ml"] == 0.0
+
+
+def test_dosing_pump_commands():
+    s = "RFDQ012310100304"
+    p = lambda f: f.split(b"\x00", 4)
+    f = p(pr.frame_dp_manual_dose(s, 4, 5, "17937"))
+    assert f[1:4] == [b"dpManual", b"set", b"17937"]
+    assert f[4] == b'{"id":4,"command":"refillStart","refill":{"value":50000,"dir":"f","days":0,"delay":0}}\x00'
+    assert p(pr.frame_dp_set_schedule(s, 4, [{"time": "00:00", "ml": 2, "days": 127}]))[4] == \
+        b'{"settings":[{"id":4,"schedule":[{"t":0,"d":127,"v":20000,"dir":"f"}]}]}\x00'
+    assert p(pr.frame_dp_set_schedule(s, 3, [{"time": "15:00", "ml": 1.25, "days": ["mon", "wed"]}, {"time": "11:40", "ml": 2.75}]))[4] == \
+        b'{"settings":[{"id":3,"schedule":[{"t":700,"d":127,"v":27500,"dir":"f"},{"t":900,"d":5,"v":12500,"dir":"f"}]}]}\x00'
+    assert p(pr.frame_dp_set_schedule(s, 2, []))[4] == b'{"settings":[{"id":2,"schedule":[]}]}\x00'
+    assert p(pr.frame_dp_calibration(s, 4, True))[4] == b'{"id":4,"command":"startCalib","time":30}\x00'
+    assert p(pr.frame_dp_calibration(s, 4, False))[4] == b'{"id":4,"command":"cancelCalib"}\x00'
+    log = pr.parse_frame(b"RFDQ012310100304\x00dpLog\x00dose\x001793701213648\x00" + b'{"id":4,"value":50000}\x00')
+    assert pr.decode(pr.DEVICE_DOSING_PUMP, log) == {"ch4_dose_event_ml": 5.0}
 
 if __name__ == "__main__":
     n = 0
