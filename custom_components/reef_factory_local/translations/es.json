@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Sin respuesta. Comprueba la dirección IP y si otro programa ya está conectado al dispositivo.",
-      "unsupported_device": "El dispositivo {serial} no es compatible (por ahora: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "El dispositivo {serial} no es compatible (por ahora: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "En esta dirección responde otro dispositivo Reef Factory."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Tiempo restante de pausa de alimentación"
+      },
+      "sr_state": {
+        "name": "Estado del rodillo",
+        "state": {
+          "auto_off": "Avance automático desactivado",
+          "auto": "Avance automático activado",
+          "jammed": "Atascado",
+          "unknown": "Desconocido"
+        }
+      },
+      "sr_remaining": {
+        "name": "Vellón restante"
+      },
+      "sr_remaining_pct": {
+        "name": "Vellón restante (porcentaje)"
+      },
+      "sr_used_today": {
+        "name": "Usado hoy"
+      },
+      "sr_daily_average": {
+        "name": "Media diaria"
+      },
+      "sr_roll_length": {
+        "name": "Longitud del rollo"
+      },
+      "sr_shift": {
+        "name": "Longitud de avance"
+      },
+      "sr_start_delay": {
+        "name": "Retardo de inicio"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Queda poca comida"
+      },
+      "sr_jammed": {
+        "name": "Atascado"
+      },
+      "sr_auto": {
+        "name": "Avance automático"
       }
     },
     "number": {

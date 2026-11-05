@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v0.7)
+## Supported devices (v0.8)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -20,6 +20,7 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions) | 1.2.3 |
+| Smart Roller (serial prefix not known yet - recognised during setup) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | **none - read only** | **untested** - report layout from Steven Downer's [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller); testers welcome |
 
 ## Only confirmed writes are sent
 
@@ -42,6 +43,10 @@ Removed in 0.7.1 because they could not be confirmed: Reef Flare manual-preset s
 a timer, changing a manual preset (and the intensity in manual mode), renaming a program (the light
 switched to the renamed program), program preview (the light reports nothing back), and writing a program
 other than the active one. Their frames stay documented in `protocol.py` but are never sent.
+
+The **Smart Roller** is read only: nobody has checked this integration on one yet. Its commands (automatic
+advance, advance length, start delay, advance now, clear a jam, new roll) are known from Steven Downer's
+integration but will only be offered once an owner has confirmed them on a real device.
 
 ## Use at your own risk
 
@@ -236,6 +241,26 @@ minutes of the day, days as a bit mask with bit 0 = Monday); commands `sfExecute
 `sfSet/mode|settings|container`; events `sfLog/dose`, `sfLog/container`.
 See `custom_components/reef_factory_local/protocol.py` and `cloud.py`.
 
+## Smart Roller testers wanted
+
+The Smart Roller is recognised during setup: its serial number prefix is not known yet, so when a device
+answers with an unknown serial, the setup sends it the Smart Roller subscription and waits a few seconds
+for its report (nothing is written). If you own one, please set it up, compare the values with the app and
+open an issue with the *Download diagnostics* file (it contains the raw report, `report_hex`, which lets us
+check every value).
+
+## Credits and related projects
+
+- **Steven Downer** - the Smart Roller report layout comes from his
+  [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) (MIT License,
+  Copyright (c) 2026 Steven Downer), re-implemented here. He also wrote a local
+  [Level keeper integration](https://github.com/downerhouse/ha-reef-factory-level-keeper); both offer
+  controls for these devices.
+- Other Home Assistant integrations for Reef Factory devices this one does not cover:
+  [ha-reeffactory-ph](https://github.com/dominikhartl/ha-reeffactory-ph) (pH meters, local),
+  [reef-factory-kh](https://github.com/realiztw/reef-factory-kh) (KH Keeper Plus, via the Smart Reef cloud),
+  [ha-reeffactory](https://github.com/patrick2724/ha-reeffactory) (several devices).
+
 ## Support the project
 
 This is a hobby project, free for everyone. If it saved your tank's cloud-dependent gear, you can
@@ -247,4 +272,5 @@ buy me a coffee - it goes into test hardware (a spare Reef Flare board, dosing p
 
 MIT - see `LICENSE`. This repository contains only original code: no firmware, app files, certificates
 or keys from the manufacturer. Protocol knowledge comes from the devices' own web pages (served by the
-devices themselves) and from network captures of the author's own devices.
+devices themselves) and from network captures of the author's own devices; the Smart Roller report layout
+comes from Steven Downer's MIT-licensed integration (see *Credits*).

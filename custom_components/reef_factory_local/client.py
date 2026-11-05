@@ -23,22 +23,50 @@ def _url(host: str) -> str:
     return f"ws://{host}{pr.WS_PATH}"
 
 
-async def async_probe(session: aiohttp.ClientSession, host: str, timeout: float = 10) -> dict:
-    """Connect once, ask for the config and return serial/firmware. Raises on failure."""
-    async with asyncio.timeout(timeout):
-        ws = await session.ws_connect(_url(host), protocols=(pr.WS_SUBPROTOCOL,), autoping=True)
-        try:
+async def async_probe(
+    session: aiohttp.ClientSession, host: str, timeout: float = 10, probe_timeout: float = 8
+) -> dict:
+    """Connect once, ask for the config and return serial/firmware. Raises on failure.
+
+    A serial without known prefix is tried against PROBE_TYPES: only the subscription request of that type
+    is sent; if the device answers with its own report topic, info["device_type"] is set.
+    """
+    ws = None
+    try:
+        async with asyncio.timeout(timeout):
+            ws = await session.ws_connect(_url(host), protocols=(pr.WS_SUBPROTOCOL,), autoping=True)
             await ws.send_bytes(pr.frame_get_config())
-            async for msg in ws:
-                if msg.type is aiohttp.WSMsgType.BINARY:
-                    frame = pr.parse_frame(msg.data)
-                    if frame and (info := pr.parse_config(frame)):
-                        return info
-                elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE):
+            info = await _next(ws, pr.parse_config)
+        if info is None:
+            raise ConnectionError("no config answer")
+        if info["device_type"] is None:
+            for kind, prefix in pr.PROBE_TYPES.items():
+                await ws.send_bytes(pr.frame_probe(info["serial"], kind))
+                try:
+                    async with asyncio.timeout(probe_timeout):
+                        hit = await _next(ws, lambda f, p=prefix: f.topic.startswith(p) or None)
+                except TimeoutError:
+                    hit = None
+                if hit:
+                    info["device_type"] = kind
+                    info["probed"] = True
                     break
-        finally:
+        return info
+    finally:
+        if ws is not None:
             await ws.close()
-    raise ConnectionError("no config answer")
+
+
+async def _next(ws: aiohttp.ClientWebSocketResponse, pick: Callable) -> object:
+    """First non-empty pick(frame) of the incoming binary frames, None when the socket closes."""
+    async for msg in ws:
+        if msg.type is aiohttp.WSMsgType.BINARY:
+            frame = pr.parse_frame(msg.data)
+            if frame and (res := pick(frame)):
+                return res
+        elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE):
+            break
+    return None
 
 
 class ReefClient:

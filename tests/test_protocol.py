@@ -368,6 +368,33 @@ def test_base_pump_feed_mode():
     log = pr.parse_frame(b"RFBP052309210012\x00bpLog\x00mode\x001793701213648\x00" + b'{"mode":"auto"}\x00')
     assert pr.decode(pr.DEVICE_BASE_PUMP, log) == {"mode": "auto", "feed_remaining_s": 0}
 
+def test_smart_roller_synthetic():
+    # SYNTHETIC vector built from the offsets in ha-reef-factory-smartroller (Steven Downer, MIT) - not a capture.
+    blob = bytes.fromhex("01001e07003c000000000000c3500000c350000000000000012c000000fa")
+    f = pr.parse_frame(b"RFXX000000000001\x00srReport\x00all\x00\x00" + blob + b"\x00")
+    d = pr.decode(pr.DEVICE_SMART_ROLLER, f)
+    assert d["state"] == "auto" and d["auto"] and not d["jammed"], d
+    assert (d["shift_mm"], d["reminder_raw"], d["delay_s"]) == (30, 7, 60), d
+    assert (d["remaining_mm"], d["roll_length_mm"], d["used_today_mm"], d["daily_average_mm"]) == (50000, 50000, 300, 250), d
+    assert d["report_hex"] == blob.hex(), d
+    jam = pr.parse_frame(b"X\x00srReport\x00all\x00\x00" + b"\x02" + blob[1:])
+    assert pr.decode(pr.DEVICE_SMART_ROLLER, jam)["state"] == "jammed"
+    assert pr.decode(pr.DEVICE_SMART_ROLLER, pr.parse_frame(b"X\x00srReport\x00all\x00\x00\x01\x02")) is None  # too short
+    assert pr.decode(pr.DEVICE_SMART_ROLLER, pr.parse_frame(b"X\x00pong\x00\x00\x00")) is None
+
+
+def test_probe_types_and_override():
+    serial = "RFZZ999999999999"  # unknown prefix
+    assert pr.device_type(serial) is None
+    probe = pr.parse_frame(pr.frame_probe(serial, pr.DEVICE_SMART_ROLLER))
+    assert (probe.topic, probe.subtopic, probe.blob) == ("srConnect", "join", serial.encode() + b"\x00\x00"), probe
+    pr.register_device_type(serial, pr.DEVICE_SMART_ROLLER)
+    assert pr.device_type(serial) == pr.DEVICE_SMART_ROLLER
+    assert pr.parse_frame(pr.frame_subscribe(serial)).topic == "srConnect"
+    assert pr.MODEL_NAME[pr.DEVICE_SMART_ROLLER] == "Smart Roller"
+    assert set(pr.PROBE_TYPES) <= set(pr.CONNECT_TOPIC)
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

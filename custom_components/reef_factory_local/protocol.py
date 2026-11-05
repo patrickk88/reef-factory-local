@@ -33,6 +33,7 @@ DEVICE_FLARE = "reef_flare"
 DEVICE_FEEDER = "smart_feeder"  # cloud-only device (no local port), served by the cloud replacement
 DEVICE_BASE_PUMP = "base_pump"      # cloud-only, Reef Base pump (return pump)
 DEVICE_DOSING_PUMP = "dosing_pump"  # cloud-only, Dosing pump Pro X4
+DEVICE_SMART_ROLLER = "smart_roller"  # local; serial prefix not known yet, found by PROBE_TYPES
 
 # Cloud channel (what the devices expect from api.reeffactory.com)
 CLOUD_HOST = "api.reeffactory.com"
@@ -62,7 +63,14 @@ CONNECT_TOPIC = {
     DEVICE_FEEDER: "sfConnect",
     DEVICE_BASE_PUMP: "bpConnect",
     DEVICE_DOSING_PUMP: "dqConnect",  # yes, dq - the reports and requests use dp
+    DEVICE_SMART_ROLLER: "srConnect",
 }
+# Device types whose serial prefix is not known yet: recognised at setup because they answer their own
+# subscription with frames whose topic starts with this prefix (no write, only the join request).
+PROBE_TYPES = {DEVICE_SMART_ROLLER: "sr"}
+# Smart Roller: byte 0 of srReport/all
+SR_STATE = {0: "auto_off", 1: "auto", 2: "jammed"}
+SR_STATE_OPTIONS = [*SR_STATE.values(), "unknown"]
 MODEL_NAME = {
     DEVICE_LEVEL_KEEPER: "Level keeper",
     DEVICE_THERMO: "Thermo control",
@@ -70,6 +78,7 @@ MODEL_NAME = {
     DEVICE_FEEDER: "Smart feeder",
     DEVICE_BASE_PUMP: "Base pump",
     DEVICE_DOSING_PUMP: "Dosing pump Pro X4",
+    DEVICE_SMART_ROLLER: "Smart Roller",
 }
 # Smart feeder: feeding modes (sfSet/mode) and units
 FEEDER_MODES = {"period": "schedule", "sequence": "interval"}
@@ -120,8 +129,23 @@ FLARE_MODES: dict[str, str] = {
 }
 
 
+_TYPE_OVERRIDES: dict[str, str] = {}
+
+
+def register_device_type(serial: str, kind: str) -> None:
+    """Device type found by probing (no known serial prefix), stored in the config entry."""
+    _TYPE_OVERRIDES[serial] = kind
+
+
+def frame_probe(serial: str, kind: str) -> bytes:
+    """Subscription request used to recognise a device type without a known serial prefix."""
+    return build_frame(CONNECT_TOPIC[kind], "join", serial.encode() + b"\x00", serial, join_id())
+
+
 def device_type(serial: str) -> str | None:
     """Return the supported device type for a serial number, or None."""
+    if serial in _TYPE_OVERRIDES:
+        return _TYPE_OVERRIDES[serial]
     for prefix, kind in _PREFIXES:
         if serial.startswith(prefix):
             return kind
@@ -971,7 +995,33 @@ def frame_dp_calibration(serial: str, channel: int, start: bool, seconds: int = 
     return frame_json(serial, "dpCalibration", "set", obj, joinid)
 
 
+def decode_smart_roller(frame: Frame) -> dict | None:
+    """srReport/all, binary, big-endian. Read only.
+
+    Offsets taken from ha-reef-factory-smartroller by Steven Downer (MIT); not yet confirmed on a device
+    by us - the raw report is kept (diagnostics) so testers can check them.
+    """
+    if frame.topic != "srReport" or frame.subtopic != "all" or len(frame.blob) < 30:
+        return None
+    b = frame.blob
+    return {
+        "state": SR_STATE.get(b[0], "unknown"),
+        "state_raw": b[0],
+        "auto": b[0] == 1,
+        "jammed": b[0] == 2,
+        "shift_mm": _be(b, 1, 2),
+        "reminder_raw": b[3],
+        "delay_s": _be(b, 4, 2),
+        "remaining_mm": _be(b, 10, 4),
+        "roll_length_mm": _be(b, 14, 4),
+        "used_today_mm": _be(b, 22, 4),
+        "daily_average_mm": _be(b, 26, 4),
+        "report_hex": b.rstrip(b"\x00").hex() if len(b) > 30 else b.hex(),
+    }
+
+
 _DECODERS = {
+    DEVICE_SMART_ROLLER: decode_smart_roller,
     DEVICE_FEEDER: decode_feeder,
     DEVICE_BASE_PUMP: decode_base_pump,
     DEVICE_DOSING_PUMP: decode_dosing_pump,

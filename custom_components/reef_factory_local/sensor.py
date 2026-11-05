@@ -15,6 +15,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfLength,
     UnitOfMass,
     UnitOfTemperature,
     UnitOfTime,
@@ -56,6 +57,10 @@ def _flare_attrs(d: dict) -> dict:
     if d.get("mode") == "manual":
         out["manual_duration_min"] = None if d.get("manual_time_s") is None else round(d["manual_time_s"] / 60)
     return out
+
+
+def _mm_to_m(v):
+    return None if v is None else v / 1000
 
 
 def _date_tuple(v):
@@ -228,6 +233,53 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
         WIFI,
     ),
     pr.DEVICE_DOSING_PUMP: tuple(desc for ch in range(1, pr.DOSING_CHANNELS + 1) for desc in _dosing_sensors(ch)) + (WIFI,),
+    pr.DEVICE_SMART_ROLLER: (
+        ReefSensorDescription(
+            key="sr_state", translation_key="sr_state", icon="mdi:paper-roll",
+            device_class=SensorDeviceClass.ENUM, options=pr.SR_STATE_OPTIONS,
+            value_fn=lambda d: d.get("state"),
+            attrs_fn=lambda d: {k: d[k] for k in ("state_raw", "reminder_raw", "report_hex") if d.get(k) is not None},
+        ),
+        ReefSensorDescription(
+            key="sr_remaining", translation_key="sr_remaining", icon="mdi:paper-roll-outline",
+            device_class=SensorDeviceClass.DISTANCE, state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.METERS, suggested_display_precision=2,
+            value_fn=lambda d: _mm_to_m(d.get("remaining_mm")),
+        ),
+        ReefSensorDescription(
+            key="sr_remaining_pct", translation_key="sr_remaining_pct", icon="mdi:paper-roll-outline",
+            state_class=SensorStateClass.MEASUREMENT, native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda d: (round(d["remaining_mm"] * 100 / d["roll_length_mm"])
+                                if d.get("roll_length_mm") and d.get("remaining_mm") is not None else None),
+        ),
+        ReefSensorDescription(
+            key="sr_used_today", translation_key="sr_used_today", icon="mdi:counter",
+            device_class=SensorDeviceClass.DISTANCE, state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfLength.METERS, suggested_display_precision=2,
+            value_fn=lambda d: _mm_to_m(d.get("used_today_mm")),
+        ),
+        ReefSensorDescription(
+            key="sr_daily_average", translation_key="sr_daily_average", icon="mdi:chart-line",
+            device_class=SensorDeviceClass.DISTANCE, state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.METERS, suggested_display_precision=2,
+            value_fn=lambda d: _mm_to_m(d.get("daily_average_mm")),
+        ),
+        ReefSensorDescription(
+            key="sr_roll_length", translation_key="sr_roll_length", entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.DISTANCE, native_unit_of_measurement=UnitOfLength.METERS,
+            suggested_display_precision=1, value_fn=lambda d: _mm_to_m(d.get("roll_length_mm")),
+        ),
+        ReefSensorDescription(
+            key="sr_shift", translation_key="sr_shift", entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.DISTANCE, native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            value_fn=lambda d: d.get("shift_mm"),
+        ),
+        ReefSensorDescription(
+            key="sr_start_delay", translation_key="sr_start_delay", entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.DURATION, native_unit_of_measurement=UnitOfTime.SECONDS,
+            value_fn=lambda d: d.get("delay_s"),
+        ),
+    ),
 }
 
 

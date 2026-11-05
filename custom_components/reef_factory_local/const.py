@@ -1,6 +1,7 @@
 """Constants for Reef Factory Local (unofficial)."""
 DOMAIN = "reef_factory_local"
 CONF_SERIAL = "serial"
+CONF_DEVICE_TYPE = "device_type"  # only for types found by probing (no known serial prefix)
 CONF_ALLOW_PUMP_ACTIONS = "allow_pump_actions"
 MANUFACTURER = "Reef Factory"
 # entities go unavailable when no data arrived for this long

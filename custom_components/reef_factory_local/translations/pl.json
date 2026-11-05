@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Brak odpowiedzi. Sprawdź adres IP i czy inny program nie jest już połączony z urządzeniem.",
-      "unsupported_device": "Urządzenie {serial} nie jest obsługiwane (na razie: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "Urządzenie {serial} nie jest obsługiwane (na razie: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "Pod tym adresem odpowiada inne urządzenie Reef Factory."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Pauza na karmienie – pozostały czas"
+      },
+      "sr_state": {
+        "name": "Stan rolki",
+        "state": {
+          "auto_off": "Automatyczny przesuw wyłączony",
+          "auto": "Automatyczny przesuw włączony",
+          "jammed": "Zablokowana",
+          "unknown": "Nieznany"
+        }
+      },
+      "sr_remaining": {
+        "name": "Pozostała włóknina"
+      },
+      "sr_remaining_pct": {
+        "name": "Pozostała włóknina (procent)"
+      },
+      "sr_used_today": {
+        "name": "Zużyto dziś"
+      },
+      "sr_daily_average": {
+        "name": "Średnie dzienne zużycie"
+      },
+      "sr_roll_length": {
+        "name": "Długość rolki"
+      },
+      "sr_shift": {
+        "name": "Długość przesuwu"
+      },
+      "sr_start_delay": {
+        "name": "Opóźnienie startu"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Kończy się pokarm"
+      },
+      "sr_jammed": {
+        "name": "Zablokowana"
+      },
+      "sr_auto": {
+        "name": "Automatyczny przesuw"
       }
     },
     "number": {

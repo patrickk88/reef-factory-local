@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Geen antwoord. Controleer het IP-adres en of er al een ander programma met het apparaat verbonden is.",
-      "unsupported_device": "Apparaat {serial} wordt niet ondersteund (tot nu toe: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "Apparaat {serial} wordt niet ondersteund (tot nu toe: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "Op dit adres antwoordt een ander Reef Factory-apparaat."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Resterende voerpauze"
+      },
+      "sr_state": {
+        "name": "Rolstatus",
+        "state": {
+          "auto_off": "Automatisch doorvoeren uit",
+          "auto": "Automatisch doorvoeren aan",
+          "jammed": "Vastgelopen",
+          "unknown": "Onbekend"
+        }
+      },
+      "sr_remaining": {
+        "name": "Vlies over"
+      },
+      "sr_remaining_pct": {
+        "name": "Vlies over (procent)"
+      },
+      "sr_used_today": {
+        "name": "Vandaag verbruikt"
+      },
+      "sr_daily_average": {
+        "name": "Daggemiddelde"
+      },
+      "sr_roll_length": {
+        "name": "Rollengte"
+      },
+      "sr_shift": {
+        "name": "Doorvoerlengte"
+      },
+      "sr_start_delay": {
+        "name": "Startvertraging"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Voer bijna op"
+      },
+      "sr_jammed": {
+        "name": "Vastgelopen"
+      },
+      "sr_auto": {
+        "name": "Automatisch doorvoeren"
       }
     },
     "number": {

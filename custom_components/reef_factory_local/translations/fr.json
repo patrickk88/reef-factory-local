@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Aucune réponse. Vérifiez l'adresse IP et qu'aucun autre programme n'est déjà connecté à l'appareil.",
-      "unsupported_device": "L'appareil {serial} n'est pas pris en charge (pour l'instant : Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "L'appareil {serial} n'est pas pris en charge (pour l'instant : Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "Un autre appareil Reef Factory répond à cette adresse."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Temps restant de la pause nourrissage"
+      },
+      "sr_state": {
+        "name": "État du rouleau",
+        "state": {
+          "auto_off": "Avance automatique désactivée",
+          "auto": "Avance automatique activée",
+          "jammed": "Bloqué",
+          "unknown": "Inconnu"
+        }
+      },
+      "sr_remaining": {
+        "name": "Molleton restant"
+      },
+      "sr_remaining_pct": {
+        "name": "Molleton restant (pourcentage)"
+      },
+      "sr_used_today": {
+        "name": "Utilisé aujourd'hui"
+      },
+      "sr_daily_average": {
+        "name": "Moyenne journalière"
+      },
+      "sr_roll_length": {
+        "name": "Longueur du rouleau"
+      },
+      "sr_shift": {
+        "name": "Longueur d'avance"
+      },
+      "sr_start_delay": {
+        "name": "Délai de démarrage"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Nourriture bientôt épuisée"
+      },
+      "sr_jammed": {
+        "name": "Bloqué"
+      },
+      "sr_auto": {
+        "name": "Avance automatique"
       }
     },
     "number": {

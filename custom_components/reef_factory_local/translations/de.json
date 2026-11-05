@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Keine Antwort. Prüfe die IP-Adresse und ob schon ein anderes Programm mit dem Gerät verbunden ist.",
-      "unsupported_device": "Gerät {serial} wird nicht unterstützt (bisher: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "Gerät {serial} wird nicht unterstützt (bisher: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "Unter dieser Adresse antwortet ein anderes Reef-Factory-Gerät."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Futterpause Restzeit"
+      },
+      "sr_state": {
+        "name": "Rollenstatus",
+        "state": {
+          "auto_off": "Automatischer Vorschub aus",
+          "auto": "Automatischer Vorschub an",
+          "jammed": "Blockiert",
+          "unknown": "Unbekannt"
+        }
+      },
+      "sr_remaining": {
+        "name": "Vlies übrig"
+      },
+      "sr_remaining_pct": {
+        "name": "Vlies übrig (Prozent)"
+      },
+      "sr_used_today": {
+        "name": "Heute verbraucht"
+      },
+      "sr_daily_average": {
+        "name": "Tagesdurchschnitt"
+      },
+      "sr_roll_length": {
+        "name": "Rollenlänge"
+      },
+      "sr_shift": {
+        "name": "Vorschublänge"
+      },
+      "sr_start_delay": {
+        "name": "Startverzögerung"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Futter knapp"
+      },
+      "sr_jammed": {
+        "name": "Blockiert"
+      },
+      "sr_auto": {
+        "name": "Automatischer Vorschub"
       }
     },
     "number": {

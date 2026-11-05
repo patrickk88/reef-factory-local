@@ -16,7 +16,8 @@ from . import protocol as pr
 from .client import async_probe
 from .cloud import MODE_LOCAL, MODE_PASSTHROUGH
 from .const import (
-    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, CONF_CLOUD_MODE, CONF_LOW_DAYS, CONF_SERIAL, CONF_UPSTREAM_IPS,
+    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, CONF_CLOUD_MODE, CONF_DEVICE_TYPE, CONF_LOW_DAYS, CONF_SERIAL,
+    CONF_UPSTREAM_IPS,
     DEFAULT_LOW_DAYS, DOMAIN,
 )
 
@@ -67,10 +68,10 @@ class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(serial)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                    return self.async_create_entry(
-                        title=f"{pr.MODEL_NAME[kind]} {serial[-4:]}",
-                        data={CONF_HOST: host, CONF_SERIAL: serial},
-                    )
+                    data = {CONF_HOST: host, CONF_SERIAL: serial}
+                    if info.get("probed"):  # no known serial prefix: remember what the device answered as
+                        data[CONF_DEVICE_TYPE] = kind
+                    return self.async_create_entry(title=f"{pr.MODEL_NAME[kind]} {serial[-4:]}", data=data)
         return self.async_show_form(
             step_id="device",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),

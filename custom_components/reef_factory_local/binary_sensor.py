@@ -65,6 +65,12 @@ BINARY: dict[str, tuple[ReefBinaryDescription, ...]] = {
         CLOUD,
     ),
     pr.DEVICE_FLARE: (CLOUD,),
+    pr.DEVICE_SMART_ROLLER: (
+        ReefBinaryDescription(key="sr_jammed", translation_key="sr_jammed", data_key="jammed",
+                              device_class=BinarySensorDeviceClass.PROBLEM),
+        ReefBinaryDescription(key="sr_auto", translation_key="sr_auto", data_key="auto", icon="mdi:autorenew"),
+        CLOUD,
+    ),
     pr.DEVICE_FEEDER: (
         ReefBinaryDescription(key="container_empty", translation_key="container_empty",
                               data_key="container_empty", device_class=BinarySensorDeviceClass.PROBLEM),

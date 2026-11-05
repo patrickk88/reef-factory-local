@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Nessuna risposta. Controlla l'indirizzo IP e se un altro programma è già connesso al dispositivo.",
-      "unsupported_device": "Il dispositivo {serial} non è supportato (per ora: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "Il dispositivo {serial} non è supportato (per ora: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "A questo indirizzo risponde un altro dispositivo Reef Factory."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Tempo rimanente pausa alimentazione"
+      },
+      "sr_state": {
+        "name": "Stato del rullo",
+        "state": {
+          "auto_off": "Avanzamento automatico disattivato",
+          "auto": "Avanzamento automatico attivo",
+          "jammed": "Bloccato",
+          "unknown": "Sconosciuto"
+        }
+      },
+      "sr_remaining": {
+        "name": "Tessuto filtrante rimasto"
+      },
+      "sr_remaining_pct": {
+        "name": "Tessuto filtrante rimasto (percentuale)"
+      },
+      "sr_used_today": {
+        "name": "Usato oggi"
+      },
+      "sr_daily_average": {
+        "name": "Media giornaliera"
+      },
+      "sr_roll_length": {
+        "name": "Lunghezza del rotolo"
+      },
+      "sr_shift": {
+        "name": "Lunghezza di avanzamento"
+      },
+      "sr_start_delay": {
+        "name": "Ritardo di avvio"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Cibo in esaurimento"
+      },
+      "sr_jammed": {
+        "name": "Bloccato"
+      },
+      "sr_auto": {
+        "name": "Avanzamento automatico"
       }
     },
     "number": {

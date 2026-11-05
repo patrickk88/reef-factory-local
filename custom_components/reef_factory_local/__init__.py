@@ -11,7 +11,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import protocol as pr
 from .client import ReefClient
 from .cloud import MODE_PASSTHROUGH, CloudDevice, ReefCloudServer
-from .const import CONF_CLOUD, CONF_CLOUD_MODE, CONF_SERIAL, CONF_UPSTREAM_IPS, DOMAIN, SIGNAL_NEW_CLOUD_DEVICE
+from .const import (
+    CONF_CLOUD, CONF_CLOUD_MODE, CONF_DEVICE_TYPE, CONF_SERIAL, CONF_UPSTREAM_IPS, DOMAIN, SIGNAL_NEW_CLOUD_DEVICE,
+)
 from .coordinator import CloudCoordinator, ReefCoordinator
 from .services import async_setup_services
 
@@ -23,6 +25,7 @@ PLATFORMS: dict[str, list[Platform]] = {
         Platform.NUMBER, Platform.SWITCH, Platform.BUTTON,
     ],
     pr.DEVICE_THERMO: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH],
+    pr.DEVICE_SMART_ROLLER: [Platform.SENSOR, Platform.BINARY_SENSOR],  # read only until writes are confirmed
     pr.DEVICE_FLARE: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT, Platform.NUMBER],
     pr.DEVICE_FEEDER: [
         Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT,
@@ -58,6 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> bool
     if is_cloud_entry(entry):
         return await _async_setup_cloud(hass, entry)
     serial = entry.data[CONF_SERIAL]
+    if kind := entry.data.get(CONF_DEVICE_TYPE):
+        pr.register_device_type(serial, kind)
     coordinator = ReefCoordinator(hass, entry)
     coordinator.client = ReefClient(
         async_get_clientsession(hass),

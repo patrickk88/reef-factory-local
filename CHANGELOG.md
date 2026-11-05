@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 - 2026-11-05
+- Smart Roller (read only, untested - testers welcome): state, fleece left (m and %), used today, daily
+  average, roll length, advance length, start delay, jammed, automatic advance. Report layout from Steven
+  Downer's ha-reef-factory-smartroller (MIT), re-implemented. No command is sent to the roller.
+- Setup recognises devices whose serial prefix is not known yet by their answer to the subscription
+  (only the join request is sent); the result is stored in the entry. So far: Smart Roller.
+- README: Smart Roller testers, credits and related projects.
+
 ## 0.7.1 - 2026-11-05
 - Only writes confirmed on real hardware are offered (review of the HACS default-list submission). The
   README lists every confirmed write per device and firmware.

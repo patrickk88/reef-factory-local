@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "No answer. Check the IP address and whether another program is already connected to the device.",
-      "unsupported_device": "Device {serial} is not supported (so far: Level keeper, Thermo control, Reef Flare).",
+      "unsupported_device": "Device {serial} is not supported (so far: Level keeper, Thermo control, Reef Flare, Smart Roller).",
       "wrong_device": "A different Reef Factory device answers at this address."
     },
     "abort": {
@@ -158,6 +158,36 @@
       },
       "bp_feed_remaining": {
         "name": "Feed pause remaining"
+      },
+      "sr_state": {
+        "name": "Roller state",
+        "state": {
+          "auto_off": "Automatic advance off",
+          "auto": "Automatic advance on",
+          "jammed": "Jammed",
+          "unknown": "Unknown"
+        }
+      },
+      "sr_remaining": {
+        "name": "Fleece left"
+      },
+      "sr_remaining_pct": {
+        "name": "Fleece left (percent)"
+      },
+      "sr_used_today": {
+        "name": "Used today"
+      },
+      "sr_daily_average": {
+        "name": "Daily average use"
+      },
+      "sr_roll_length": {
+        "name": "Roll length"
+      },
+      "sr_shift": {
+        "name": "Advance length"
+      },
+      "sr_start_delay": {
+        "name": "Start delay"
       }
     },
     "select": {
@@ -218,6 +248,12 @@
       },
       "container_low": {
         "name": "Food running low"
+      },
+      "sr_jammed": {
+        "name": "Jammed"
+      },
+      "sr_auto": {
+        "name": "Automatic advance"
       }
     },
     "number": {
