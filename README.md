@@ -71,10 +71,11 @@ Use a password for Smart Reef that you use nowhere else.
   stay offline until power cycled. The cloud replacement therefore never closes a device connection
   politely; it drops it with a TCP reset, after which the device reconnects by itself. Keep that in mind
   if you put a proxy in front of the ports (it must not send close frames either).
-- Reef Flare writing (intensity, presets, programs, acclimation, preview) uses exactly the frames of the
-  device's own web page and was checked byte for byte against what the device sends (rewriting a program
-  unchanged gives the device's own bytes). It is still **experimental** until tested on a real light;
-  this note is removed once that is done.
+- Reef Flare writing uses exactly the frames of the device's own web page and was checked byte for
+  byte against what the device sends. Rewriting the active program (intensity, points) is **tested on a
+  real Reef Flare M** (firmware 1.0.0, 2026-11-05: the light echoed each change within a second, program
+  unchanged). Manual presets, manual mode with duration, acclimation, preview and renaming are built the
+  same way but still **untested on hardware** - treat them as experimental.
 - Reef Flare stores programs and presets in its flash. Do not change intensity or programs every few
   minutes from an automation; for short changes use *manual mode with a duration*.
 - Reef Flare: the program list only contains the points of the *active* program. Writing another
