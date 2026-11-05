@@ -106,6 +106,9 @@
       "intensity": {
         "name": "Intensiteit"
       },
+      "output": {
+        "name": "Huidige helderheid"
+      },
       "light_mode": {
         "name": "Modus",
         "state": {

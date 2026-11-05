@@ -389,6 +389,39 @@ def flare_presets_with_levels(presets: list[dict], levels: list) -> list[dict]:
     return out
 
 
+FLARE_CHANNEL_KEYS = ("uv", "violet", "indigo", "blue", "green", "red", "white")
+
+
+def flare_levels_at(points: list[dict], minute: float) -> list[float] | None:
+    """Channel levels of a program at a minute of the day - the light fades linearly between points."""
+    pts = sorted(points or [], key=lambda p: p["minute"])
+    if not pts:
+        return None
+    if minute <= pts[0]["minute"]:
+        return [float(v) for v in pts[0]["levels"]]
+    for a, b in zip(pts, pts[1:]):
+        if a["minute"] <= minute <= b["minute"]:
+            span = b["minute"] - a["minute"]
+            f = (minute - a["minute"]) / span if span else 0.0
+            return [x + (y - x) * f for x, y in zip(a["levels"], b["levels"])]
+    return [float(v) for v in pts[-1]["levels"]]
+
+
+def flare_output(data: dict, minute: float) -> tuple[float, dict] | None:
+    """Output now in % (mean of the 7 channels x intensity) and the channels after intensity.
+    Program: points at this minute; manual: levels of the active preset; off: 0."""
+    mode = data.get("mode")
+    if mode == "off":
+        return 0.0, dict.fromkeys(FLARE_CHANNEL_KEYS, 0.0)
+    levels = data.get("levels") if mode == "manual" else \
+        flare_levels_at(data.get("points") or [], minute) if mode == "program" else None
+    if not levels or len(levels) < FLARE_CHANNELS or data.get("intensity") is None:
+        return None
+    scale = data["intensity"] / 100
+    channels = {k: round(v * scale, 1) for k, v in zip(FLARE_CHANNEL_KEYS, levels)}
+    return round(sum(levels[:FLARE_CHANNELS]) / FLARE_CHANNELS * scale, 1), channels
+
+
 def flare_same_points(reported, points: list[dict]) -> bool:
     """Reported points (decode_flare) equal to normalized points?"""
     return [(p["minute"], list(p["levels"])) for p in reported or []] == \

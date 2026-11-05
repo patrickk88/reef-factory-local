@@ -106,6 +106,9 @@
       "intensity": {
         "name": "Intensità"
       },
+      "output": {
+        "name": "Luminosità attuale"
+      },
       "light_mode": {
         "name": "Modalità",
         "state": {

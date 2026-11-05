@@ -106,6 +106,9 @@
       "intensity": {
         "name": "Intensywność"
       },
+      "output": {
+        "name": "Aktualna jasność"
+      },
       "light_mode": {
         "name": "Tryb",
         "state": {

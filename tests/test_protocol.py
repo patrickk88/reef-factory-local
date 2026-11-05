@@ -185,6 +185,26 @@ def test_flare_timed_manual_and_new_program_helpers():
     assert pr.flare_same_points(rep, pts) and not pr.flare_same_points(rep[:1], pts) and not pr.flare_same_points(None, pts)
     assert pr.FLARE_MANUAL_MAX_MIN * 60 <= 0xFFFE
 
+def test_flare_output_now():
+    """Output: program points interpolated at the minute, x intensity; manual preset; off = 0."""
+    pts = pr.normalize_flare_points([
+        {"time": "00:00", "levels": [0] * 7}, {"time": "21:45", "levels": [0, 0, 2, 0, 0, 0, 0]},
+        {"time": "22:29", "levels": [0] * 7}, {"time": "24:00", "levels": [0] * 7}])
+    assert pr.flare_levels_at(pts, 21 * 60 + 45)[2] == 2 and pr.flare_levels_at(pts, 22 * 60 + 7)[2] == 1.0
+    assert pr.flare_levels_at(pts, 1440) == [0.0] * 7 and pr.flare_levels_at([], 600) is None
+    noon = pr.normalize_flare_points([{"time": "00:00", "levels": [0] * 7},
+                                      {"time": "12:00", "levels": [100, 100, 100, 100, 50, 50, 80]},
+                                      {"time": "24:00", "levels": [0] * 7}])
+    out, ch = pr.flare_output({"mode": "program", "points": noon, "intensity": 30}, 720)
+    assert out == 24.9 and ch["uv"] == 30.0 and ch["green"] == 15.0 and ch["white"] == 24.0, (out, ch)
+    out, ch = pr.flare_output({"mode": "program", "points": noon, "intensity": 30}, 360)
+    assert out == 12.4 and ch["uv"] == 15.0, (out, ch)
+    out, ch = pr.flare_output({"mode": "manual", "levels": [20, 44, 42, 39, 42, 41, 75], "intensity": 100}, 0)
+    assert out == 43.3 and ch["white"] == 75.0, out
+    assert pr.flare_output({"mode": "off"}, 0)[0] == 0.0
+    assert pr.flare_output({"mode": "program", "points": noon}, 720) is None  # no intensity yet
+    assert pr.flare_output({}, 720) is None
+
 def test_flare_precise_update_roundtrip():
     """Re-encoding the active program unchanged must give the device's own program bytes."""
     fr = pr.parse_frame(FLARE_PRECISE)

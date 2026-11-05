@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 - 2026-11-05
+- Reef Flare: sensor *Current output* - the mean of the 7 channels times the intensity, right now: in
+  program mode from the points of the active program (linear between points, as the light fades), in
+  manual mode from the active preset, 0 when off. Attributes: each channel after intensity. Computed, the
+  light itself does not report it.
+- Reef Flare *Program* sensor: the attributes `levels` and `presets` only in manual mode (they stayed from
+  the last manual mode before).
+
 ## 0.9.0 - 2026-11-05
 - Reef Flare: action `flare_manual` - timed manual mode (the app's *timer mode*): manual mode, optional new
   levels for the active manual preset, duration 1-360 min; the light goes back to its program by itself.

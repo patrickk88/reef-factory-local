@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import ReefConfigEntry
 from . import protocol as pr
@@ -45,16 +46,23 @@ def _cal_date(d: dict):
         return None
 
 
+def _flare_output(d: dict):
+    now = dt_util.now()
+    return pr.flare_output(d, now.hour * 60 + now.minute + now.second / 60)
+
+
 def _flare_attrs(d: dict) -> dict:
     out = {}
     if d.get("programs"):
         out["programs"] = [p for p in d["programs"] if p]
     if d.get("points") is not None:  # same shape the flare_program_set action accepts
         out["points"] = [{"time": p["time"], "levels": p["levels"]} for p in d["points"]]
-    for key in ("levels", "presets", "acclimation"):
-        if d.get(key) is not None:
-            out[key] = d[key]
-    if d.get("mode") == "manual":
+    if d.get("acclimation") is not None:
+        out["acclimation"] = d["acclimation"]
+    if d.get("mode") == "manual":  # manual preset values stay in the data after manual mode ended
+        for key in ("levels", "presets"):
+            if d.get(key) is not None:
+                out[key] = d[key]
         out["manual_duration_min"] = None if d.get("manual_time_s") is None else round(d["manual_time_s"] / 60)
     return out
 
@@ -180,6 +188,13 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
             key="intensity", translation_key="intensity",
             state_class=SensorStateClass.MEASUREMENT, native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda d: d.get("intensity"),
+        ),
+        ReefSensorDescription(
+            key="output", translation_key="output", icon="mdi:brightness-6",
+            state_class=SensorStateClass.MEASUREMENT, native_unit_of_measurement=PERCENTAGE,
+            suggested_display_precision=1,
+            value_fn=lambda d: (r := _flare_output(d)) and r[0],
+            attrs_fn=lambda d: (r := _flare_output(d)) and r[1] or {},
         ),
         ReefSensorDescription(
             key="light_mode", translation_key="light_mode",
