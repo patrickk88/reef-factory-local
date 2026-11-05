@@ -441,10 +441,18 @@ def decode_base_pump(frame: "Frame") -> dict | None:
     """bpReport/all of the Base pump (plus the generic wifi report)."""
     if (wifi := _decode_wifi(frame)) is not None:
         return wifi
-    if frame.topic != "bpReport" or frame.subtopic != "all":
-        return None
     obj = parse_json(frame)
     if obj is None:
+        return None
+    if frame.topic == "bpReport" and frame.subtopic == "feed":  # feed mode countdown, once a second
+        return {"feed_remaining_s": obj.get("time"), "mode": "feedMode"}
+    if frame.topic == "bpLog" and frame.subtopic == "mode":
+        mode = obj.get("mode")
+        out = {"mode": mode}
+        if mode != "feedMode":
+            out["feed_remaining_s"] = 0
+        return out
+    if frame.topic != "bpReport" or frame.subtopic != "all":
         return None
     return {
         "mode": obj.get("mode"),
@@ -465,6 +473,16 @@ def frame_bp_set_settings(serial: str, speed: int, feed_mode_time: int, feed_spe
         "speed": int(speed), "feedModeTime": int(feed_mode_time), "feedSpeed": int(feed_speed),
         "display": "on" if display else "off", "backlight": "on" if backlight else "off",
     }, joinid)
+
+
+BASE_PUMP_MODES = ("auto", "feedMode")
+
+
+def frame_bp_set_mode(serial: str, mode: str, joinid: str = "") -> bytes:
+    """bpSet/mode - "feedMode" starts the feed pause (pump at feedSpeed for feedModeTime), "auto" ends it."""
+    if mode not in BASE_PUMP_MODES:
+        raise ValueError(f"unknown base pump mode {mode!r}")
+    return frame_json(serial, "bpSet", "mode", {"mode": mode}, joinid)
 
 
 # --- Dosing pump Pro X4 ---------------------------------------------------------

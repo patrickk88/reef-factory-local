@@ -144,6 +144,9 @@
       },
       "dp_calibration": {
         "name": "Kanal {channel} kalibriert am"
+      },
+      "bp_feed_remaining": {
+        "name": "Futterpause Restzeit"
       }
     },
     "select": {
@@ -274,6 +277,9 @@
       },
       "bp_backlight": {
         "name": "Hintergrundbeleuchtung"
+      },
+      "bp_feed_mode": {
+        "name": "Futterpause"
       }
     },
     "button": {

@@ -357,6 +357,17 @@ def test_dosing_pump_commands():
     log = pr.parse_frame(b"RFDQ012310100304\x00dpLog\x00dose\x001793701213648\x00" + b'{"id":4,"value":50000}\x00')
     assert pr.decode(pr.DEVICE_DOSING_PUMP, log) == {"ch4_dose_event_ml": 5.0}
 
+
+def test_base_pump_feed_mode():
+    s = "RFBP052309210012"
+    p = lambda f: f.split(b"\x00", 4)
+    assert p(pr.frame_bp_set_mode(s, "feedMode", "17937"))[1:5] == [b"bpSet", b"mode", b"17937", b'{"mode":"feedMode"}\x00']
+    assert p(pr.frame_bp_set_mode(s, "auto"))[4] == b'{"mode":"auto"}\x00'
+    feed = pr.parse_frame(b"RFBP052309210012\x00bpReport\x00feed\x001793701213648\x00" + b'{"time":299}\x00')
+    assert pr.decode(pr.DEVICE_BASE_PUMP, feed) == {"feed_remaining_s": 299, "mode": "feedMode"}
+    log = pr.parse_frame(b"RFBP052309210012\x00bpLog\x00mode\x001793701213648\x00" + b'{"mode":"auto"}\x00')
+    assert pr.decode(pr.DEVICE_BASE_PUMP, log) == {"mode": "auto", "feed_remaining_s": 0}
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

@@ -220,6 +220,11 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
             key="bp_mode", translation_key="bp_mode", icon="mdi:pump", value_fn=lambda d: d.get("mode"),
             attrs_fn=lambda d: {k: d[k] for k in ("alert",) if d.get(k) is not None},
         ),
+        ReefSensorDescription(
+            key="bp_feed_remaining", translation_key="bp_feed_remaining", icon="mdi:timer-sand",
+            device_class=SensorDeviceClass.DURATION, native_unit_of_measurement=UnitOfTime.SECONDS,
+            value_fn=lambda d: d.get("feed_remaining_s", 0) if d.get("mode") == "feedMode" else 0,
+        ),
         WIFI,
     ),
     pr.DEVICE_DOSING_PUMP: tuple(desc for ch in range(1, pr.DOSING_CHANNELS + 1) for desc in _dosing_sensors(ch)) + (WIFI,),

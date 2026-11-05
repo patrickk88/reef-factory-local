@@ -144,6 +144,9 @@
       },
       "dp_calibration": {
         "name": "Channel {channel} calibrated on"
+      },
+      "bp_feed_remaining": {
+        "name": "Feed pause remaining"
       }
     },
     "select": {
@@ -274,6 +277,9 @@
       },
       "bp_backlight": {
         "name": "Backlight"
+      },
+      "bp_feed_mode": {
+        "name": "Feed pause"
       }
     },
     "button": {

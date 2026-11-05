@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2 - 2026-11-05
+- Base pump: feed pause as a switch (`bpSet/mode feedMode` / `auto`) with the remaining time as a sensor
+  (`bpReport/feed` countdown); the mode follows `bpLog/mode`.
+
 ## 0.6.1 - 2026-11-05
 - Dosing pump Pro X4: unit fix - the device counts in 1/10000 ml (0.6.0 showed ten times too much).
 - Dosing pump Pro X4: actions `dosing_pump_dose` (manual dose) and `dosing_pump_set_schedule`, behind the

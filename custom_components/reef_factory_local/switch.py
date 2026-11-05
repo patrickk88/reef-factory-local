@@ -27,7 +27,7 @@ async def async_setup_entry(
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederFlag(c, "led"), ReefFeederFlag(c, "feeding_button")]
         if kind == pr.DEVICE_BASE_PUMP:
-            return [ReefBasePumpFlag(c, "display"), ReefBasePumpFlag(c, "backlight")]
+            return [ReefBasePumpFeed(c), ReefBasePumpFlag(c, "display"), ReefBasePumpFlag(c, "backlight")]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -147,6 +147,43 @@ class ReefBasePumpFlag(ReefEntity, SwitchEntity):
                                          bool(data.get("backlight", True)), d.join_id)
         try:
             await d.async_send(frame)
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Base pump not connected: {err}") from err
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._set(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._set(False)
+
+
+class ReefBasePumpFeed(ReefEntity, SwitchEntity):
+    """Feed pause of the Base pump: on = bpSet/mode feedMode (pump at feed speed for the feed time), off = auto."""
+
+    _attr_translation_key = "bp_feed_mode"
+    _attr_icon = "mdi:fish"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "bp_feed_mode")
+
+    @property
+    def available(self) -> bool:
+        return super().available and (self.coordinator.data or {}).get("mode") is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        mode = (self.coordinator.data or {}).get("mode")
+        return None if mode is None else mode == "feedMode"
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        d = self.coordinator.data or {}
+        return {k: d[k] for k in ("feed_remaining_s", "feed_mode_time", "feed_speed") if d.get(k) is not None} or None
+
+    async def _set(self, on: bool) -> None:
+        d = self.coordinator.device
+        try:
+            await d.async_send(pr.frame_bp_set_mode(d.serial, "feedMode" if on else "auto", d.join_id))
         except ConnectionError as err:
             raise HomeAssistantError(f"Base pump not connected: {err}") from err
 
