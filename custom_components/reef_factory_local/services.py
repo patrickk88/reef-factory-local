@@ -1,4 +1,4 @@
-"""Actions for Level keeper pump operations and Reef Flare programming.
+"""Actions for Level keeper pump operations, Reef Flare programming, feeder and dosing pump.
 
 Actions that run the pump (manual refill, calibration run, filling the hose)
 only work when the option "Allow pump actions" is enabled for that device.
@@ -21,6 +21,8 @@ from .const import CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, DOMAIN, MAX_MANUAL_REFIL
 
 ATTR_DEVICE_ID = "device_id"
 BASE = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
+# Reef Flare actions take one or more lights (e.g. two lights programmed together)
+FLARE_BASE = vol.Schema({vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string], vol.Length(min=1))})
 
 
 _WRONG_DEVICE = {pr.DEVICE_LEVEL_KEEPER: "not_level_keeper", pr.DEVICE_FLARE: "not_flare",
@@ -28,8 +30,8 @@ _WRONG_DEVICE = {pr.DEVICE_LEVEL_KEEPER: "not_level_keeper", pr.DEVICE_FLARE: "n
 
 
 def _coordinator(hass: HomeAssistant, call: ServiceCall, pump: bool = False,
-                 kind: str = pr.DEVICE_LEVEL_KEEPER):
-    device = dr.async_get(hass).async_get(call.data[ATTR_DEVICE_ID])
+                 kind: str = pr.DEVICE_LEVEL_KEEPER, device_id: str | None = None):
+    device = dr.async_get(hass).async_get(device_id or call.data[ATTR_DEVICE_ID])
     if device is not None:
         # HA >= 2026.x: one config entry per device (config_entries is deprecated)
         entry_ids = [device.config_entry_id] if getattr(device, "config_entry_id", None) else list(device.config_entries)
@@ -98,6 +100,14 @@ def _points(raw) -> list[dict]:
         raise _invalid(str(err)) from err
 
 
+async def _each(items, job) -> None:
+    """Run job(item) for every light at the same time; raise the first error after all ended."""
+    results = await asyncio.gather(*(job(item) for item in items), return_exceptions=True)
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
+
+
 def async_setup_services(hass: HomeAssistant) -> None:
     async def manual_refill(call: ServiceCall) -> None:
         c = _coordinator(hass, call, pump=True)
@@ -132,34 +142,110 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _send(c, pr.frame_lk_circuit_stop(c.serial))
 
     # --- Reef Flare -----------------------------------------------------------
-    def _flare(call: ServiceCall):
-        return _coordinator(hass, call, kind=pr.DEVICE_FLARE)
+    def _flares(call: ServiceCall) -> list:
+        ids = list(dict.fromkeys(call.data[ATTR_DEVICE_ID]))
+        return [_coordinator(hass, call, kind=pr.DEVICE_FLARE, device_id=i) for i in ids]
 
-    async def flare_program_set(call: ServiceCall) -> None:
-        c = _flare(call)
+    def _program_mode(c) -> dict:
         data = c.data or {}
         if data.get("mode") != "program":
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_program")
-        index = _program_index(data, call.data.get("program"))
+        return data
+
+    async def flare_program_set(call: ServiceCall) -> None:
         points = _points(call.data["points"])
-        if index != data.get("program_index"):
-            # writing another program would first switch the light to it - only the active program
-            # was confirmed on hardware, so select the program first (select entity), then write it
-            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_active_program")
-        intensity = call.data.get("intensity")
-        if intensity is None:
-            intensity = 100 if data.get("intensity") is None else data["intensity"]
-        await _send(c, pr.frame_rf_precise_update(c.serial, index, data.get("program_time_raw") or 0,
-                                                  points, intensity))
+        jobs = []
+        for c in _flares(call):  # check every light before writing to any
+            data = _program_mode(c)
+            index = _program_index(data, call.data.get("program"))
+            if index != data.get("program_index"):
+                # writing another program would first switch the light to it - only the active program
+                # was confirmed on hardware, so select the program first (select entity), then write it
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_active_program")
+            intensity = call.data.get("intensity")
+            if intensity is None:
+                intensity = 100 if data.get("intensity") is None else data["intensity"]
+            jobs.append((c, pr.frame_rf_precise_update(c.serial, index, data.get("program_time_raw") or 0,
+                                                       points, intensity)))
+        await _each(jobs, lambda job: _send(*job))
+
+    async def flare_manual(call: ServiceCall) -> None:
+        """Timed manual mode (Zeitschaltmodus): manual mode, levels of the active preset, duration.
+        Order confirmed 2026-11-05: the duration is only taken while the light is in manual mode;
+        when it runs out the light goes back to its program by itself."""
+        seconds = call.data["duration_min"] * 60
+        levels = call.data.get("levels")
+
+        async def job(c) -> None:
+            data = c.data or {}
+            if data.get("mode") != "manual":
+                await _send(c, pr.frame_rf_mode(c.serial, "manual"))
+                data = await _wait_for(c, lambda d: d.get("mode") == "manual" and bool(d.get("manual_presets")), 20)
+            if levels is not None:
+                try:
+                    presets = pr.flare_presets_with_levels(data.get("manual_presets") or [], levels)
+                except ValueError as err:
+                    raise _invalid(str(err)) from err
+                await _send(c, pr.frame_rf_manual_update(c.serial, presets))
+                await _wait_for(c, lambda d: d.get("levels") == list(levels), 15)
+            await _send(c, pr.frame_rf_manual_time(c.serial, seconds))
+            await _wait_for(c, lambda d: d.get("mode") == "manual" and d.get("manual_time_s") is not None
+                            and abs(d["manual_time_s"] - seconds) <= 30, 20)
+
+        await _each(_flares(call), job)
+
+    async def flare_program_create(call: ServiceCall) -> None:
+        """New program in a free slot: select the slot, write the points, name it, select back
+        (unless activate). Confirmed 2026-11-05 on both lights."""
+        name = call.data["name"]
+        activate = call.data["activate"]
+        plans = {}
+        coordinators = _flares(call)
+        for c in coordinators:  # check every light before writing to any
+            data = _program_mode(c)
+            names = data.get("programs") or []
+            if name in names:
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_program_exists",
+                                             translation_placeholders={"name": name})
+            slot = pr.flare_free_slot(names)
+            if slot is None:
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_no_free_slot")
+            points = _points(call.data["points"] if "points" in call.data else data.get("points") or [])
+            intensity = call.data.get("intensity")
+            if intensity is None:
+                intensity = 100 if data.get("intensity") is None else data["intensity"]
+            plans[id(c)] = (slot, points, intensity, data.get("program_index", 0))
+
+        async def job(c) -> None:
+            slot, points, intensity, back = plans[id(c)]
+            await _send(c, pr.frame_rf_select_program(c.serial, slot))
+            try:
+                data = await _wait_for(c, lambda d: d.get("program_index") == slot, 15)
+                await _send(c, pr.frame_rf_precise_update(c.serial, slot, data.get("program_time_raw") or 0,
+                                                          points, intensity))
+                await _wait_for(c, lambda d: d.get("program_index") == slot and d.get("intensity") == intensity
+                                and pr.flare_same_points(d.get("points"), points), 15)
+                await _send(c, pr.frame_rf_program_name(c.serial, slot, name))
+                await _wait_for(c, lambda d: (d.get("programs") or [])[slot:slot + 1] == [name], 15)
+            except Exception:
+                # never leave the light on the default program of the new slot
+                try:
+                    await _send(c, pr.frame_rf_select_program(c.serial, back))
+                except HomeAssistantError:
+                    pass
+                raise
+            if not activate:
+                await _send(c, pr.frame_rf_select_program(c.serial, back))
+                await _wait_for(c, lambda d: d.get("program_index") == back, 15)
+
+        await _each(coordinators, job)
 
     async def flare_acclimation_start(call: ServiceCall) -> None:
-        c = _flare(call)
-        await _send(c, pr.frame_rf_acclimation(c.serial, call.data["days"], call.data["start_pct"],
-                                               call.data["end_pct"]))
+        await _each(_flares(call), lambda c: _send(c, pr.frame_rf_acclimation(
+            c.serial, call.data["days"], call.data["start_pct"], call.data["end_pct"])))
 
     async def flare_acclimation_stop(call: ServiceCall) -> None:
-        c = _flare(call)
-        await _send(c, pr.frame_rf_acclimation(c.serial))
+        await _each(_flares(call), lambda c: _send(c, pr.frame_rf_acclimation(c.serial)))
 
     # --- Smart feeder (cloud replacement) --------------------------------------
     def _feeder(call: ServiceCall):
@@ -217,16 +303,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
     reg(DOMAIN, "feeder_set_schedule", feeder_set_schedule, BASE.extend(
         {vol.Required("entries"): vol.All(cv.ensure_list, [dict])}))
     pct = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
-    reg(DOMAIN, "flare_program_set", flare_program_set, BASE.extend({
+    reg(DOMAIN, "flare_program_set", flare_program_set, FLARE_BASE.extend({
         vol.Optional("program"): cv.string,
         vol.Required("points"): vol.All(cv.ensure_list, [dict]),
         vol.Optional("intensity"): pct,
     }))
-    reg(DOMAIN, "flare_acclimation_start", flare_acclimation_start, BASE.extend({
+    reg(DOMAIN, "flare_program_create", flare_program_create, FLARE_BASE.extend({
+        vol.Required("name"): vol.All(cv.string, vol.Strip, vol.Length(min=1, max=pr.FLARE_NAME_MAX)),
+        vol.Optional("points"): vol.All(cv.ensure_list, [dict]),
+        vol.Optional("intensity"): pct,
+        vol.Optional("activate", default=False): cv.boolean,
+    }))
+    reg(DOMAIN, "flare_manual", flare_manual, FLARE_BASE.extend({
+        vol.Optional("levels"): vol.All(cv.ensure_list, [pct], vol.Length(min=pr.FLARE_CHANNELS, max=pr.FLARE_CHANNELS)),
+        vol.Required("duration_min"): vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.FLARE_MANUAL_MAX_MIN)),
+    }))
+    reg(DOMAIN, "flare_acclimation_start", flare_acclimation_start, FLARE_BASE.extend({
         vol.Required("days"): vol.All(vol.Coerce(int), vol.Range(min=2, max=30)),
         vol.Required("start_pct"): pct, vol.Required("end_pct"): pct,
     }))
-    reg(DOMAIN, "flare_acclimation_stop", flare_acclimation_stop, BASE)
+    reg(DOMAIN, "flare_acclimation_stop", flare_acclimation_stop, FLARE_BASE)
 
     reg(DOMAIN, "manual_refill", manual_refill, BASE.extend(
         {vol.Required("amount_ml"): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_MANUAL_REFILL_ML))}))

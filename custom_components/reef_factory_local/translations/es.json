@@ -450,7 +450,7 @@
       "fields": {
         "device_id": {
           "name": "Dispositivo",
-          "description": "La Reef Flare."
+          "description": "Una o varias Reef Flare."
         },
         "program": {
           "name": "Programa",
@@ -466,13 +466,57 @@
         }
       }
     },
+    "flare_program_create": {
+      "name": "Flare: crear programa",
+      "description": "Crea un programa nuevo en un hueco libre: una copia del programa activo o los puntos indicados. La luz debe estar en modo programa; se queda en su programa actual salvo que 'Activar' esté encendido.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre del programa nuevo (máx. 16 caracteres, no debe existir)."
+        },
+        "points": {
+          "name": "Puntos",
+          "description": "Como en 'Escribir programa' (por defecto: copia del programa activo)."
+        },
+        "intensity": {
+          "name": "Intensidad",
+          "description": "Intensidad general (por defecto: la del programa activo)."
+        },
+        "activate": {
+          "name": "Activar",
+          "description": "Cambiar después al programa nuevo."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: modo manual temporizado",
+      "description": "Pone la(s) luz(ces) en modo manual durante un tiempo, opcionalmente con nuevos niveles para el preajuste manual activo. Al terminar el tiempo, la luz vuelve sola a su programa.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "levels": {
+          "name": "Niveles",
+          "description": "7 × 0–100 (UV, violeta, índigo, azul, verde, rojo, blanco) para el preajuste manual activo (por defecto: sin cambios)."
+        },
+        "duration_min": {
+          "name": "Duración",
+          "description": "Minutos en modo manual (1–360); después vuelve a funcionar el programa."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: iniciar aclimatación",
       "description": "Aumenta gradualmente la intensidad del programa activo desde el valor inicial hasta el final a lo largo del número de días indicado.",
       "fields": {
         "device_id": {
           "name": "Dispositivo",
-          "description": "La Reef Flare."
+          "description": "Una o varias Reef Flare."
         },
         "days": {
           "name": "Días",
@@ -494,7 +538,7 @@
       "fields": {
         "device_id": {
           "name": "Dispositivo",
-          "description": "La Reef Flare."
+          "description": "Una o varias Reef Flare."
         }
       }
     },
@@ -605,6 +649,12 @@
     },
     "flare_not_program": {
       "message": "Para esto, la luz debe estar en modo programa."
+    },
+    "flare_program_exists": {
+      "message": "Ya existe un programa llamado {name}."
+    },
+    "flare_no_free_slot": {
+      "message": "No hay hueco libre: la luz guarda 8 programas."
     },
     "no_answer": {
       "message": "El dispositivo no respondió a tiempo."

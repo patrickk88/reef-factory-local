@@ -450,7 +450,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Reef Flare."
+          "description": "One or more Reef Flares."
         },
         "program": {
           "name": "Program",
@@ -466,13 +466,57 @@
         }
       }
     },
+    "flare_program_create": {
+      "name": "Flare: create program",
+      "description": "Create a new program in a free slot: a copy of the active program, or the given points. The light must be in program mode; it stays on its current program unless 'Activate' is on.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "One or more Reef Flares."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the new program (max. 16 characters, must not exist yet)."
+        },
+        "points": {
+          "name": "Points",
+          "description": "Like 'Write program' (default: copy of the active program)."
+        },
+        "intensity": {
+          "name": "Intensity",
+          "description": "Overall intensity (default: that of the active program)."
+        },
+        "activate": {
+          "name": "Activate",
+          "description": "Switch to the new program afterwards."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: timed manual mode",
+      "description": "Switch the light(s) to manual mode for a while, optionally with new levels for the active manual preset. When the time runs out the light goes back to its program by itself.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "One or more Reef Flares."
+        },
+        "levels": {
+          "name": "Levels",
+          "description": "7 × 0–100 (UV, violet, indigo, blue, green, red, white) for the active manual preset (default: keep)."
+        },
+        "duration_min": {
+          "name": "Duration",
+          "description": "Minutes in manual mode (1–360); afterwards the program runs again."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: start acclimation",
       "description": "Ramp the active program's intensity from start to end over the given number of days.",
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Reef Flare."
+          "description": "One or more Reef Flares."
         },
         "days": {
           "name": "Days",
@@ -494,7 +538,7 @@
       "fields": {
         "device_id": {
           "name": "Device",
-          "description": "The Reef Flare."
+          "description": "One or more Reef Flares."
         }
       }
     },
@@ -605,6 +649,12 @@
     },
     "flare_not_program": {
       "message": "The light must be in program mode for this."
+    },
+    "flare_program_exists": {
+      "message": "A program named {name} already exists."
+    },
+    "flare_no_free_slot": {
+      "message": "No free program slot - the light stores 8 programs."
     },
     "no_answer": {
       "message": "The device did not answer in time."

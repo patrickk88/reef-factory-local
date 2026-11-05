@@ -371,6 +371,30 @@ def normalize_flare_points(points: list) -> list[dict]:
     return out
 
 
+FLARE_MANUAL_MAX_MIN = 360  # device UI: manual mode for 1 min .. 6 h
+
+
+def flare_free_slot(programs: list) -> int | None:
+    """First unnamed program slot after slot 0. Selecting it makes the light create a default program
+    there (confirmed 2026-11-05), which is then overwritten and named."""
+    return next((i for i, name in enumerate(programs or []) if i > 0 and not name), None)
+
+
+def flare_presets_with_levels(presets: list[dict], levels: list) -> list[dict]:
+    """Copy of the manual preset list with the levels of the active preset replaced."""
+    out = [dict(p, levels=list(p["levels"])) for p in presets]
+    if not out:
+        raise ValueError("no manual presets reported")
+    out[_active(out)]["levels"] = [_pct(v) for v in levels][:FLARE_CHANNELS]
+    return out
+
+
+def flare_same_points(reported, points: list[dict]) -> bool:
+    """Reported points (decode_flare) equal to normalized points?"""
+    return [(p["minute"], list(p["levels"])) for p in reported or []] == \
+        [(p["minute"], list(p["levels"])) for p in points]
+
+
 def frame_get_user(serial: str) -> bytes:
     """Only answered when sent with the device serial and a join id (checked 29.10.2026)."""
     return build_frame("get", "user", b"", serial, join_id())

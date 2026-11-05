@@ -68,6 +68,7 @@ flare_program_set:
       selector:
         device:
           integration: reef_factory_local
+          multiple: true
     program:
       selector:
         text:
@@ -82,6 +83,43 @@ flare_program_set:
           min: 0
           max: 100
           unit_of_measurement: "%"
+flare_program_create:
+  fields:
+    device_id: *flare_device
+    name:
+      required: true
+      example: Sommer
+      selector:
+        text:
+    points:
+      selector:
+        object:
+    intensity:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    activate:
+      default: false
+      selector:
+        boolean:
+flare_manual:
+  fields:
+    device_id: *flare_device
+    levels:
+      example: "[20, 44, 42, 39, 42, 41, 75]"
+      selector:
+        object:
+    duration_min:
+      required: true
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 360
+          unit_of_measurement: min
+          mode: box
 flare_acclimation_start:
   fields:
     device_id: *flare_device

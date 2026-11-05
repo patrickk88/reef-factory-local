@@ -450,7 +450,7 @@
       "fields": {
         "device_id": {
           "name": "Urządzenie",
-          "description": "Lampa Reef Flare."
+          "description": "Jedna lub więcej lamp Reef Flare."
         },
         "program": {
           "name": "Program",
@@ -466,13 +466,57 @@
         }
       }
     },
+    "flare_program_create": {
+      "name": "Flare: utwórz program",
+      "description": "Tworzy nowy program w wolnym miejscu: kopię aktywnego programu lub podane punkty. Lampa musi być w trybie programu; pozostaje przy obecnym programie, chyba że włączono „Aktywuj”.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Nazwa nowego programu (maks. 16 znaków, nie może już istnieć)."
+        },
+        "points": {
+          "name": "Punkty",
+          "description": "Jak w „Zapisz program” (domyślnie: kopia aktywnego programu)."
+        },
+        "intensity": {
+          "name": "Intensywność",
+          "description": "Ogólna intensywność (domyślnie: jak w aktywnym programie)."
+        },
+        "activate": {
+          "name": "Aktywuj",
+          "description": "Następnie przełącz na nowy program."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: tryb ręczny na czas",
+      "description": "Przełącza lampę (lub lampy) na pewien czas w tryb ręczny, opcjonalnie z nowymi poziomami dla aktywnego ustawienia ręcznego. Po upływie czasu lampa sama wraca do programu.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "levels": {
+          "name": "Poziomy",
+          "description": "7 × 0–100 (UV, fiolet, indygo, niebieski, zielony, czerwony, biały) dla aktywnego ustawienia ręcznego (domyślnie: bez zmian)."
+        },
+        "duration_min": {
+          "name": "Czas trwania",
+          "description": "Minuty w trybie ręcznym (1–360); potem znowu działa program."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: rozpocznij aklimatyzację",
       "description": "Stopniowo zmienia intensywność aktywnego programu od wartości początkowej do końcowej w ciągu podanej liczby dni.",
       "fields": {
         "device_id": {
           "name": "Urządzenie",
-          "description": "Lampa Reef Flare."
+          "description": "Jedna lub więcej lamp Reef Flare."
         },
         "days": {
           "name": "Dni",
@@ -494,7 +538,7 @@
       "fields": {
         "device_id": {
           "name": "Urządzenie",
-          "description": "Lampa Reef Flare."
+          "description": "Jedna lub więcej lamp Reef Flare."
         }
       }
     },
@@ -605,6 +649,12 @@
     },
     "flare_not_program": {
       "message": "Do tego światło musi być w trybie programu."
+    },
+    "flare_program_exists": {
+      "message": "Program o nazwie {name} już istnieje."
+    },
+    "flare_no_free_slot": {
+      "message": "Brak wolnego miejsca – lampa przechowuje 8 programów."
     },
     "no_answer": {
       "message": "Urządzenie nie odpowiedziało na czas."

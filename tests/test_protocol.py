@@ -159,6 +159,32 @@ def test_flare_manual_synthetic():
     payload = pr.frame_rf_manual_update("RFRFS62403220038", d["manual_presets"]).split(b"\x00", 4)[4][:-1]
     assert payload == blob[4:], (payload.hex(), blob[4:].hex())
 
+def test_flare_timed_manual_and_new_program_helpers():
+    """Helpers of flare_manual / flare_program_create (sequence confirmed on both lights 2026-11-05)."""
+    name = lambda s: s.encode("utf-16-be") + b"\x00\x00"
+    presets = name("") + b"\x01" + bytes([20, 44, 42, 39, 42, 41, 75]) + name("") + b"\x00" + bytes([20] * 7)
+    blob = bytes([29, 0x02, 0x01, 0x2C, 2]) + presets + bytes([100, 0])
+    d = pr.decode(pr.DEVICE_FLARE, pr.Frame("RFRFS62403220038", "rfRefresh", "manualData", "", blob))
+    assert d["manual_time_s"] == 300 and d["levels"] == [20, 44, 42, 39, 42, 41, 75], d
+    new = pr.flare_presets_with_levels(d["manual_presets"], [5, 5, 5, 5, 5, 5, 105])
+    assert new[0]["levels"] == [5, 5, 5, 5, 5, 5, 100] and new[1] == d["manual_presets"][1], new
+    assert d["manual_presets"][0]["levels"] == [20, 44, 42, 39, 42, 41, 75]  # input untouched
+    payload = pr.frame_rf_manual_update("RFRFS62403220038", new).split(b"\x00", 4)[4][:-1]
+    assert payload == blob[4:].replace(bytes([20, 44, 42, 39, 42, 41, 75]), bytes([5] * 6 + [100])), payload.hex()
+    try:
+        pr.flare_presets_with_levels([], [0] * 7)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("empty preset list accepted")
+    progs = ["Gemischte Kora75", "Gpt1", "Gpt2 stable 50%", "Gpt3 60% ziel", "", "", "", ""]
+    assert pr.flare_free_slot(progs) == 4
+    assert pr.flare_free_slot(["", "A", ""]) == 2 and pr.flare_free_slot(["A"] * 8) is None and pr.flare_free_slot(None) is None
+    pts = pr.normalize_flare_points([{"time": "00:00", "levels": [0] * 7}, {"time": "24:00", "levels": [1] * 7}])
+    rep = [{"time": "00:00", "minute": 0, "levels": [0] * 7}, {"time": "24:00", "minute": 1440, "levels": [1] * 7}]
+    assert pr.flare_same_points(rep, pts) and not pr.flare_same_points(rep[:1], pts) and not pr.flare_same_points(None, pts)
+    assert pr.FLARE_MANUAL_MAX_MIN * 60 <= 0xFFFE
+
 def test_flare_precise_update_roundtrip():
     """Re-encoding the active program unchanged must give the device's own program bytes."""
     fr = pr.parse_frame(FLARE_PRECISE)

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 - 2026-11-05
+- Reef Flare: action `flare_manual` - timed manual mode (the app's *timer mode*): manual mode, optional new
+  levels for the active manual preset, duration 1-360 min; the light goes back to its program by itself.
+  Confirmed on both lights: the duration is only taken while the light is already in manual mode.
+- Reef Flare: action `flare_program_create` - new program in the first free slot, a copy of the active
+  program or the given points; the light stays on its program unless `activate`. Confirmed on both lights
+  (select the slot, write the points, name it, select back).
+- All Reef Flare actions take one or more lights (two lights programmed together); `flare_program_set`
+  checks every light before writing to any.
+
 ## 0.8.2 - 2026-11-05
 - Dosing pump Pro X4: action `dosing_pump_set_name` renames a channel (`dpSettings/set` with `name`, captured
   from the app). Confirmed on the device, also with umlauts (sent as UTF-8 like the app). Not a pump action.

@@ -450,7 +450,7 @@
       "fields": {
         "device_id": {
           "name": "Apparaat",
-          "description": "De Reef Flare."
+          "description": "Eén of meer Reef Flares."
         },
         "program": {
           "name": "Programma",
@@ -466,13 +466,57 @@
         }
       }
     },
+    "flare_program_create": {
+      "name": "Flare: programma aanmaken",
+      "description": "Maakt een nieuw programma aan op een vrije plek: een kopie van het actieve programma of de opgegeven punten. De lamp moet in programmamodus staan; ze blijft op haar huidige programma, tenzij 'Activeren' aan staat.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Naam van het nieuwe programma (max. 16 tekens, mag nog niet bestaan)."
+        },
+        "points": {
+          "name": "Punten",
+          "description": "Zoals bij 'Programma schrijven' (standaard: kopie van het actieve programma)."
+        },
+        "intensity": {
+          "name": "Intensiteit",
+          "description": "Totale intensiteit (standaard: die van het actieve programma)."
+        },
+        "activate": {
+          "name": "Activeren",
+          "description": "Daarna naar het nieuwe programma overschakelen."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: getimede handmatige modus",
+      "description": "Zet de lamp(en) een tijdje in handmatige modus, optioneel met nieuwe niveaus voor de actieve handmatige voorinstelling. Als de tijd om is, gaat de lamp vanzelf terug naar haar programma.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "levels": {
+          "name": "Niveaus",
+          "description": "7 × 0–100 (UV, violet, indigo, blauw, groen, rood, wit) voor de actieve handmatige voorinstelling (standaard: ongewijzigd)."
+        },
+        "duration_min": {
+          "name": "Duur",
+          "description": "Minuten in handmatige modus (1–360); daarna loopt het programma weer."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: acclimatisatie starten",
       "description": "Verhoog de intensiteit van het actieve programma over het opgegeven aantal dagen van begin- naar eindwaarde.",
       "fields": {
         "device_id": {
           "name": "Apparaat",
-          "description": "De Reef Flare."
+          "description": "Eén of meer Reef Flares."
         },
         "days": {
           "name": "Dagen",
@@ -494,7 +538,7 @@
       "fields": {
         "device_id": {
           "name": "Apparaat",
-          "description": "De Reef Flare."
+          "description": "Eén of meer Reef Flares."
         }
       }
     },
@@ -605,6 +649,12 @@
     },
     "flare_not_program": {
       "message": "De lamp moet hiervoor in programmamodus staan."
+    },
+    "flare_program_exists": {
+      "message": "Er bestaat al een programma met de naam {name}."
+    },
+    "flare_no_free_slot": {
+      "message": "Geen vrije programmaplek - de lamp bewaart 8 programma's."
     },
     "no_answer": {
       "message": "Het apparaat heeft niet op tijd geantwoord."
