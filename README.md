@@ -197,6 +197,13 @@ minutes of the day, days as a bit mask with bit 0 = Monday); commands `sfExecute
 `sfSet/mode|settings|container`; events `sfLog/dose`, `sfLog/container`.
 See `custom_components/reef_factory_local/protocol.py` and `cloud.py`.
 
+## Support the project
+
+This is a hobby project, free for everyone. If it saved your tank's cloud-dependent gear, you can
+buy me a coffee - it goes into test hardware (a spare Reef Flare board, dosing pump parts) and time.
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-yellow?style=for-the-badge)](https://buymeacoffee.com/patrical)
+
 ## License
 
 MIT - see `LICENSE`. This repository contains only original code: no firmware, app files, certificates
