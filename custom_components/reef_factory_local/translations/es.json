@@ -1,0 +1,651 @@
+{
+  "config": {
+    "step": {
+      "device": {
+        "title": "Dispositivo Reef Factory",
+        "description": "Dirección IP del dispositivo en tu red. El número de serie y el tipo se leen del dispositivo.",
+        "data": {
+          "host": "Dirección IP"
+        }
+      },
+      "user": {
+        "title": "¿Qué quieres añadir?",
+        "menu_options": {
+          "device": "Un dispositivo por dirección IP (Level keeper, Thermo control, Reef Flare)",
+          "cloud": "Reemplazo de la nube para dispositivos que solo funcionan con la nube (Smart feeder, bombas)"
+        },
+        "description": "Proyecto comunitario no oficial, sin relación con Reef Factory. Úsalo bajo tu propia responsabilidad: estos dispositivos controlan bombas, calentadores, luces y bombas dosificadoras - un ajuste incorrecto puede dañar tu acuario. Las acciones de bomba permanecen desactivadas hasta que las habilites en las opciones."
+      },
+      "cloud": {
+        "title": "Reemplazo de la nube",
+        "description": "Home Assistant responde en los puertos 442 y 444 como si fuera api.reeffactory.com. Haz que ese nombre apunte a este equipo en tu router o filtro DNS (consulta el README). El reenvío (passthrough) mantiene la app oficial funcionando mientras exista la nube real.",
+        "data": {
+          "cloud_mode": "Modo"
+        }
+      },
+      "reconfigure": {
+        "title": "Cambiar la dirección del dispositivo",
+        "description": "Nueva dirección IP o nombre de host de {name}. El dispositivo se verifica por su número de serie.",
+        "data": {
+          "host": "Dirección IP o nombre de host"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Sin respuesta. Comprueba la dirección IP y si otro programa ya está conectado al dispositivo.",
+      "unsupported_device": "El dispositivo {serial} no es compatible (por ahora: Level keeper, Thermo control, Reef Flare).",
+      "wrong_device": "En esta dirección responde otro dispositivo Reef Factory."
+    },
+    "abort": {
+      "already_configured": "El dispositivo ya está configurado.",
+      "reconfigure_successful": "Dirección cambiada, el dispositivo se está reconectando.",
+      "reconfigure_cloud": "El reemplazo de la nube no tiene ninguna dirección que cambiar - los dispositivos lo encuentran a través de tu redirección DNS."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Acciones de bomba",
+        "description": "El rellenado manual, el ciclo de calibración y el llenado de la manguera ponen en marcha la bomba. Si se usan mal, el acuario puede desbordarse. Las acciones de parada siempre funcionan.",
+        "data": {
+          "allow_pump_actions": "Permitir acciones de bomba"
+        }
+      },
+      "cloud": {
+        "title": "Reemplazo de la nube",
+        "data": {
+          "cloud_mode": "Modo",
+          "upstream_ips": "Direcciones de la nube real (opcional, separadas por comas)",
+          "allow_pump_actions": "Permitir acciones de bomba",
+          "low_container_days": "Avisar cuando a un recipiente le queden estos días"
+        },
+        "data_description": {
+          "upstream_ips": "Déjalo vacío para resolver api.reeffactory.com mediante un servidor DNS público.",
+          "allow_pump_actions": "Las dosis manuales y los cambios de horario de la bomba dosificadora ponen en marcha la bomba y cambian lo que entra en el acuario. La lectura siempre está permitida.",
+          "low_container_days": "Se aplica a los canales de la Dosing pump Pro X4 y al Smart feeder: el sensor binario \"recipiente bajo\" se activa con este número de días o menos."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "refilled_today": {
+        "name": "Rellenado hoy"
+      },
+      "water_level": {
+        "name": "Nivel de agua",
+        "state": {
+          "ok": "O.K.",
+          "refilling": "Rellenando",
+          "manual_refill": "Rellenado manual",
+          "filling_circuit": "Llenando la manguera",
+          "calibrating": "Calibrando",
+          "water_high": "Nivel de agua alto",
+          "water_low": "Nivel de agua bajo",
+          "temporarily_off": "Apagado temporalmente",
+          "unknown": "Desconocido"
+        }
+      },
+      "refill_time": {
+        "name": "Tiempo de rellenado actual"
+      },
+      "calibration_date": {
+        "name": "Próxima calibración"
+      },
+      "thermo_state": {
+        "name": "Estado de la salida",
+        "state": {
+          "heating": "Calentando",
+          "cooling": "Enfriando",
+          "idle": "Inactivo"
+        }
+      },
+      "housing_temperature": {
+        "name": "Temperatura de la carcasa"
+      },
+      "intensity": {
+        "name": "Intensidad"
+      },
+      "light_mode": {
+        "name": "Modo",
+        "state": {
+          "program": "Programa",
+          "off": "Apagado",
+          "dashboard": "Panel",
+          "manual": "Manual"
+        }
+      },
+      "program": {
+        "name": "Programa"
+      },
+      "next_feeding": {
+        "name": "Próxima alimentación"
+      },
+      "last_feeding": {
+        "name": "Última alimentación"
+      },
+      "days_to_end": {
+        "name": "Días hasta vaciarse"
+      },
+      "daily_dose": {
+        "name": "Alimentado hoy"
+      },
+      "schedule": {
+        "name": "Horario"
+      },
+      "wifi_rssi": {
+        "name": "Señal Wi-Fi"
+      },
+      "bp_mode": {
+        "name": "Modo"
+      },
+      "dp_next_dose": {
+        "name": "Canal {channel} próxima dosis"
+      },
+      "dp_last_dose": {
+        "name": "Canal {channel} última dosis"
+      },
+      "dp_dosed_today": {
+        "name": "Canal {channel} dosificado hoy"
+      },
+      "dp_container": {
+        "name": "Canal {channel} recipiente"
+      },
+      "dp_days_to_replace": {
+        "name": "Canal {channel} días hasta vaciarse"
+      },
+      "dp_calibration": {
+        "name": "Canal {channel} calibrado el"
+      },
+      "bp_feed_remaining": {
+        "name": "Tiempo restante de pausa de alimentación"
+      }
+    },
+    "select": {
+      "refill_cycle": {
+        "name": "Ciclo de rellenado",
+        "state": {
+          "off": "Apagado",
+          "every_60_min": "60 min",
+          "every_30_min": "30 min",
+          "every_10_min": "10 min",
+          "constant": "Constante",
+          "hysteresis": "Histéresis"
+        }
+      },
+      "flare_mode": {
+        "name": "Modo",
+        "state": {
+          "program": "Programa",
+          "manual": "Manual",
+          "off": "Apagado"
+        }
+      },
+      "flare_program": {
+        "name": "Programa"
+      },
+      "flare_preset": {
+        "name": "Preajuste manual"
+      },
+      "feeder_mode": {
+        "name": "Modo de alimentación",
+        "state": {
+          "schedule": "Horario",
+          "interval": "Intervalo"
+        }
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Calefacción"
+      },
+      "cooling": {
+        "name": "Refrigeración"
+      },
+      "calibration_needed": {
+        "name": "Calibración pendiente"
+      },
+      "cloud_connected": {
+        "name": "Nube conectada"
+      },
+      "container_empty": {
+        "name": "Recipiente vacío"
+      },
+      "cloud_passthrough": {
+        "name": "Nube real"
+      },
+      "bp_alert": {
+        "name": "Alerta"
+      },
+      "dp_container_low": {
+        "name": "Canal {channel} recipiente bajo"
+      },
+      "container_low": {
+        "name": "Queda poca comida"
+      }
+    },
+    "number": {
+      "max_refill_time": {
+        "name": "Tiempo máx. de rellenado"
+      },
+      "refill_pause": {
+        "name": "Pausar rellenado"
+      },
+      "alarm_low": {
+        "name": "Alarma por debajo de"
+      },
+      "range_low": {
+        "name": "Rango objetivo inferior"
+      },
+      "range_high": {
+        "name": "Rango objetivo superior"
+      },
+      "alarm_high": {
+        "name": "Alarma por encima de"
+      },
+      "flare_intensity": {
+        "name": "Intensidad"
+      },
+      "feeder_container": {
+        "name": "Comida en el recipiente"
+      },
+      "feeder_container_size": {
+        "name": "Capacidad del recipiente"
+      },
+      "feeder_single_dose": {
+        "name": "Dosis por giro"
+      },
+      "feeder_interval_minutes": {
+        "name": "Intervalo"
+      },
+      "feeder_interval_rotations": {
+        "name": "Giros por intervalo"
+      },
+      "feeder_reminder_days": {
+        "name": "Recordatorio de rellenado"
+      },
+      "bp_speed": {
+        "name": "Velocidad"
+      },
+      "bp_feed_mode_time": {
+        "name": "Duración del modo alimentación"
+      },
+      "bp_feed_speed": {
+        "name": "Velocidad en modo alimentación"
+      }
+    },
+    "switch": {
+      "display_light": {
+        "name": "Luz de la pantalla"
+      },
+      "tc_sound": {
+        "name": "Pitido"
+      },
+      "tc_light": {
+        "name": "Luz de la pantalla"
+      },
+      "feeder_led": {
+        "name": "Retroiluminación LED"
+      },
+      "feeder_feeding_button": {
+        "name": "Botón de alimentación"
+      },
+      "bp_display": {
+        "name": "Pantalla"
+      },
+      "bp_backlight": {
+        "name": "Retroiluminación"
+      },
+      "bp_feed_mode": {
+        "name": "Pausa de alimentación"
+      }
+    },
+    "button": {
+      "sync_time": {
+        "name": "Ajustar reloj"
+      },
+      "stop_pump": {
+        "name": "Detener acción de bomba"
+      },
+      "feed_now": {
+        "name": "Alimentar ahora"
+      }
+    }
+  },
+  "selector": {
+    "reminder": {
+      "options": {
+        "1_week": "1 semana",
+        "2_weeks": "2 semanas",
+        "1_month": "1 mes",
+        "3_months": "3 meses"
+      }
+    }
+  },
+  "services": {
+    "manual_refill": {
+      "name": "Rellenado manual",
+      "description": "Rellena la cantidad indicada (máx. 1000 mL). Requiere que las acciones de bomba estén permitidas.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        },
+        "amount_ml": {
+          "name": "Cantidad",
+          "description": "Cantidad en mL."
+        }
+      }
+    },
+    "manual_refill_stop": {
+      "name": "Detener rellenado manual",
+      "description": "Detiene un rellenado manual en curso.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        }
+      }
+    },
+    "calibration_start": {
+      "name": "Iniciar ciclo de calibración",
+      "description": "Hace funcionar la bomba durante el tiempo indicado. ¡Primero coloca la manguera en un vaso medidor! Requiere que las acciones de bomba estén permitidas.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        },
+        "duration_s": {
+          "name": "Duración",
+          "description": "Tiempo de funcionamiento en segundos."
+        }
+      }
+    },
+    "calibration_value": {
+      "name": "Finalizar calibración",
+      "description": "Introduce la cantidad medida tras el ciclo de calibración.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        },
+        "measured_ml": {
+          "name": "Cantidad medida",
+          "description": "Cantidad en el vaso medidor en mL."
+        },
+        "reminder": {
+          "name": "Recordatorio",
+          "description": "Cuándo recordarte que vuelvas a calibrar."
+        }
+      }
+    },
+    "calibration_stop": {
+      "name": "Detener calibración",
+      "description": "Detiene un ciclo de calibración en curso.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        }
+      }
+    },
+    "fill_hose_start": {
+      "name": "Llenar manguera",
+      "description": "Hace funcionar la bomba para llenar la manguera. Requiere que las acciones de bomba estén permitidas.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        }
+      }
+    },
+    "fill_hose_stop": {
+      "name": "Detener llenado de manguera",
+      "description": "Detiene el llenado de la manguera.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Level keeper."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: modo manual",
+      "description": "Cambia la luz al modo manual, opcionalmente con un preajuste y una duración. Al terminar la duración, la luz vuelve a su programa.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        },
+        "preset": {
+          "name": "Preajuste",
+          "description": "Nombre del preajuste manual que se activará (opcional)."
+        },
+        "duration_min": {
+          "name": "Duración",
+          "description": "Minutos hasta que la luz vuelve al programa; 0 = permanecer en modo manual."
+        }
+      }
+    },
+    "flare_preset_set": {
+      "name": "Flare: cambiar preajuste manual",
+      "description": "Cambia los niveles de canal, la intensidad o el nombre de un preajuste manual. La luz debe estar en modo manual.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        },
+        "preset": {
+          "name": "Preajuste",
+          "description": "Nombre del preajuste que se cambiará."
+        },
+        "levels": {
+          "name": "Niveles de canal",
+          "description": "7 valores 0–100 % en orden de canal: UV, violeta, índigo, azul, verde, rojo, blanco."
+        },
+        "intensity": {
+          "name": "Intensidad",
+          "description": "Intensidad general de este preajuste."
+        },
+        "new_name": {
+          "name": "Nombre nuevo",
+          "description": "Hasta 16 caracteres."
+        }
+      }
+    },
+    "flare_program_set": {
+      "name": "Flare: escribir programa",
+      "description": "Reemplaza los puntos de un programa guardado. La luz debe estar en modo programa; si es otro programa, pasa a ser el activo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        },
+        "program": {
+          "name": "Programa",
+          "description": "Nombre del programa (por defecto: el programa activo)."
+        },
+        "points": {
+          "name": "Puntos",
+          "description": "Lista de {time: 'HH:MM', levels: [7 × 0–100]} (canales UV, violeta, índigo, azul, verde, rojo, blanco); el primero a las 00:00, el último a las 24:00, como máximo 31 puntos."
+        },
+        "intensity": {
+          "name": "Intensidad",
+          "description": "Intensidad general (por defecto: sin cambios)."
+        }
+      }
+    },
+    "flare_program_rename": {
+      "name": "Flare: renombrar programa",
+      "description": "Renombra un programa guardado.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        },
+        "program": {
+          "name": "Programa",
+          "description": "Nombre actual."
+        },
+        "new_name": {
+          "name": "Nombre nuevo",
+          "description": "Hasta 16 caracteres."
+        }
+      }
+    },
+    "flare_acclimation_start": {
+      "name": "Flare: iniciar aclimatación",
+      "description": "Aumenta gradualmente la intensidad del programa activo desde el valor inicial hasta el final a lo largo del número de días indicado.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        },
+        "days": {
+          "name": "Días",
+          "description": "2–30 días."
+        },
+        "start_pct": {
+          "name": "Intensidad inicial",
+          "description": "Intensidad el primer día."
+        },
+        "end_pct": {
+          "name": "Intensidad final",
+          "description": "Intensidad el último día."
+        }
+      }
+    },
+    "flare_acclimation_stop": {
+      "name": "Flare: detener aclimatación",
+      "description": "Finaliza una aclimatación en curso.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        }
+      }
+    },
+    "flare_preview_start": {
+      "name": "Flare: iniciar vista previa del programa",
+      "description": "Reproduce el programa activo de forma acelerada (como en la página web del dispositivo).",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        }
+      }
+    },
+    "flare_preview_stop": {
+      "name": "Flare: detener vista previa del programa",
+      "description": "Finaliza la vista previa del programa.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Reef Flare."
+        }
+      }
+    },
+    "feeder_feed": {
+      "name": "Feeder: alimentar",
+      "description": "Hace funcionar el comedero manualmente.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Smart feeder."
+        },
+        "rotations": {
+          "name": "Giros",
+          "description": "Número de giros del tambor (1 = como el botón del dispositivo)."
+        }
+      }
+    },
+    "feeder_set_schedule": {
+      "name": "Feeder: establecer horario",
+      "description": "Reemplaza todo el horario de alimentación.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Smart feeder."
+        },
+        "entries": {
+          "name": "Entradas",
+          "description": "Lista de {time: 'HH:MM', rotations: n, days: [mon..sun] or bit mask (127 = daily)}."
+        }
+      }
+    },
+    "dosing_pump_dose": {
+      "name": "Bomba dosificadora: dosificar ahora",
+      "description": "Dosifica una cantidad en un canal ahora mismo (como la dosis manual de la app). Requiere 'Permitir acciones de bomba' en las opciones del reemplazo de la nube.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Canal",
+          "description": "1-4 (A-D)."
+        },
+        "ml": {
+          "name": "Cantidad",
+          "description": "Mililitros."
+        }
+      }
+    },
+    "dosing_pump_set_schedule": {
+      "name": "Bomba dosificadora: establecer horario",
+      "description": "Reemplaza todo el horario de un canal. Requiere 'Permitir acciones de bomba' en las opciones del reemplazo de la nube.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Canal",
+          "description": "1-4 (A-D)."
+        },
+        "entries": {
+          "name": "Entradas",
+          "description": "Lista de {time: 'HH:MM', ml: x, days: [mon..sun] or bit mask (127 = daily)}. Una lista vacía borra el horario."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "pump_actions_disabled": {
+      "message": "Las acciones de bomba no están permitidas para este dispositivo. Habilítalas en Ajustes → Dispositivos y servicios → Reef Factory Local → Configurar."
+    },
+    "not_level_keeper": {
+      "message": "Esta acción solo está disponible para el Level keeper."
+    },
+    "unknown_device": {
+      "message": "Dispositivo no encontrado o no cargado."
+    },
+    "not_connected": {
+      "message": "El dispositivo no está conectado en este momento."
+    },
+    "thermo_order": {
+      "message": "Los umbrales deben seguir este orden: alarma por debajo de < rango objetivo inferior < rango objetivo superior < alarma por encima de."
+    },
+    "not_flare": {
+      "message": "Esta acción solo está disponible para la Reef Flare."
+    },
+    "flare_not_manual": {
+      "message": "Para esto, la luz debe estar en modo manual."
+    },
+    "flare_not_program": {
+      "message": "Para esto, la luz debe estar en modo programa."
+    },
+    "no_answer": {
+      "message": "El dispositivo no respondió a tiempo."
+    },
+    "invalid_value": {
+      "message": "Valor no válido: {reason}"
+    },
+    "not_feeder": {
+      "message": "Esta acción solo está disponible para el Smart feeder."
+    },
+    "not_dosing_pump": {
+      "message": "Esta acción solo está disponible para la Dosing pump Pro X4."
+    }
+  }
+}

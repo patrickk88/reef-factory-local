@@ -1,0 +1,651 @@
+{
+  "config": {
+    "step": {
+      "device": {
+        "title": "Reef Factory-apparaat",
+        "description": "IP-adres van het apparaat in je netwerk. Serienummer en type worden uit het apparaat gelezen.",
+        "data": {
+          "host": "IP-adres"
+        }
+      },
+      "user": {
+        "title": "Wat wil je toevoegen?",
+        "menu_options": {
+          "device": "Een apparaat via IP-adres (Level keeper, Thermo control, Reef Flare)",
+          "cloud": "Cloudvervanger voor apparaten die alleen via de cloud werken (Smart feeder, pompen)"
+        },
+        "description": "Onofficieel communityproject, niet verbonden aan Reef Factory. Gebruik op eigen risico: deze apparaten sturen pompen, verwarmers, verlichting en doseerpompen aan - een verkeerde instelling kan je aquarium schaden. Pompacties blijven uitgeschakeld totdat je ze in de opties inschakelt."
+      },
+      "cloud": {
+        "title": "Cloudvervanger",
+        "description": "Home Assistant antwoordt op poort 442 en 444 alsof het api.reeffactory.com is. Laat die naam in je router of DNS-filter naar deze host wijzen (zie README). Met doorsturen (passthrough) blijft de officiële app werken zolang de echte cloud nog bestaat.",
+        "data": {
+          "cloud_mode": "Modus"
+        }
+      },
+      "reconfigure": {
+        "title": "Apparaatadres wijzigen",
+        "description": "Nieuw IP-adres of nieuwe hostnaam van {name}. Het apparaat wordt herkend aan zijn serienummer.",
+        "data": {
+          "host": "IP-adres of hostnaam"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Geen antwoord. Controleer het IP-adres en of er al een ander programma met het apparaat verbonden is.",
+      "unsupported_device": "Apparaat {serial} wordt niet ondersteund (tot nu toe: Level keeper, Thermo control, Reef Flare).",
+      "wrong_device": "Op dit adres antwoordt een ander Reef Factory-apparaat."
+    },
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd.",
+      "reconfigure_successful": "Adres gewijzigd, het apparaat maakt opnieuw verbinding.",
+      "reconfigure_cloud": "De cloudvervanger heeft geen adres om te wijzigen - apparaten vinden hem via je DNS-omleiding."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pompacties",
+        "description": "Handmatig bijvullen, de kalibratierun en slang vullen laten de pomp draaien. Bij verkeerd gebruik kan het aquarium overlopen. Stopacties werken altijd.",
+        "data": {
+          "allow_pump_actions": "Pompacties toestaan"
+        }
+      },
+      "cloud": {
+        "title": "Cloudvervanger",
+        "data": {
+          "cloud_mode": "Modus",
+          "upstream_ips": "Adressen van de echte cloud (optioneel, kommagescheiden)",
+          "allow_pump_actions": "Pompacties toestaan",
+          "low_container_days": "Waarschuwen als een reservoir nog zoveel dagen meegaat"
+        },
+        "data_description": {
+          "upstream_ips": "Laat leeg om api.reeffactory.com via een openbare DNS-server op te zoeken.",
+          "allow_pump_actions": "Handmatige doseringen en schemawijzigingen van de doseerpomp laten de pomp draaien en veranderen wat er in het aquarium komt. Uitlezen is altijd toegestaan.",
+          "low_container_days": "Geldt voor de kanalen van de Dosing pump Pro X4 en de Smart feeder: de binaire sensor \"reservoir bijna leeg\" gaat aan bij dit aantal dagen of minder."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "refilled_today": {
+        "name": "Vandaag bijgevuld"
+      },
+      "water_level": {
+        "name": "Waterniveau",
+        "state": {
+          "ok": "OK",
+          "refilling": "Bijvullen",
+          "manual_refill": "Handmatig bijvullen",
+          "filling_circuit": "Slang vullen",
+          "calibrating": "Kalibreren",
+          "water_high": "Waterniveau hoog",
+          "water_low": "Waterniveau laag",
+          "temporarily_off": "Tijdelijk uit",
+          "unknown": "Onbekend"
+        }
+      },
+      "refill_time": {
+        "name": "Huidige bijvultijd"
+      },
+      "calibration_date": {
+        "name": "Volgende kalibratie"
+      },
+      "thermo_state": {
+        "name": "Uitgangsstatus",
+        "state": {
+          "heating": "Verwarmen",
+          "cooling": "Koelen",
+          "idle": "Inactief"
+        }
+      },
+      "housing_temperature": {
+        "name": "Behuizingstemperatuur"
+      },
+      "intensity": {
+        "name": "Intensiteit"
+      },
+      "light_mode": {
+        "name": "Modus",
+        "state": {
+          "program": "Programma",
+          "off": "Uit",
+          "dashboard": "Dashboard",
+          "manual": "Handmatig"
+        }
+      },
+      "program": {
+        "name": "Programma"
+      },
+      "next_feeding": {
+        "name": "Volgende voerbeurt"
+      },
+      "last_feeding": {
+        "name": "Laatste voerbeurt"
+      },
+      "days_to_end": {
+        "name": "Dagen tot leeg"
+      },
+      "daily_dose": {
+        "name": "Vandaag gevoerd"
+      },
+      "schedule": {
+        "name": "Schema"
+      },
+      "wifi_rssi": {
+        "name": "Wifi-signaal"
+      },
+      "bp_mode": {
+        "name": "Modus"
+      },
+      "dp_next_dose": {
+        "name": "Kanaal {channel} volgende dosering"
+      },
+      "dp_last_dose": {
+        "name": "Kanaal {channel} laatste dosering"
+      },
+      "dp_dosed_today": {
+        "name": "Kanaal {channel} vandaag gedoseerd"
+      },
+      "dp_container": {
+        "name": "Kanaal {channel} reservoir"
+      },
+      "dp_days_to_replace": {
+        "name": "Kanaal {channel} dagen tot leeg"
+      },
+      "dp_calibration": {
+        "name": "Kanaal {channel} gekalibreerd op"
+      },
+      "bp_feed_remaining": {
+        "name": "Resterende voerpauze"
+      }
+    },
+    "select": {
+      "refill_cycle": {
+        "name": "Bijvulcyclus",
+        "state": {
+          "off": "Uit",
+          "every_60_min": "60 min",
+          "every_30_min": "30 min",
+          "every_10_min": "10 min",
+          "constant": "Constant",
+          "hysteresis": "Hysterese"
+        }
+      },
+      "flare_mode": {
+        "name": "Modus",
+        "state": {
+          "program": "Programma",
+          "manual": "Handmatig",
+          "off": "Uit"
+        }
+      },
+      "flare_program": {
+        "name": "Programma"
+      },
+      "flare_preset": {
+        "name": "Handmatige voorinstelling"
+      },
+      "feeder_mode": {
+        "name": "Voermodus",
+        "state": {
+          "schedule": "Schema",
+          "interval": "Interval"
+        }
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Verwarming"
+      },
+      "cooling": {
+        "name": "Koeling"
+      },
+      "calibration_needed": {
+        "name": "Kalibratie nodig"
+      },
+      "cloud_connected": {
+        "name": "Cloud verbonden"
+      },
+      "container_empty": {
+        "name": "Reservoir leeg"
+      },
+      "cloud_passthrough": {
+        "name": "Echte cloud"
+      },
+      "bp_alert": {
+        "name": "Alarm"
+      },
+      "dp_container_low": {
+        "name": "Kanaal {channel} reservoir bijna leeg"
+      },
+      "container_low": {
+        "name": "Voer bijna op"
+      }
+    },
+    "number": {
+      "max_refill_time": {
+        "name": "Max. bijvultijd"
+      },
+      "refill_pause": {
+        "name": "Bijvullen pauzeren"
+      },
+      "alarm_low": {
+        "name": "Alarm onder"
+      },
+      "range_low": {
+        "name": "Doelbereik ondergrens"
+      },
+      "range_high": {
+        "name": "Doelbereik bovengrens"
+      },
+      "alarm_high": {
+        "name": "Alarm boven"
+      },
+      "flare_intensity": {
+        "name": "Intensiteit"
+      },
+      "feeder_container": {
+        "name": "Voer in reservoir"
+      },
+      "feeder_container_size": {
+        "name": "Reservoircapaciteit"
+      },
+      "feeder_single_dose": {
+        "name": "Dosis per omwenteling"
+      },
+      "feeder_interval_minutes": {
+        "name": "Interval"
+      },
+      "feeder_interval_rotations": {
+        "name": "Omwentelingen per interval"
+      },
+      "feeder_reminder_days": {
+        "name": "Bijvulherinnering"
+      },
+      "bp_speed": {
+        "name": "Snelheid"
+      },
+      "bp_feed_mode_time": {
+        "name": "Duur voermodus"
+      },
+      "bp_feed_speed": {
+        "name": "Snelheid voermodus"
+      }
+    },
+    "switch": {
+      "display_light": {
+        "name": "Displayverlichting"
+      },
+      "tc_sound": {
+        "name": "Pieptoon"
+      },
+      "tc_light": {
+        "name": "Displayverlichting"
+      },
+      "feeder_led": {
+        "name": "LED-achtergrondverlichting"
+      },
+      "feeder_feeding_button": {
+        "name": "Voerknop"
+      },
+      "bp_display": {
+        "name": "Display"
+      },
+      "bp_backlight": {
+        "name": "Achtergrondverlichting"
+      },
+      "bp_feed_mode": {
+        "name": "Voerpauze"
+      }
+    },
+    "button": {
+      "sync_time": {
+        "name": "Klok instellen"
+      },
+      "stop_pump": {
+        "name": "Pompactie stoppen"
+      },
+      "feed_now": {
+        "name": "Nu voeren"
+      }
+    }
+  },
+  "selector": {
+    "reminder": {
+      "options": {
+        "1_week": "1 week",
+        "2_weeks": "2 weken",
+        "1_month": "1 maand",
+        "3_months": "3 maanden"
+      }
+    }
+  },
+  "services": {
+    "manual_refill": {
+      "name": "Handmatig bijvullen",
+      "description": "Vult de opgegeven hoeveelheid bij (max. 1000 mL). Pompacties moeten toegestaan zijn.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        },
+        "amount_ml": {
+          "name": "Hoeveelheid",
+          "description": "Hoeveelheid in mL."
+        }
+      }
+    },
+    "manual_refill_stop": {
+      "name": "Handmatig bijvullen stoppen",
+      "description": "Stopt een lopende handmatige bijvulling.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        }
+      }
+    },
+    "calibration_start": {
+      "name": "Kalibratierun starten",
+      "description": "Laat de pomp de opgegeven tijd draaien. Hang de slang eerst in een maatbeker! Pompacties moeten toegestaan zijn.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        },
+        "duration_s": {
+          "name": "Duur",
+          "description": "Looptijd in seconden."
+        }
+      }
+    },
+    "calibration_value": {
+      "name": "Kalibratie afronden",
+      "description": "Voer de gemeten hoeveelheid na de kalibratierun in.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        },
+        "measured_ml": {
+          "name": "Gemeten hoeveelheid",
+          "description": "Hoeveelheid in de maatbeker in mL."
+        },
+        "reminder": {
+          "name": "Herinnering",
+          "description": "Wanneer je eraan herinnerd wilt worden om opnieuw te kalibreren."
+        }
+      }
+    },
+    "calibration_stop": {
+      "name": "Kalibratie stoppen",
+      "description": "Stopt een lopende kalibratierun.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        }
+      }
+    },
+    "fill_hose_start": {
+      "name": "Slang vullen",
+      "description": "Laat de pomp draaien om de slang te vullen. Pompacties moeten toegestaan zijn.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        }
+      }
+    },
+    "fill_hose_stop": {
+      "name": "Slang vullen stoppen",
+      "description": "Stopt het vullen van de slang.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Level keeper."
+        }
+      }
+    },
+    "flare_manual": {
+      "name": "Flare: handmatige modus",
+      "description": "Zet de lamp in de handmatige modus, optioneel met een voorinstelling en een duur. Na afloop keert de lamp terug naar zijn programma.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        },
+        "preset": {
+          "name": "Voorinstelling",
+          "description": "Naam van de handmatige voorinstelling die je wilt activeren (optioneel)."
+        },
+        "duration_min": {
+          "name": "Duur",
+          "description": "Minuten totdat de lamp terugkeert naar het programma; 0 = in handmatige modus blijven."
+        }
+      }
+    },
+    "flare_preset_set": {
+      "name": "Flare: handmatige voorinstelling wijzigen",
+      "description": "Wijzig kanaalniveaus, intensiteit of naam van een handmatige voorinstelling. De lamp moet in handmatige modus staan.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        },
+        "preset": {
+          "name": "Voorinstelling",
+          "description": "Naam van de voorinstelling die je wilt wijzigen."
+        },
+        "levels": {
+          "name": "Kanaalniveaus",
+          "description": "7 waarden 0–100 % in kanaalvolgorde: UV, violet, indigo, blauw, groen, rood, wit."
+        },
+        "intensity": {
+          "name": "Intensiteit",
+          "description": "Totale intensiteit van deze voorinstelling."
+        },
+        "new_name": {
+          "name": "Nieuwe naam",
+          "description": "Maximaal 16 tekens."
+        }
+      }
+    },
+    "flare_program_set": {
+      "name": "Flare: programma schrijven",
+      "description": "Vervang de punten van een opgeslagen programma. De lamp moet in programmamodus staan; een ander programma wordt daarbij het actieve.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Programmanaam (standaard: het actieve programma)."
+        },
+        "points": {
+          "name": "Punten",
+          "description": "Lijst van {time: 'HH:MM', levels: [7 × 0–100]} (kanalen UV, violet, indigo, blauw, groen, rood, wit); eerste 00:00, laatste 24:00, maximaal 31 punten."
+        },
+        "intensity": {
+          "name": "Intensiteit",
+          "description": "Totale intensiteit (standaard: ongewijzigd)."
+        }
+      }
+    },
+    "flare_program_rename": {
+      "name": "Flare: programma hernoemen",
+      "description": "Hernoem een opgeslagen programma.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Huidige naam."
+        },
+        "new_name": {
+          "name": "Nieuwe naam",
+          "description": "Maximaal 16 tekens."
+        }
+      }
+    },
+    "flare_acclimation_start": {
+      "name": "Flare: acclimatisatie starten",
+      "description": "Verhoog de intensiteit van het actieve programma over het opgegeven aantal dagen van begin- naar eindwaarde.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        },
+        "days": {
+          "name": "Dagen",
+          "description": "2–30 dagen."
+        },
+        "start_pct": {
+          "name": "Beginintensiteit",
+          "description": "Intensiteit op de eerste dag."
+        },
+        "end_pct": {
+          "name": "Eindintensiteit",
+          "description": "Intensiteit op de laatste dag."
+        }
+      }
+    },
+    "flare_acclimation_stop": {
+      "name": "Flare: acclimatisatie stoppen",
+      "description": "Beëindig een lopende acclimatisatie.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        }
+      }
+    },
+    "flare_preview_start": {
+      "name": "Flare: programmavoorbeeld starten",
+      "description": "Speel het actieve programma versneld af (zoals op de webpagina van het apparaat).",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        }
+      }
+    },
+    "flare_preview_stop": {
+      "name": "Flare: programmavoorbeeld stoppen",
+      "description": "Beëindig het programmavoorbeeld.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Reef Flare."
+        }
+      }
+    },
+    "feeder_feed": {
+      "name": "Feeder: voeren",
+      "description": "Laat de voerautomaat handmatig draaien.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Smart feeder."
+        },
+        "rotations": {
+          "name": "Omwentelingen",
+          "description": "Aantal trommelomwentelingen (1 = zoals de knop op het apparaat)."
+        }
+      }
+    },
+    "feeder_set_schedule": {
+      "name": "Feeder: schema instellen",
+      "description": "Vervang het volledige voerschema.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Smart feeder."
+        },
+        "entries": {
+          "name": "Items",
+          "description": "Lijst van {time: 'HH:MM', rotations: n, days: [mon..sun] of bitmasker (127 = dagelijks)}."
+        }
+      }
+    },
+    "dosing_pump_dose": {
+      "name": "Doseerpomp: nu doseren",
+      "description": "Doseer direct een hoeveelheid op één kanaal (zoals de handmatige dosering in de app). Vereist 'Pompacties toestaan' in de opties van de cloudvervanger.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanaal",
+          "description": "1-4 (A-D)."
+        },
+        "ml": {
+          "name": "Hoeveelheid",
+          "description": "Milliliter."
+        }
+      }
+    },
+    "dosing_pump_set_schedule": {
+      "name": "Doseerpomp: schema instellen",
+      "description": "Vervang het volledige schema van één kanaal. Vereist 'Pompacties toestaan' in de opties van de cloudvervanger.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanaal",
+          "description": "1-4 (A-D)."
+        },
+        "entries": {
+          "name": "Items",
+          "description": "Lijst van {time: 'HH:MM', ml: x, days: [mon..sun] of bitmasker (127 = dagelijks)}. Een lege lijst wist het schema."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "pump_actions_disabled": {
+      "message": "Pompacties zijn voor dit apparaat niet toegestaan. Schakel ze in via Instellingen → Apparaten & diensten → Reef Factory Local → Configureren."
+    },
+    "not_level_keeper": {
+      "message": "Deze actie is alleen beschikbaar voor de Level keeper."
+    },
+    "unknown_device": {
+      "message": "Apparaat niet gevonden of niet geladen."
+    },
+    "not_connected": {
+      "message": "Apparaat is op dit moment niet verbonden."
+    },
+    "thermo_order": {
+      "message": "De drempels moeten in deze volgorde staan: alarm onder < doelbereik ondergrens < doelbereik bovengrens < alarm boven."
+    },
+    "not_flare": {
+      "message": "Deze actie is alleen beschikbaar voor de Reef Flare."
+    },
+    "flare_not_manual": {
+      "message": "De lamp moet hiervoor in handmatige modus staan."
+    },
+    "flare_not_program": {
+      "message": "De lamp moet hiervoor in programmamodus staan."
+    },
+    "no_answer": {
+      "message": "Het apparaat heeft niet op tijd geantwoord."
+    },
+    "invalid_value": {
+      "message": "Ongeldige waarde: {reason}"
+    },
+    "not_feeder": {
+      "message": "Deze actie is alleen beschikbaar voor de Smart feeder."
+    },
+    "not_dosing_pump": {
+      "message": "Deze actie is alleen beschikbaar voor de Dosing pump Pro X4."
+    }
+  }
+}
