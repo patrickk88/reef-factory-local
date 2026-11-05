@@ -180,9 +180,16 @@ The 7 levels are, in this order (names from the device's own web page):
 
 ## Installation
 
-HACS -> custom repository -> category *Integration*, or copy `custom_components/reef_factory_local`
-into your Home Assistant `config/custom_components/` and restart.
-Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*.
+[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickk88&repository=reef-factory-local&category=integration)
+
+The button adds this repository to HACS in your own Home Assistant (as a custom repository,
+category *Integration*); then download *Reef Factory Local* in HACS and restart Home Assistant.
+Without the button: HACS -> menu -> *Custom repositories* -> `https://github.com/patrickk88/reef-factory-local`,
+type *Integration*. Or copy `custom_components/reef_factory_local` into your Home Assistant
+`config/custom_components/` and restart.
+Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*, or:
+
+[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=reef_factory_local)
 
 ## Protocol notes
 
