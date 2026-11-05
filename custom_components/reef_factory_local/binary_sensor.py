@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ReefConfigEntry
 from . import protocol as pr
+from .const import CONF_LOW_DAYS, DEFAULT_LOW_DAYS
 from .entity import ReefEntity
 from .platform_setup import setup_entities
 
@@ -21,6 +22,29 @@ from .platform_setup import setup_entities
 @dataclass(frozen=True, kw_only=True)
 class ReefBinaryDescription(BinarySensorEntityDescription):
     data_key: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReefLowDescription(BinarySensorEntityDescription):
+    """Container low: days left (data key) at or below the threshold from the cloud entry options."""
+
+    days_key: str
+    present_key: str | None = None
+
+
+LOW: dict[str, tuple[ReefLowDescription, ...]] = {
+    pr.DEVICE_DOSING_PUMP: tuple(
+        ReefLowDescription(
+            key=f"ch{ch}_container_low", translation_key="dp_container_low", translation_placeholders={"channel": str(ch)},
+            device_class=BinarySensorDeviceClass.PROBLEM, days_key=f"ch{ch}_days_to_replace", present_key=f"ch{ch}_present",
+        )
+        for ch in range(1, pr.DOSING_CHANNELS + 1)
+    ),
+    pr.DEVICE_FEEDER: (
+        ReefLowDescription(key="container_low", translation_key="container_low",
+                           device_class=BinarySensorDeviceClass.PROBLEM, days_key="days_to_end"),
+    ),
+}
 
 
 CLOUD = ReefBinaryDescription(
@@ -58,6 +82,7 @@ async def async_setup_entry(
     def factory(c):
         kind = pr.device_type(c.serial)
         ents = [ReefBinary(c, d) for d in BINARY.get(kind, ())]
+        ents += [ReefContainerLow(c, d) for d in LOW.get(kind, ())]
         if kind in pr.CLOUD_ONLY:
             ents.append(ReefCloudPassthrough(c))
         return ents
@@ -75,6 +100,35 @@ class ReefBinary(ReefEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         return (self.coordinator.data or {}).get(self.entity_description.data_key)
+
+
+class ReefContainerLow(ReefEntity, BinarySensorEntity):
+    """On when a container is about to run out (days left <= threshold, option of the cloud entry)."""
+
+    entity_description: ReefLowDescription
+
+    def __init__(self, coordinator, description: ReefLowDescription) -> None:
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    def _threshold(self) -> int:
+        entry = self.coordinator.config_entry
+        return int((entry.options if entry is not None else {}).get(CONF_LOW_DAYS, DEFAULT_LOW_DAYS))
+
+    @property
+    def available(self) -> bool:
+        key = self.entity_description.present_key
+        return super().available and (key is None or bool((self.coordinator.data or {}).get(key)))
+
+    @property
+    def is_on(self) -> bool | None:
+        days = (self.coordinator.data or {}).get(self.entity_description.days_key)
+        return None if days is None else days <= self._threshold()
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"days_left": (self.coordinator.data or {}).get(self.entity_description.days_key),
+                "threshold_days": self._threshold()}
 
 
 class ReefCloudPassthrough(ReefEntity, BinarySensorEntity):

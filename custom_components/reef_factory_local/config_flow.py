@@ -10,12 +10,14 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig, NumberSelectorMode
 
 from . import protocol as pr
 from .client import async_probe
 from .cloud import MODE_LOCAL, MODE_PASSTHROUGH
 from .const import (
-    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, CONF_CLOUD_MODE, CONF_SERIAL, CONF_UPSTREAM_IPS, DOMAIN,
+    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, CONF_CLOUD_MODE, CONF_LOW_DAYS, CONF_SERIAL, CONF_UPSTREAM_IPS,
+    DEFAULT_LOW_DAYS, DOMAIN,
 )
 
 
@@ -77,6 +79,34 @@ class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """New address of a device entry (the device keeps its serial = unique id)."""
+        entry = self._get_reconfigure_entry()
+        if entry.data.get(CONF_CLOUD):
+            return self.async_abort(reason="reconfigure_cloud")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST].strip()
+            if host == entry.data.get(CONF_HOST):
+                # same address: just reconnect (probing would fail - the device takes one connection)
+                return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
+            try:
+                info = await async_probe(async_get_clientsession(self.hass), host)
+            except (TimeoutError, aiohttp.ClientError, ConnectionError, OSError):
+                errors["base"] = "cannot_connect"
+            else:
+                if info["serial"] != entry.data[CONF_SERIAL]:
+                    errors["base"] = "wrong_device"
+                else:
+                    return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data.get(CONF_HOST, "")): str}),
+            errors=errors,
+            description_placeholders={"name": entry.title},
+        )
+
+
 class ReefOptionsFlow(OptionsFlow):
     """Device entries: pump actions off by default. Cloud entry: mode and cloud addresses."""
 
@@ -102,5 +132,8 @@ class ReefOptionsFlow(OptionsFlow):
                     MODE_PASSTHROUGH: "passthrough", MODE_LOCAL: "local"}),
                 vol.Optional(CONF_UPSTREAM_IPS, default=opts.get(CONF_UPSTREAM_IPS, "")): str,
                 vol.Required(CONF_ALLOW_PUMP_ACTIONS, default=opts.get(CONF_ALLOW_PUMP_ACTIONS, False)): bool,
+                vol.Required(CONF_LOW_DAYS, default=opts.get(CONF_LOW_DAYS, DEFAULT_LOW_DAYS)): NumberSelector(
+                    NumberSelectorConfig(min=1, max=90, step=1, mode=NumberSelectorMode.BOX, unit_of_measurement="d")
+                ),
             }),
         )

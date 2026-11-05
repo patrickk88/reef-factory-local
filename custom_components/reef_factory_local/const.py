@@ -13,3 +13,6 @@ CONF_CLOUD_MODE = "cloud_mode"
 CONF_UPSTREAM_IPS = "upstream_ips"
 CLOUD_UNIQUE_ID = "cloud_replacement"
 SIGNAL_NEW_CLOUD_DEVICE = "reef_factory_local_new_cloud_device"
+# "container low" warning (X4 channels, Smart feeder): days left at or below this (cloud entry option)
+CONF_LOW_DAYS = "low_container_days"
+DEFAULT_LOW_DAYS = 14

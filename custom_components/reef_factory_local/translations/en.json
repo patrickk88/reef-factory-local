@@ -22,14 +22,24 @@
         "data": {
           "cloud_mode": "Mode"
         }
+      },
+      "reconfigure": {
+        "title": "Change device address",
+        "description": "New IP address or hostname of {name}. The device is checked by its serial number.",
+        "data": {
+          "host": "IP address or hostname"
+        }
       }
     },
     "error": {
       "cannot_connect": "No answer. Check the IP address and whether another program is already connected to the device.",
-      "unsupported_device": "Device {serial} is not supported (so far: Level keeper, Thermo control, Reef Flare)."
+      "unsupported_device": "Device {serial} is not supported (so far: Level keeper, Thermo control, Reef Flare).",
+      "wrong_device": "A different Reef Factory device answers at this address."
     },
     "abort": {
-      "already_configured": "Device is already configured."
+      "already_configured": "Device is already configured.",
+      "reconfigure_successful": "Address changed, the device is reconnecting.",
+      "reconfigure_cloud": "The cloud replacement has no address to change - devices find it through your DNS redirect."
     }
   },
   "options": {
@@ -46,11 +56,13 @@
         "data": {
           "cloud_mode": "Mode",
           "upstream_ips": "Addresses of the real cloud (optional, comma separated)",
-          "allow_pump_actions": "Allow pump actions"
+          "allow_pump_actions": "Allow pump actions",
+          "low_container_days": "Warn when a container has this many days left"
         },
         "data_description": {
           "upstream_ips": "Leave empty to resolve api.reeffactory.com through a public DNS server.",
-          "allow_pump_actions": "Manual doses and schedule changes of the Dosing pump run the pump and change what goes into the tank. Reading is always allowed."
+          "allow_pump_actions": "Manual doses and schedule changes of the Dosing pump run the pump and change what goes into the tank. Reading is always allowed.",
+          "low_container_days": "Applies to the Dosing pump Pro X4 channels and the Smart feeder: the binary sensor \"container low\" turns on at or below this number of days."
         }
       }
     }
@@ -204,6 +216,12 @@
       },
       "bp_alert": {
         "name": "Alert"
+      },
+      "dp_container_low": {
+        "name": "Channel {channel} container low"
+      },
+      "container_low": {
+        "name": "Food running low"
       }
     },
     "number": {

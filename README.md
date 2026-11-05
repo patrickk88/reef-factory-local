@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v0.6)
+## Supported devices (v0.7)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -96,6 +96,19 @@ Use a password for Smart Reef that you use nowhere else.
 - Calibration (tested 03.11.2026): put the refill hose into a measuring cup, *fill hose* until water comes,
   stop, empty the cup, run the calibration (default 10 s, as on the device page), enter the measured mL.
   Both work while refilling is paused - pause first so the device does not refill into the cup.
+
+## Container warnings, new address, diagnostics
+
+- **Container low:** every Dosing pump Pro X4 channel and the Smart feeder have a binary sensor
+  (*Channel n container low*, *Food running low*). It turns on when the days left - as the device itself
+  calculates them - reach the threshold in the options of the *cloud replacement* entry (default 14 days).
+  Channels without a schedule have no days-left value, their sensor stays unknown.
+- **New IP address:** *Settings -> Devices & services -> Reef Factory Local -> device entry -> menu ->
+  Reconfigure*. The device is checked by its serial number. Reef Factory devices offer no network discovery,
+  so a fixed address (DHCP reservation) is still the best choice - see *Network notes*.
+- **Diagnostics:** *menu -> Download diagnostics* on an entry gives a JSON file with the decoded values
+  (tokens, keys, e-mail and Wi-Fi data removed). Please attach it when you open an issue.
+- The interface is available in English, German, Dutch, French, Spanish, Italian and Polish.
 
 ## Pump actions are off by default
 

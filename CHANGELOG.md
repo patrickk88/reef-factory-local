@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 - 2026-11-05
+- Binary sensors "container low" for each Dosing pump Pro X4 channel and the Smart feeder, threshold in days
+  as an option of the cloud replacement entry (default 14).
+- Reconfigure: change the address of a device entry (checked against the serial number).
+- Diagnostics download for device entries and the cloud replacement entry (secrets redacted).
+- Translations: Dutch, French, Spanish, Italian, Polish.
+
 ## 0.6.2 - 2026-11-05
 - Base pump: feed pause as a switch (`bpSet/mode feedMode` / `auto`) with the remaining time as a sensor
   (`bpReport/feed` countdown); the mode follows `bpLog/mode`.

@@ -22,14 +22,24 @@
         "data": {
           "cloud_mode": "Betriebsart"
         }
+      },
+      "reconfigure": {
+        "title": "Adresse des Geräts ändern",
+        "description": "Neue IP-Adresse oder neuer Hostname von {name}. Das Gerät wird an seiner Seriennummer erkannt.",
+        "data": {
+          "host": "IP-Adresse oder Hostname"
+        }
       }
     },
     "error": {
       "cannot_connect": "Keine Antwort. Prüfe die IP-Adresse und ob schon ein anderes Programm mit dem Gerät verbunden ist.",
-      "unsupported_device": "Gerät {serial} wird nicht unterstützt (bisher: Level keeper, Thermo control, Reef Flare)."
+      "unsupported_device": "Gerät {serial} wird nicht unterstützt (bisher: Level keeper, Thermo control, Reef Flare).",
+      "wrong_device": "Unter dieser Adresse antwortet ein anderes Reef-Factory-Gerät."
     },
     "abort": {
-      "already_configured": "Gerät ist bereits eingerichtet."
+      "already_configured": "Gerät ist bereits eingerichtet.",
+      "reconfigure_successful": "Adresse geändert, das Gerät verbindet sich neu.",
+      "reconfigure_cloud": "Der Cloud-Ersatz hat keine Adresse zum Ändern - die Geräte finden ihn über deine DNS-Umleitung."
     }
   },
   "options": {
@@ -46,11 +56,13 @@
         "data": {
           "cloud_mode": "Betriebsart",
           "upstream_ips": "Adressen der echten Cloud (optional, kommagetrennt)",
-          "allow_pump_actions": "Pumpenaktionen erlauben"
+          "allow_pump_actions": "Pumpenaktionen erlauben",
+          "low_container_days": "Warnen, wenn ein Behälter nur noch so viele Tage reicht"
         },
         "data_description": {
           "upstream_ips": "Leer lassen, dann wird api.reeffactory.com über einen öffentlichen DNS-Server aufgelöst.",
-          "allow_pump_actions": "Manuelle Dosen und Zeitplanänderungen der Dosierpumpe lassen die Pumpe laufen und ändern, was ins Becken kommt. Lesen geht immer."
+          "allow_pump_actions": "Manuelle Dosen und Zeitplanänderungen der Dosierpumpe lassen die Pumpe laufen und ändern, was ins Becken kommt. Lesen geht immer.",
+          "low_container_days": "Gilt für die Kanäle der Dosing pump Pro X4 und den Smart feeder: Der Binärsensor „Behälter knapp“ geht bei dieser Zahl von Tagen oder weniger an."
         }
       }
     }
@@ -204,6 +216,12 @@
       },
       "bp_alert": {
         "name": "Störung"
+      },
+      "dp_container_low": {
+        "name": "Kanal {channel} Behälter knapp"
+      },
+      "container_low": {
+        "name": "Futter knapp"
       }
     },
     "number": {
