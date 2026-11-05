@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.2 - 2026-11-05
+- Reef Flare *Current output*: two decimals (a light that is nearly off showed 0.0 %).
+
 ## 0.9.1 - 2026-11-05
 - Reef Flare: sensor *Current output* - the mean of the 7 channels times the intensity, right now: in
   program mode from the points of the active program (linear between points, as the light fades), in

@@ -418,8 +418,8 @@ def flare_output(data: dict, minute: float) -> tuple[float, dict] | None:
     if not levels or len(levels) < FLARE_CHANNELS or data.get("intensity") is None:
         return None
     scale = data["intensity"] / 100
-    channels = {k: round(v * scale, 1) for k, v in zip(FLARE_CHANNEL_KEYS, levels)}
-    return round(sum(levels[:FLARE_CHANNELS]) / FLARE_CHANNELS * scale, 1), channels
+    channels = {k: round(v * scale, 2) for k, v in zip(FLARE_CHANNEL_KEYS, levels)}
+    return round(sum(levels[:FLARE_CHANNELS]) / FLARE_CHANNELS * scale, 2), channels
 
 
 def flare_same_points(reported, points: list[dict]) -> bool:

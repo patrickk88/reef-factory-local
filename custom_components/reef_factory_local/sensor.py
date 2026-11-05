@@ -192,7 +192,7 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
         ReefSensorDescription(
             key="output", translation_key="output", icon="mdi:brightness-6",
             state_class=SensorStateClass.MEASUREMENT, native_unit_of_measurement=PERCENTAGE,
-            suggested_display_precision=1,
+            suggested_display_precision=2,
             value_fn=lambda d: (r := _flare_output(d)) and r[0],
             attrs_fn=lambda d: (r := _flare_output(d)) and r[1] or {},
         ),
