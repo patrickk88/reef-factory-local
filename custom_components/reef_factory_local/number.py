@@ -130,10 +130,11 @@ class ReefThermoThreshold(ReefEntity, NumberEntity):
 
 
 class ReefFlareIntensity(ReefEntity, NumberEntity):
-    """Intensity of the active program (program mode) or active preset (manual mode).
+    """Intensity of the active program (program mode only).
 
-    Program mode rewrites the active program unchanged except for the intensity byte
-    (the device stores it - avoid changing it every few minutes from automations).
+    Rewrites the active program unchanged except for the intensity byte (the device stores
+    it - avoid changing it every few minutes from automations). Changing the intensity of a
+    manual preset is not offered: it was not confirmed on hardware.
     """
 
     _attr_translation_key = "flare_intensity"
@@ -151,12 +152,6 @@ class ReefFlareIntensity(ReefEntity, NumberEntity):
         s = self.coordinator.serial
         if d.get("mode") == "program" and d.get("points") and d.get("program_time_raw") is not None:
             return pr.frame_rf_precise_update(s, d.get("program_index", 0), d["program_time_raw"], d["points"], value)
-        if d.get("mode") == "manual" and d.get("manual_presets"):
-            presets = [dict(p) for p in d["manual_presets"]]
-            for p in presets:
-                if p["active"]:
-                    p["intensity"] = value
-            return pr.frame_rf_manual_update(s, presets)
         return None
 
     @property
@@ -170,7 +165,7 @@ class ReefFlareIntensity(ReefEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         frame = self._frame(int(value))
         if frame is None:
-            raise HomeAssistantError("Intensity can only be changed in program or manual mode")
+            raise HomeAssistantError("Intensity can only be changed in program mode")
         try:
             await self.coordinator.client.async_send(frame)
         except ConnectionError as err:

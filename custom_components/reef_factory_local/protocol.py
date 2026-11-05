@@ -117,7 +117,6 @@ FLARE_MODES: dict[str, str] = {
     "preciseData": "program",
     "manualData": "manual",
     "offData": "off",
-    "dashboardData": "dashboard",
 }
 
 
@@ -875,13 +874,13 @@ def decode_flare(frame: Frame) -> dict | None:
     if frame.topic != "rfRefresh":
         return None
     blob, sub = frame.blob, frame.subtopic
-    mode = FLARE_MODES.get(sub, sub)
-    data: dict = {"mode": mode}
     if sub == "dashboardData":
-        # observed: blob[0] == 1, blob[1] == housing temperature
-        if len(blob) > 1:
-            data["temperature"] = blob[1]
-        return data
+        # sent in every refresh cycle next to the mode frame, so it says nothing about the mode
+        # (observed: blob[0] == 1, blob[1] == housing temperature)
+        return {"temperature": blob[1]} if len(blob) > 1 else None
+    data: dict = {}
+    if sub in FLARE_MODES:
+        data["mode"] = FLARE_MODES[sub]
     if sub == "temp" and blob:
         return {"temperature": blob[0]}
     if blob:
@@ -915,7 +914,7 @@ def decode_flare(frame: Frame) -> dict | None:
             data["program"] = presets[idx]["name"] or None
             data["levels"] = presets[idx]["levels"]
             data["intensity"] = presets[idx].get("intensity")
-    return data
+    return data or None
 
 
 _FW_RE = re.compile(rb"(\d+\.\d+\.\d+)")

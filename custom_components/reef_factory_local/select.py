@@ -20,7 +20,7 @@ async def async_setup_entry(
         if kind == pr.DEVICE_LEVEL_KEEPER:
             return [ReefRefillCycle(c)]
         if kind == pr.DEVICE_FLARE:
-            return [ReefFlareMode(c), ReefFlareProgram(c), ReefFlarePreset(c)]
+            return [ReefFlareMode(c), ReefFlareProgram(c)]  # manual presets: not confirmed on hardware yet
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederMode(c)]
         return []
@@ -99,40 +99,6 @@ class ReefFlareProgram(ReefEntity, SelectEntity):
         try:
             for frame in frames:
                 await self.coordinator.client.async_send(frame)
-        except ConnectionError as err:
-            raise HomeAssistantError(f"Reef Flare not connected: {err}") from err
-
-
-class ReefFlarePreset(ReefEntity, SelectEntity):
-    """Active manual preset; only available while the light is in manual mode."""
-
-    _attr_translation_key = "flare_preset"
-
-    def __init__(self, coordinator) -> None:
-        super().__init__(coordinator, "flare_preset")
-
-    @property
-    def options(self) -> list[str]:
-        return [p["name"] for p in (self.coordinator.data or {}).get("manual_presets") or [] if p["name"]]
-
-    @property
-    def available(self) -> bool:
-        return super().available and (self.coordinator.data or {}).get("mode") == "manual" and bool(self.options)
-
-    @property
-    def current_option(self) -> str | None:
-        return (self.coordinator.data or {}).get("program")
-
-    async def async_select_option(self, option: str) -> None:
-        presets = [dict(p) for p in (self.coordinator.data or {}).get("manual_presets") or []]
-        if option not in [p["name"] for p in presets]:
-            raise HomeAssistantError(f"Unknown preset {option!r}")
-        hit = False
-        for p in presets:
-            p["active"] = (p["name"] == option and not hit)
-            hit = hit or p["active"]
-        try:
-            await self.coordinator.client.async_send(pr.frame_rf_manual_update(self.coordinator.serial, presets))
         except ConnectionError as err:
             raise HomeAssistantError(f"Reef Flare not connected: {err}") from err
 

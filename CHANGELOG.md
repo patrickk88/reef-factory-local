@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1 - 2026-11-05
+- Only writes confirmed on real hardware are offered (review of the HACS default-list submission). The
+  README lists every confirmed write per device and firmware.
+- Removed until confirmed: Reef Flare actions `flare_manual`, `flare_preset_set`, `flare_program_rename`,
+  `flare_preview_start`, `flare_preview_stop`, the manual-preset select and the intensity in manual mode.
+  `flare_program_set` now only writes the active program (writing another one switched the light to it).
+- Reef Flare: mode and intensity no longer flicker to unknown / unavailable - the dashboard frame the light
+  sends in every refresh cycle was read as a mode.
+
 ## 0.7.0 - 2026-11-05
 - Binary sensors "container low" for each Dosing pump Pro X4 channel and the Smart feeder, threshold in days
   as an option of the cloud replacement entry (default 14).

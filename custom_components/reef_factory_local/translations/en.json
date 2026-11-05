@@ -111,7 +111,6 @@
         "state": {
           "program": "Program",
           "off": "Off",
-          "dashboard": "Dashboard",
           "manual": "Manual"
         }
       },
@@ -183,9 +182,6 @@
       },
       "flare_program": {
         "name": "Program"
-      },
-      "flare_preset": {
-        "name": "Manual preset"
       },
       "feeder_mode": {
         "name": "Feeding mode",
@@ -409,53 +405,9 @@
         }
       }
     },
-    "flare_manual": {
-      "name": "Flare: manual mode",
-      "description": "Switch the light to manual mode, optionally with a preset and a duration. After the duration the light returns to its program.",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Reef Flare."
-        },
-        "preset": {
-          "name": "Preset",
-          "description": "Name of the manual preset to activate (optional)."
-        },
-        "duration_min": {
-          "name": "Duration",
-          "description": "Minutes until the light returns to the program; 0 = stay in manual mode."
-        }
-      }
-    },
-    "flare_preset_set": {
-      "name": "Flare: change manual preset",
-      "description": "Change channel levels, intensity or name of a manual preset. The light must be in manual mode.",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Reef Flare."
-        },
-        "preset": {
-          "name": "Preset",
-          "description": "Name of the preset to change."
-        },
-        "levels": {
-          "name": "Channel levels",
-          "description": "7 values 0–100 % in channel order: UV, violet, indigo, blue, green, red, white."
-        },
-        "intensity": {
-          "name": "Intensity",
-          "description": "Overall intensity of this preset."
-        },
-        "new_name": {
-          "name": "New name",
-          "description": "Up to 16 characters."
-        }
-      }
-    },
     "flare_program_set": {
       "name": "Flare: write program",
-      "description": "Replace the points of a stored program. The light must be in program mode; a different program becomes the active one.",
+      "description": "Replace the points of the active program. The light must be in program mode; to write another program, select it first.",
       "fields": {
         "device_id": {
           "name": "Device",
@@ -463,7 +415,7 @@
         },
         "program": {
           "name": "Program",
-          "description": "Program name (default: the active program)."
+          "description": "Name of the active program (optional check; another program is refused)."
         },
         "points": {
           "name": "Points",
@@ -472,24 +424,6 @@
         "intensity": {
           "name": "Intensity",
           "description": "Overall intensity (default: keep)."
-        }
-      }
-    },
-    "flare_program_rename": {
-      "name": "Flare: rename program",
-      "description": "Rename a stored program.",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Reef Flare."
-        },
-        "program": {
-          "name": "Program",
-          "description": "Current name."
-        },
-        "new_name": {
-          "name": "New name",
-          "description": "Up to 16 characters."
         }
       }
     },
@@ -518,26 +452,6 @@
     "flare_acclimation_stop": {
       "name": "Flare: stop acclimation",
       "description": "End a running acclimation.",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Reef Flare."
-        }
-      }
-    },
-    "flare_preview_start": {
-      "name": "Flare: start program preview",
-      "description": "Play the active program accelerated (as in the device web page).",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "The Reef Flare."
-        }
-      }
-    },
-    "flare_preview_stop": {
-      "name": "Flare: stop program preview",
-      "description": "End the program preview.",
       "fields": {
         "device_id": {
           "name": "Device",
@@ -629,8 +543,8 @@
     "not_flare": {
       "message": "This action is only available for the Reef Flare."
     },
-    "flare_not_manual": {
-      "message": "The light must be in manual mode for this."
+    "flare_not_active_program": {
+      "message": "Only the active program can be written - select the program first."
     },
     "flare_not_program": {
       "message": "The light must be in program mode for this."

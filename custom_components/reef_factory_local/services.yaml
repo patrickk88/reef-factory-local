@@ -61,48 +61,13 @@ fill_hose_start:
   fields: *device_only
 fill_hose_stop:
   fields: *device_only
-flare_manual:
+flare_program_set:
   fields:
     device_id: &flare_device
       required: true
       selector:
         device:
           integration: reef_factory_local
-    preset:
-      example: "Preset 1"
-      selector:
-        text:
-    duration_min:
-      default: 0
-      selector:
-        number:
-          min: 0
-          max: 360
-          unit_of_measurement: min
-          mode: box
-flare_preset_set:
-  fields:
-    device_id: *flare_device
-    preset:
-      required: true
-      selector:
-        text:
-    levels:
-      example: "[100, 100, 100, 100, 50, 50, 80]"
-      selector:
-        object:
-    intensity:
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-    new_name:
-      selector:
-        text:
-flare_program_set:
-  fields:
-    device_id: *flare_device
     program:
       selector:
         text:
@@ -117,17 +82,6 @@ flare_program_set:
           min: 0
           max: 100
           unit_of_measurement: "%"
-flare_program_rename:
-  fields:
-    device_id: *flare_device
-    program:
-      required: true
-      selector:
-        text:
-    new_name:
-      required: true
-      selector:
-        text:
 flare_acclimation_start:
   fields:
     device_id: *flare_device
@@ -157,12 +111,6 @@ flare_acclimation_start:
           max: 100
           unit_of_measurement: "%"
 flare_acclimation_stop:
-  fields:
-    device_id: *flare_device
-flare_preview_start:
-  fields:
-    device_id: *flare_device
-flare_preview_stop:
   fields:
     device_id: *flare_device
 feeder_feed:

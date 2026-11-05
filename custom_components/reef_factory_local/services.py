@@ -84,22 +84,6 @@ def _program_index(data: dict, name: str | None) -> int:
     return names.index(name)
 
 
-def _preset_list(data: dict) -> list[dict]:
-    if data.get("mode") != "manual" or not data.get("manual_presets"):
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_manual")
-    return [dict(p, levels=list(p["levels"])) for p in data["manual_presets"]]
-
-
-def _select_preset(presets: list[dict], name: str) -> list[dict]:
-    if name not in [p["name"] for p in presets]:
-        raise _invalid(f"unknown preset {name!r}")
-    hit = False
-    for p in presets:
-        p["active"] = p["name"] == name and not hit
-        hit = hit or p["active"]
-    return presets
-
-
 def _points(raw) -> list[dict]:
     try:
         return pr.normalize_flare_points(raw)
@@ -144,33 +128,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
     def _flare(call: ServiceCall):
         return _coordinator(hass, call, kind=pr.DEVICE_FLARE)
 
-    async def flare_manual(call: ServiceCall) -> None:
-        c = _flare(call)
-        minutes = call.data.get("duration_min", 0)
-        await _send(c, pr.frame_rf_manual_time(c.serial, minutes * 60 if minutes else None),
-                    pr.frame_rf_mode(c.serial, "manual"))
-        if preset := call.data.get("preset"):
-            data = await _wait_for(c, lambda d: d.get("mode") == "manual" and d.get("manual_presets"))
-            await _send(c, pr.frame_rf_manual_update(c.serial, _select_preset(_preset_list(data), preset)))
-
-    async def flare_preset_set(call: ServiceCall) -> None:
-        c = _flare(call)
-        presets = _preset_list(c.data or {})
-        name = call.data["preset"]
-        target = next((p for p in presets if p["name"] == name), None)
-        if target is None:
-            raise _invalid(f"unknown preset {name!r}")
-        if "levels" in call.data:
-            levels = [int(v) for v in call.data["levels"]]
-            if len(levels) != pr.FLARE_CHANNELS or not all(0 <= v <= 100 for v in levels):
-                raise _invalid(f"levels needs {pr.FLARE_CHANNELS} values between 0 and 100")
-            target["levels"] = levels
-        if "intensity" in call.data:
-            target["intensity"] = call.data["intensity"]
-        if new_name := call.data.get("new_name"):
-            target["name"] = new_name
-        await _send(c, pr.frame_rf_manual_update(c.serial, presets))
-
     async def flare_program_set(call: ServiceCall) -> None:
         c = _flare(call)
         data = c.data or {}
@@ -179,19 +136,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         index = _program_index(data, call.data.get("program"))
         points = _points(call.data["points"])
         if index != data.get("program_index"):
-            await _send(c, pr.frame_rf_select_program(c.serial, index))
-            data = await _wait_for(c, lambda d: d.get("program_index") == index and d.get("points") is not None)
+            # writing another program would first switch the light to it - only the active program
+            # was confirmed on hardware, so select the program first (select entity), then write it
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_active_program")
         intensity = call.data.get("intensity")
         if intensity is None:
             intensity = 100 if data.get("intensity") is None else data["intensity"]
         await _send(c, pr.frame_rf_precise_update(c.serial, index, data.get("program_time_raw") or 0,
                                                   points, intensity))
-
-    async def flare_program_rename(call: ServiceCall) -> None:
-        c = _flare(call)
-        data = c.data or {}
-        index = _program_index(data, call.data["program"])
-        await _send(c, pr.frame_rf_program_name(c.serial, index, call.data["new_name"]))
 
     async def flare_acclimation_start(call: ServiceCall) -> None:
         c = _flare(call)
@@ -201,14 +153,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def flare_acclimation_stop(call: ServiceCall) -> None:
         c = _flare(call)
         await _send(c, pr.frame_rf_acclimation(c.serial))
-
-    async def flare_preview_start(call: ServiceCall) -> None:
-        c = _flare(call)
-        await _send(c, pr.frame_rf_preview(c.serial, True))
-
-    async def flare_preview_stop(call: ServiceCall) -> None:
-        c = _flare(call)
-        await _send(c, pr.frame_rf_preview(c.serial, False))
 
     # --- Smart feeder (cloud replacement) --------------------------------------
     def _feeder(call: ServiceCall):
@@ -257,31 +201,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     reg(DOMAIN, "feeder_set_schedule", feeder_set_schedule, BASE.extend(
         {vol.Required("entries"): vol.All(cv.ensure_list, [dict])}))
     pct = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
-    name = vol.All(cv.string, vol.Length(min=1, max=pr.FLARE_NAME_MAX))
-    reg(DOMAIN, "flare_manual", flare_manual, BASE.extend({
-        vol.Optional("preset"): cv.string,
-        vol.Optional("duration_min", default=0): vol.All(vol.Coerce(int), vol.Range(min=0, max=360)),
-    }))
-    reg(DOMAIN, "flare_preset_set", flare_preset_set, BASE.extend({
-        vol.Required("preset"): cv.string,
-        vol.Optional("levels"): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional("intensity"): pct,
-        vol.Optional("new_name"): name,
-    }))
     reg(DOMAIN, "flare_program_set", flare_program_set, BASE.extend({
         vol.Optional("program"): cv.string,
         vol.Required("points"): vol.All(cv.ensure_list, [dict]),
         vol.Optional("intensity"): pct,
     }))
-    reg(DOMAIN, "flare_program_rename", flare_program_rename, BASE.extend({
-        vol.Required("program"): cv.string, vol.Required("new_name"): name}))
     reg(DOMAIN, "flare_acclimation_start", flare_acclimation_start, BASE.extend({
         vol.Required("days"): vol.All(vol.Coerce(int), vol.Range(min=2, max=30)),
         vol.Required("start_pct"): pct, vol.Required("end_pct"): pct,
     }))
     reg(DOMAIN, "flare_acclimation_stop", flare_acclimation_stop, BASE)
-    reg(DOMAIN, "flare_preview_start", flare_preview_start, BASE)
-    reg(DOMAIN, "flare_preview_stop", flare_preview_stop, BASE)
 
     reg(DOMAIN, "manual_refill", manual_refill, BASE.extend(
         {vol.Required("amount_ml"): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_MANUAL_REFILL_ML))}))

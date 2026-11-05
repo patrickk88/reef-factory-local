@@ -16,10 +16,32 @@ The devices below already speak a local WebSocket protocol, which this integrati
 |---|---|---|---|
 | Level keeper (`RFLK…`) | refilled today, state (ok / refilling / water high / water low / paused / calibrating / filling hose / manual refill), current refill time, calibration date, calibration due, cloud connected | refill cycle, max refill time (safety limit), pause refill, display light, set clock; **opt-in pump actions:** manual refill (max 1000 mL), calibration run, fill hose, plus stop | 1.0.0 |
 | Thermo control (`RFTC…`) | temperature, heating/cooling, all four thresholds, beeper, display light, cloud connected | thresholds (alarm below / target range low / target range high / alarm above, always sent together, order checked), beeper, display light (°C units only so far) | 1.0.0 |
-| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, acclimation, manual presets, cloud connected | mode (program / manual / off), active program, active manual preset, intensity; actions: manual mode with timer, change manual preset, write / rename program, acclimation start / stop, program preview — **experimental, see below** | 1.0.0 |
+| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, acclimation start / stop | 1.0.0 |
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions) | 1.2.3 |
+
+## Only confirmed writes are sent
+
+Every write this integration offers was checked on a real device: the change was sent from Home
+Assistant, the device reported the new value (for pump runs: the new state and its end), and the old
+value was put back. Anything that could not be confirmed this way is not offered - it stays readable
+only until someone confirms it on hardware.
+
+| Device (firmware) | Confirmed writes | Date |
+|---|---|---|
+| Level keeper (1.0.0) | display light, max refill time, set clock, pause refill, fill hose + stop, calibration run, calibration value and reminder | 2026-11-03 |
+| | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
+| Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
+| Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop | 2026-11-05 |
+| Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
+| Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
+| Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule | 2026-11-05 |
+
+Removed in 0.7.1 because they could not be confirmed: Reef Flare manual-preset select, manual mode with
+a timer, changing a manual preset (and the intensity in manual mode), renaming a program (the light
+switched to the renamed program), program preview (the light reports nothing back), and writing a program
+other than the active one. Their frames stay documented in `protocol.py` but are never sent.
 
 ## Use at your own risk
 
@@ -81,15 +103,12 @@ Use a password for Smart Reef that you use nowhere else.
   stay offline until power cycled. The cloud replacement therefore never closes a device connection
   politely; it drops it with a TCP reset, after which the device reconnects by itself. Keep that in mind
   if you put a proxy in front of the ports (it must not send close frames either).
-- Reef Flare writing uses exactly the frames of the device's own web page and was checked byte for
-  byte against what the device sends. Rewriting the active program (intensity, points) is **tested on a
-  real Reef Flare M** (firmware 1.0.0, 2026-11-05: the light echoed each change within a second, program
-  unchanged). Manual presets, manual mode with duration, acclimation, preview and renaming are built the
-  same way but still **untested on hardware** - treat them as experimental.
-- Reef Flare stores programs and presets in its flash. Do not change intensity or programs every few
-  minutes from an automation; for short changes use *manual mode with a duration*.
-- Reef Flare: the program list only contains the points of the *active* program. Writing another
-  program therefore makes it the active one first.
+- Reef Flare writing uses exactly the frames of the device's own web page, checked byte for byte
+  against what the device sends (see *Only confirmed writes are sent* for what is offered).
+- Reef Flare stores programs in its flash. Do not change intensity or programs every few minutes from
+  an automation.
+- Reef Flare: the device only reports the points of the *active* program, so only the active program
+  can be written. To change another one, select it first (*Program* select), then write it.
 - *Next calibration* is the date the device reminds you to calibrate again (calibration time + chosen
   reminder period), not the date of the last calibration. Logging the device into a Smart Reef account
   sets it to "today / not due" without any calibration. Without calibration the mL values are estimates.

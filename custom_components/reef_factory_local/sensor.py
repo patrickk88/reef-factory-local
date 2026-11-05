@@ -178,7 +178,7 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
         ),
         ReefSensorDescription(
             key="light_mode", translation_key="light_mode",
-            device_class=SensorDeviceClass.ENUM, options=["program", "manual", "off", "dashboard"],
+            device_class=SensorDeviceClass.ENUM, options=["program", "manual", "off"],
             value_fn=lambda d: d.get("mode"),
         ),
         ReefSensorDescription(

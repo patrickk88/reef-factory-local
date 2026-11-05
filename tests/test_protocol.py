@@ -125,7 +125,7 @@ def test_config_frame_gives_serial():
 
 def test_flare_dashboard():
     d = pr.decode(pr.DEVICE_FLARE, pr.parse_frame(FLARE_DASHBOARD))
-    assert d["mode"] == "dashboard" and d["temperature"] == 31 and "intensity" not in d, d
+    assert "mode" not in d and d["temperature"] == 31 and "intensity" not in d, d  # dashboardData is no mode
 
 def test_flare_precise_real():
     fr = pr.parse_frame(FLARE_PRECISE)
@@ -190,7 +190,7 @@ def test_flare_commands():
 
 def test_flare_dashboard_real():
     d = pr.decode(pr.DEVICE_FLARE, pr.parse_frame(FLARE_DASHBOARD_REAL))
-    assert d == {"mode": "dashboard", "temperature": 30}, d
+    assert d == {"temperature": 30}, d
 
 def test_flare_real_program_passes_validation():
     """The device's own program must pass the same checks the device UI applies."""
