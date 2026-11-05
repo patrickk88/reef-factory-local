@@ -45,10 +45,17 @@ def _coordinator(hass: HomeAssistant, call: ServiceCall, pump: bool = False,
                     continue
             if pr.device_type(coordinator.serial) != kind:
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key=_WRONG_DEVICE[kind])
-            if pump and not entry.options.get(CONF_ALLOW_PUMP_ACTIONS, False):
+            if pump and not pump_actions_allowed(hass, entry):
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key="pump_actions_disabled")
             return coordinator
     raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_device")
+
+
+def pump_actions_allowed(hass: HomeAssistant, entry) -> bool:
+    """Option of the entry, or the temporary unlock switch of that entry."""
+    if entry.options.get(CONF_ALLOW_PUMP_ACTIONS, False):
+        return True
+    return hass.data.get(DOMAIN, {}).get("pump_unlock", {}).get(entry.entry_id, 0) > time.monotonic()
 
 
 async def _send(coordinator, *frames: bytes) -> None:

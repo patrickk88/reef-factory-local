@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Pauza na karmienie"
+      },
+      "pump_actions_unlock": {
+        "name": "Zezwól na akcje pompy (10 min)"
       }
     },
     "button": {

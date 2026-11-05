@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Pause nourrissage"
+      },
+      "pump_actions_unlock": {
+        "name": "Autoriser les actions de pompe (10 min)"
       }
     },
     "button": {

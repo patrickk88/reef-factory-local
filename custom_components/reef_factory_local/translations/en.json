@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Feed pause"
+      },
+      "pump_actions_unlock": {
+        "name": "Allow pump actions (10 min)"
       }
     },
     "button": {

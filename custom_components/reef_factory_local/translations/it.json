@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Pausa alimentazione"
+      },
+      "pump_actions_unlock": {
+        "name": "Consenti azioni della pompa (10 min)"
       }
     },
     "button": {

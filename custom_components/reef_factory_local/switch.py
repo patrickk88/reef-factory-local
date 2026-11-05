@@ -1,16 +1,19 @@
-"""Level keeper display light."""
+"""Switches: device settings, plus the temporary "allow pump actions" unlock."""
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ReefConfigEntry
 from . import protocol as pr
+from .const import CONF_ALLOW_PUMP_ACTIONS, DOMAIN, PUMP_UNLOCK_SECONDS
 from .entity import ReefEntity
 from .platform_setup import setup_entities
 
@@ -21,7 +24,9 @@ async def async_setup_entry(
     def factory(c):
         kind = pr.device_type(c.serial)
         if kind == pr.DEVICE_LEVEL_KEEPER:
-            return [ReefDisplayLight(c)]
+            return [ReefDisplayLight(c), ReefPumpUnlock(c)]
+        if kind == pr.DEVICE_DOSING_PUMP:
+            return [ReefPumpUnlock(c)]
         if kind == pr.DEVICE_THERMO:
             return [ReefThermoFlag(c, "sound", pr.frame_tc_sound), ReefThermoFlag(c, "light", pr.frame_tc_light)]
         if kind == pr.DEVICE_FEEDER:
@@ -192,3 +197,66 @@ class ReefBasePumpFeed(ReefEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._set(False)
+
+
+class ReefPumpUnlock(ReefEntity, SwitchEntity):
+    """Temporary "allow pump actions" for the entry of this device (10 min, nothing is sent to the device).
+
+    Lets a dashboard script enable the pump actions just for one call instead of leaving the option on.
+    Not stored: after a restart it is off. Turning it off ends the unlock; the entry option is not changed.
+    """
+
+    _attr_translation_key = "pump_actions_unlock"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:lock-open-variant-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "pump_actions_unlock")
+        self._cancel = None
+
+    @property
+    def _store(self) -> dict:
+        return self.hass.data.setdefault(DOMAIN, {}).setdefault("pump_unlock", {})
+
+    @property
+    def _entry_id(self) -> str:
+        return self.coordinator.config_entry.entry_id
+
+    @property
+    def available(self) -> bool:
+        return True  # a local flag, independent of the device connection
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.coordinator.config_entry.options.get(CONF_ALLOW_PUMP_ACTIONS)) or (
+            self._store.get(self._entry_id, 0) > time.monotonic())
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        left = self._store.get(self._entry_id, 0) - time.monotonic()
+        return {"permanent": bool(self.coordinator.config_entry.options.get(CONF_ALLOW_PUMP_ACTIONS)),
+                "remaining_s": max(0, round(left))}
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._store[self._entry_id] = time.monotonic() + PUMP_UNLOCK_SECONDS
+        if self._cancel:
+            self._cancel()
+        self._cancel = async_call_later(self.hass, PUMP_UNLOCK_SECONDS + 1, self._expired)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._store.pop(self._entry_id, None)
+        if self._cancel:
+            self._cancel()
+            self._cancel = None
+        self.async_write_ha_state()
+
+    @callback
+    def _expired(self, _now) -> None:
+        self._cancel = None
+        self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        if self._cancel:
+            self._cancel()
+        await super().async_will_remove_from_hass()

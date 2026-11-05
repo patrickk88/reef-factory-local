@@ -3,6 +3,7 @@ DOMAIN = "reef_factory_local"
 CONF_SERIAL = "serial"
 CONF_DEVICE_TYPE = "device_type"  # only for types found by probing (no known serial prefix)
 CONF_ALLOW_PUMP_ACTIONS = "allow_pump_actions"
+PUMP_UNLOCK_SECONDS = 600  # switch "allow pump actions (10 min)": temporary, not stored, off after a restart
 MANUFACTURER = "Reef Factory"
 # entities go unavailable when no data arrived for this long
 STALE_SECONDS = 120

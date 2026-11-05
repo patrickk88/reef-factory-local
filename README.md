@@ -143,6 +143,11 @@ own entry's options, for the Dosing pump in the options of the *cloud replacemen
 (*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
 works (button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
 
+Instead of leaving the option on, the Level keeper and the Dosing pump Pro X4 have a switch *Allow pump
+actions (10 min)*: it unlocks the actions of that entry for ten minutes and then turns itself off (it is
+not stored - after a restart it is off). A dashboard script can turn it on, call the action and turn it
+off again. Nothing is sent to the device by the switch itself.
+
 ## Cloud replacement (devices without a local port)
 
 The Smart feeder (and probably the pumps) have no local interface at all: they only talk to

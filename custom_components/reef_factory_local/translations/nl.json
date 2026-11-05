@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Voerpauze"
+      },
+      "pump_actions_unlock": {
+        "name": "Pompacties toestaan (10 min)"
       }
     },
     "button": {

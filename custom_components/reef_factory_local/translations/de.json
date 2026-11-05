@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Futterpause"
+      },
+      "pump_actions_unlock": {
+        "name": "Pumpenaktionen freigeben (10 min)"
       }
     },
     "button": {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1 - 2026-11-05
+- Switch "Allow pump actions (10 min)" on the Level keeper and the Dosing pump Pro X4: unlocks the pump
+  actions of that entry for ten minutes without changing the option (not stored, off after a restart) -
+  e.g. for a dashboard that edits the X4 dosing schedule.
+
 ## 0.8.0 - 2026-11-05
 - Smart Roller (read only, untested - testers welcome): state, fleece left (m and %), used today, daily
   average, roll length, advance length, start delay, jammed, automatic advance. Report layout from Steven

@@ -330,6 +330,9 @@
       },
       "bp_feed_mode": {
         "name": "Pausa de alimentación"
+      },
+      "pump_actions_unlock": {
+        "name": "Permitir acciones de bomba (10 min)"
       }
     },
     "button": {
