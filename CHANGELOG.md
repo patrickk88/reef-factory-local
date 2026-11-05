@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 - 2026-11-05
+- Cloud replacement: device connections are dropped with a TCP reset instead of a WebSocket close
+  handshake (Home Assistant stop / reload, loss of the real cloud). The Smart feeder never reconnects
+  after a close frame; after a reset it is back within ~15 s - no more power cycle after a restart.
+- CI: HACS check only runs on public repositories.
+
 ## 0.5.0 - 2026-11-03
 - Cloud replacement: Home Assistant stands in for `api.reeffactory.com` (ports 442/444), devices
   without a local port show up by themselves. Passthrough to the real cloud with automatic local

@@ -67,6 +67,10 @@ Use a password for Smart Reef that you use nowhere else.
 ## Known quirks
 
 - Thermo control thresholds can only be changed when the device is set to °C.
+- Cloud devices (Smart feeder) never reconnect after a *WebSocket close frame* from the server - they
+  stay offline until power cycled. The cloud replacement therefore never closes a device connection
+  politely; it drops it with a TCP reset, after which the device reconnects by itself. Keep that in mind
+  if you put a proxy in front of the ports (it must not send close frames either).
 - Reef Flare writing (intensity, presets, programs, acclimation, preview) uses exactly the frames of the
   device's own web page and was checked byte for byte against what the device sends (rewriting a program
   unchanged gives the device's own bytes). It is still **experimental** until tested on a real light;
@@ -115,8 +119,9 @@ Home Assistant cannot do that for you. Examples:
   the box swallows the answer and the devices get nothing.
 - Routers that let you set a DNS override per host work the same way.
 
-Then restart the devices once (power off/on) - they keep their old connection otherwise. After a
-Home Assistant restart they may also need a power cycle.
+Then restart the devices once (power off/on) - they keep their old connection to the real cloud
+otherwise. After that they follow Home Assistant on their own: a restart or reload drops them with a
+TCP reset and they reconnect about 15 s later (checked with the Smart feeder, firmware 1.1.6).
 
 Home Assistant must be able to open ports 442, 444 and (for the app passthrough) 80 and 443. That is
 the case on Home Assistant OS and in Docker with host networking. If a port is taken (a reverse proxy

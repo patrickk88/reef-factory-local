@@ -156,6 +156,25 @@ def ensure_certificate(cert_path: str, key_path: str) -> None:
 
 # --- one connected device --------------------------------------------------------
 
+def reset_transport(transport) -> None:
+    """Drop a device connection with a TCP reset instead of a WebSocket close handshake.
+
+    Reef Factory firmware (esp_websocket_client, ESP-IDF 4.4) never reconnects after a
+    server-initiated close frame - the device stays offline until it is power cycled.
+    After a plain TCP reset it reconnects on its own within about 10-20 seconds, so this is
+    the only safe way to let a device go (Home Assistant stop, reload, upstream loss).
+    """
+    if transport is None or transport.is_closing():
+        return
+    try:
+        sock = transport.get_extra_info("socket")
+        if sock is not None:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+    except (OSError, AttributeError):
+        pass
+    transport.abort()
+
+
 class CloudDevice:
     """State of one device connected to the cloud replacement."""
 
@@ -171,6 +190,7 @@ class CloudDevice:
         self.data: dict = {}
         self.join_id = pr.cloud_join_id()
         self._ws: web.WebSocketResponse | None = None
+        self._transport = None
         self.listeners: list[Callable[[CloudDevice], None]] = []
 
     def notify(self) -> None:
@@ -314,8 +334,13 @@ class ReefCloudServer:
             server.close()
         self._raw_servers = []
         for dev in list(self.devices.values()):
-            if dev._ws is not None and not dev._ws.closed:
-                await dev._ws.close()
+            # never a close frame (see reset_transport) - the device reconnects after ~10 s,
+            # by then the server is gone (HA stop) or back (reload)
+            reset_transport(dev._transport)
+            dev._ws = None
+            dev._transport = None
+            dev.connected = False
+            dev.cloud_connected = False
         for runner in self._runners:
             await runner.cleanup()
         self._runners = []
@@ -380,7 +405,7 @@ class ReefCloudServer:
                     if frame is None or not frame.serial:
                         _LOGGER.debug("cloud: first frame from %s not parseable", peer)
                         break
-                    device = self._device(frame.serial, ws)
+                    device = self._device(frame.serial, ws, request.transport)
                     device.mode = MODE_LOCAL
                     if self.mode == MODE_PASSTHROUGH:
                         try:
@@ -411,17 +436,19 @@ class ReefCloudServer:
                 device.connected = False
                 device.cloud_connected = False
                 device._ws = None
+                device._transport = None
                 device.notify()
             _LOGGER.debug("cloud: %s disconnected", device.serial if device else peer)
         return ws
 
-    def _device(self, serial: str, ws: web.WebSocketResponse) -> CloudDevice:
+    def _device(self, serial: str, ws: web.WebSocketResponse, transport=None) -> CloudDevice:
         device = self.devices.get(serial)
         new = device is None
         if new:
             device = CloudDevice(serial)
             self.devices[serial] = device
         device._ws = ws
+        device._transport = transport
         device.connected = True
         device.last_seen = time.monotonic()
         if new and self._on_new_device:
@@ -464,8 +491,10 @@ class ReefCloudServer:
         finally:
             device.cloud_connected = False
             device.notify()
-            if not ws.closed:
-                await ws.close()  # device reconnects and gets served locally if the cloud stays away
+            if not ws.closed and device._ws is ws:
+                # reset, never a close frame: the device reconnects in ~10 s and is served
+                # locally if the real cloud stays away
+                reset_transport(device._transport)
 
     async def _poll(self, device: CloudDevice) -> None:
         await asyncio.sleep(1.0)
