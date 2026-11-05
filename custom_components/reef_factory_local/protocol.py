@@ -987,6 +987,18 @@ def frame_dp_set_schedule(serial: str, channel: int, entries: list[dict], joinid
     return frame_json(serial, "dpSettings", "set", {"settings": [{"id": int(channel), "schedule": schedule}]}, joinid)
 
 
+DP_NAME_MAX = 32  # the app's limit is not known; 16 characters ("CALCIUM Trace1/2") are in use
+
+
+def frame_dp_set_name(serial: str, channel: int, name: str, joinid: str = "") -> bytes:
+    """dpSettings/set - channel name. Captured from the app 05.11.2026: {"settings":[{"id":4,"name":"Reserve"}]}.
+
+    Non-ASCII characters are sent as UTF-8, like the app's JSON.stringify does.
+    """
+    data = json.dumps({"settings": [{"id": int(channel), "name": str(name)}]}, separators=(",", ":"), ensure_ascii=False)
+    return build_frame("dpSettings", "set", data.encode(), serial, joinid)
+
+
 def frame_dp_calibration(serial: str, channel: int, start: bool, seconds: int = 30, joinid: str = "") -> bytes:
     """dpCalibration/set startCalib (pump runs <seconds>) / cancelCalib. Storing the measured amount is not captured yet."""
     obj = {"id": int(channel), "command": "startCalib" if start else "cancelCalib"}

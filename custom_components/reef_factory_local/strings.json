@@ -561,6 +561,24 @@
           "description": "List of {time: 'HH:MM', ml: x, days: [mon..sun] or bit mask (127 = daily)}. An empty list clears the schedule."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Dosing pump: rename channel",
+      "description": "Change the name of a channel (as shown in the app). Nothing is dosed.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Up to 32 characters; empty removes the name."
+        }
+      }
     }
   },
   "exceptions": {

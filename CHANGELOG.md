@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2 - 2026-11-05
+- Dosing pump Pro X4: action `dosing_pump_set_name` renames a channel (`dpSettings/set` with `name`, captured
+  from the app). Confirmed on the device, also with umlauts (sent as UTF-8 like the app). Not a pump action.
+
 ## 0.8.1 - 2026-11-05
 - Switch "Allow pump actions (10 min)" on the Level keeper and the Dosing pump Pro X4: unlocks the pump
   actions of that entry for ten minutes without changing the option (not stored, off after a restart) -

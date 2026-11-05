@@ -561,6 +561,24 @@
           "description": "Elenco di {time: 'HH:MM', ml: x, days: [mon..sun] or bit mask (127 = daily)}. Un elenco vuoto cancella la programmazione."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Pompa dosatrice: rinomina canale",
+      "description": "Cambia il nome di un canale (come nell'app). Non viene dosato nulla.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Canale",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Nome",
+          "description": "Fino a 32 caratteri; vuoto rimuove il nome."
+        }
+      }
     }
   },
   "exceptions": {

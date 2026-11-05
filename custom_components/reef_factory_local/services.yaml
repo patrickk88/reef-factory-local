@@ -184,3 +184,22 @@ dosing_pump_set_schedule:
       example: '[{"time": "11:40", "ml": 2.75, "days": 127}, {"time": "15:00", "ml": 1.25, "days": ["mon","wed","fri"]}]'
       selector:
         object:
+dosing_pump_set_name:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    channel:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    name:
+      required: true
+      example: "Calcium"
+      selector:
+        text:

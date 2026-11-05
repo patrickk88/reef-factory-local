@@ -561,6 +561,24 @@
           "description": "Liste aus {time: 'HH:MM', ml: x, days: [mon..sun] oder Bitmaske (127 = täglich)}. Leere Liste löscht den Zeitplan."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Dosierpumpe: Kanal umbenennen",
+      "description": "Ändert den Namen eines Kanals (wie in der App). Es wird nichts dosiert.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Die Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanal",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Bis 32 Zeichen; leer entfernt den Namen."
+        }
+      }
     }
   },
   "exceptions": {

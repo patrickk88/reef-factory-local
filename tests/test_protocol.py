@@ -352,6 +352,10 @@ def test_dosing_pump_commands():
     assert p(pr.frame_dp_set_schedule(s, 3, [{"time": "15:00", "ml": 1.25, "days": ["mon", "wed"]}, {"time": "11:40", "ml": 2.75}]))[4] == \
         b'{"settings":[{"id":3,"schedule":[{"t":700,"d":127,"v":27500,"dir":"f"},{"t":900,"d":5,"v":12500,"dir":"f"}]}]}\x00'
     assert p(pr.frame_dp_set_schedule(s, 2, []))[4] == b'{"settings":[{"id":2,"schedule":[]}]}\x00'
+    # channel name, as captured from the app 05.11.2026
+    f = p(pr.frame_dp_set_name(s, 4, "Reserve", "1793"))
+    assert f[1:4] == [b"dpSettings", b"set", b"1793"] and f[4] == b'{"settings":[{"id":4,"name":"Reserve"}]}\x00', f
+    assert p(pr.frame_dp_set_name(s, 1, "Kalzium Prüf"))[4] == '{"settings":[{"id":1,"name":"Kalzium Prüf"}]}'.encode() + b"\x00"
     assert p(pr.frame_dp_calibration(s, 4, True))[4] == b'{"id":4,"command":"startCalib","time":30}\x00'
     assert p(pr.frame_dp_calibration(s, 4, False))[4] == b'{"id":4,"command":"cancelCalib"}\x00'
     log = pr.parse_frame(b"RFDQ012310100304\x00dpLog\x00dose\x001793701213648\x00" + b'{"id":4,"value":50000}\x00')

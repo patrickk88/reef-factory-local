@@ -561,6 +561,24 @@
           "description": "Lijst van {time: 'HH:MM', ml: x, days: [mon..sun] of bitmasker (127 = dagelijks)}. Een lege lijst wist het schema."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Doseerpomp: kanaal hernoemen",
+      "description": "Wijzigt de naam van een kanaal (zoals in de app). Er wordt niets gedoseerd.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanaal",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Tot 32 tekens; leeg verwijdert de naam."
+        }
+      }
     }
   },
   "exceptions": {

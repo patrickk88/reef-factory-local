@@ -561,6 +561,24 @@
           "description": "Lista de {time: 'HH:MM', ml: x, days: [mon..sun] or bit mask (127 = daily)}. Una lista vacía borra el horario."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Bomba dosificadora: renombrar canal",
+      "description": "Cambia el nombre de un canal (como en la app). No se dosifica nada.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "La Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Canal",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Hasta 32 caracteres; vacío elimina el nombre."
+        }
+      }
     }
   },
   "exceptions": {

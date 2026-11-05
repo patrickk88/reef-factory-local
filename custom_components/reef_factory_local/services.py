@@ -193,11 +193,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise _invalid(str(err)) from err
         await _send(c, frame)
 
+    async def dosing_pump_set_name(call: ServiceCall) -> None:
+        # renaming doses nothing - not behind "allow pump actions"
+        c = _coordinator(hass, call, kind=pr.DEVICE_DOSING_PUMP)
+        await _send(c, pr.frame_dp_set_name(c.serial, call.data["channel"], call.data["name"], c.device.join_id))
+
     reg = hass.services.async_register
     channel = vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.DOSING_CHANNELS))
     reg(DOMAIN, "dosing_pump_dose", dosing_pump_dose, BASE.extend({
         vol.Required("channel"): channel,
         vol.Required("ml"): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=500)),
+    }))
+    reg(DOMAIN, "dosing_pump_set_name", dosing_pump_set_name, BASE.extend({
+        vol.Required("channel"): channel,
+        vol.Required("name"): vol.All(cv.string, vol.Strip, vol.Length(max=pr.DP_NAME_MAX)),
     }))
     reg(DOMAIN, "dosing_pump_set_schedule", dosing_pump_set_schedule, BASE.extend({
         vol.Required("channel"): channel,

@@ -561,6 +561,24 @@
           "description": "Liste de {time: 'HH:MM', ml: x, days: [mon..sun] ou masque de bits (127 = tous les jours)}. Une liste vide efface le planning."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Pompe doseuse : renommer le canal",
+      "description": "Modifie le nom d'un canal (comme dans l'application). Rien n'est dosé.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "La Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Canal",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Jusqu'à 32 caractères ; vide supprime le nom."
+        }
+      }
     }
   },
   "exceptions": {

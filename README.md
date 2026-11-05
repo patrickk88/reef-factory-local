@@ -19,7 +19,7 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, acclimation start / stop | 1.0.0 |
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
-| Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions) | 1.2.3 |
+| Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions); rename a channel (action, not a pump action) | 1.2.3 |
 | Smart Roller (serial prefix not known yet - recognised during setup) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | **none - read only** | **untested** - report layout from Steven Downer's [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller); testers welcome |
 
 ## Only confirmed writes are sent
@@ -37,7 +37,7 @@ only until someone confirms it on hardware.
 | Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop | 2026-11-05 |
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
-| Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule | 2026-11-05 |
+| Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
 
 Removed in 0.7.1 because they could not be confirmed: Reef Flare manual-preset select, manual mode with
 a timer, changing a manual preset (and the intensity in manual mode), renaming a program (the light

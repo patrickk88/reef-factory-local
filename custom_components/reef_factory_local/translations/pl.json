@@ -561,6 +561,24 @@
           "description": "Lista {time: 'HH:MM', ml: x, days: [mon..sun] lub maska bitowa (127 = codziennie)}. Pusta lista czyści harmonogram."
         }
       }
+    },
+    "dosing_pump_set_name": {
+      "name": "Pompa dozująca: zmień nazwę kanału",
+      "description": "Zmienia nazwę kanału (jak w aplikacji). Nic nie jest dozowane.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Pompa Dosing pump Pro X4."
+        },
+        "channel": {
+          "name": "Kanał",
+          "description": "1-4 (A-D)."
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Do 32 znaków; puste usuwa nazwę."
+        }
+      }
     }
   },
   "exceptions": {
