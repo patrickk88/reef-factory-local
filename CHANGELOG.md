@@ -4,7 +4,8 @@
 - Binary sensors "container low" for each Dosing pump Pro X4 channel and the Smart feeder, threshold in days
   as an option of the cloud replacement entry (default 14).
 - Reconfigure: change the address of a device entry (checked against the serial number).
-- Diagnostics download for device entries and the cloud replacement entry (secrets redacted).
+- Diagnostics download for device entries and the cloud replacement entry (secrets redacted); local devices
+  now also keep their firmware version on the coordinator (shown in diagnostics).
 - Translations: Dutch, French, Spanish, Italian, Polish.
 
 ## 0.6.2 - 2026-11-05

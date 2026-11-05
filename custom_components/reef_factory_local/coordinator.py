@@ -45,6 +45,7 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
         fw = info.get("firmware")
         if not fw or self.config_entry is None:
             return
+        self.firmware = fw
         reg = dr.async_get(self.hass)
         for device in dr.async_entries_for_config_entry(reg, self.config_entry.entry_id):
             if (DOMAIN, self.serial) in device.identifiers and device.sw_version != fw:
