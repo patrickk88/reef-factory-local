@@ -26,6 +26,8 @@ async def async_setup_entry(
             return [ReefThermoFlag(c, "sound", pr.frame_tc_sound), ReefThermoFlag(c, "light", pr.frame_tc_light)]
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederFlag(c, "led"), ReefFeederFlag(c, "feeding_button")]
+        if kind == pr.DEVICE_BASE_PUMP:
+            return [ReefBasePumpFlag(c, "display"), ReefBasePumpFlag(c, "backlight")]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -115,4 +117,41 @@ class ReefFeederFlag(ReefEntity, SwitchEntity):
         await self._set(True)
 
     async def async_turn_off(self, **kwargs) -> None:
+        await self._set(False)
+
+
+class ReefBasePumpFlag(ReefEntity, SwitchEntity):
+    """Base pump display / backlight (bpSet/settings always carries all settings)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator, key: str) -> None:
+        super().__init__(coordinator, f"bp_{key}")
+        self._key = key
+        self._attr_translation_key = f"bp_{key}"
+
+    @property
+    def available(self) -> bool:
+        return super().available and (self.coordinator.data or {}).get("speed") is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        return (self.coordinator.data or {}).get(self._key)
+
+    async def _set(self, on: bool) -> None:
+        d = self.coordinator.device
+        data = dict(self.coordinator.data or {})
+        data[self._key] = on
+        frame = pr.frame_bp_set_settings(d.serial, data.get("speed") or 0, data.get("feed_mode_time") or 15,
+                                         data.get("feed_speed") or 20, bool(data.get("display", True)),
+                                         bool(data.get("backlight", True)), d.join_id)
+        try:
+            await d.async_send(frame)
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Base pump not connected: {err}") from err
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._set(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         await self._set(False)

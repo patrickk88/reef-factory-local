@@ -52,6 +52,8 @@ async def async_setup_entry(
             return [ReefFlareIntensity(c)]
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederNumber(c, key) for key in FEEDER_NUMBERS]
+        if kind == pr.DEVICE_BASE_PUMP:
+            return [ReefBasePumpNumber(c, key) for key in BASE_PUMP_NUMBERS]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -225,3 +227,48 @@ class ReefFeederNumber(ReefEntity, NumberEntity):
             await d.async_send(frame)
         except ConnectionError as err:
             raise HomeAssistantError(f"Smart feeder not connected: {err}") from err
+
+
+# Base pump numbers: key -> (data key, min, max, step, unit, config category)
+BASE_PUMP_NUMBERS: dict[str, tuple] = {
+    "speed": ("speed", 0, 100, 1, "%", False),
+    "feed_mode_time": ("feed_mode_time", 1, 120, 1, UnitOfTime.MINUTES, True),
+    "feed_speed": ("feed_speed", 0, 100, 1, "%", True),
+}
+
+
+class ReefBasePumpNumber(ReefEntity, NumberEntity):
+    """Speed, feed-mode duration and feed-mode speed of the Base pump (bpSet/settings sends all values)."""
+
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, coordinator, key: str) -> None:
+        super().__init__(coordinator, f"bp_{key}")
+        self._key = key
+        data_key, lo, hi, step, unit, config = BASE_PUMP_NUMBERS[key]
+        self._data_key = data_key
+        self._attr_translation_key = f"bp_{key}"
+        self._attr_native_min_value, self._attr_native_max_value, self._attr_native_step = lo, hi, step
+        self._attr_native_unit_of_measurement = unit
+        if config:
+            self._attr_entity_category = EntityCategory.CONFIG
+        else:
+            self._attr_icon = "mdi:pump"
+
+    @property
+    def native_value(self) -> float | None:
+        return (self.coordinator.data or {}).get(self._data_key)
+
+    async def async_set_native_value(self, value: float) -> None:
+        d = self.coordinator.device
+        data = dict(self.coordinator.data or {})
+        if data.get("speed") is None:
+            raise HomeAssistantError("Base pump has not reported its settings yet")
+        data[self._data_key] = int(value)
+        frame = pr.frame_bp_set_settings(d.serial, data["speed"], data.get("feed_mode_time") or 15,
+                                         data.get("feed_speed") or 20, bool(data.get("display", True)),
+                                         bool(data.get("backlight", True)), d.join_id)
+        try:
+            await d.async_send(frame)
+        except ConnectionError as err:
+            raise HomeAssistantError(f"Base pump not connected: {err}") from err

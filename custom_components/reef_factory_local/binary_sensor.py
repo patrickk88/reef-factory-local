@@ -45,6 +45,10 @@ BINARY: dict[str, tuple[ReefBinaryDescription, ...]] = {
         ReefBinaryDescription(key="container_empty", translation_key="container_empty",
                               data_key="container_empty", device_class=BinarySensorDeviceClass.PROBLEM),
     ),
+    pr.DEVICE_BASE_PUMP: (
+        ReefBinaryDescription(key="bp_alert", translation_key="bp_alert", data_key="alert_active",
+                              device_class=BinarySensorDeviceClass.PROBLEM),
+    ),
 }
 
 

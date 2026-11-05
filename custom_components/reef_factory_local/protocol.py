@@ -31,6 +31,8 @@ DEVICE_LEVEL_KEEPER = "level_keeper"
 DEVICE_THERMO = "thermo_control"
 DEVICE_FLARE = "reef_flare"
 DEVICE_FEEDER = "smart_feeder"  # cloud-only device (no local port), served by the cloud replacement
+DEVICE_BASE_PUMP = "base_pump"      # cloud-only, Reef Base pump (return pump)
+DEVICE_DOSING_PUMP = "dosing_pump"  # cloud-only, Dosing pump Pro X4
 
 # Cloud channel (what the devices expect from api.reeffactory.com)
 CLOUD_HOST = "api.reeffactory.com"
@@ -40,7 +42,7 @@ CLOUD_PATHS = ("/hardware32", "/hardware")
 CLOUD_SUBPROTOCOL = "reeffactory"
 CLOUD_PING_INTERVAL = 20  # seconds, what the real cloud answers in geReport/login
 # devices whose values arrive over the cloud channel only
-CLOUD_ONLY = {DEVICE_FEEDER}
+CLOUD_ONLY = {DEVICE_FEEDER, DEVICE_BASE_PUMP, DEVICE_DOSING_PUMP}
 
 # longest prefix first
 _PREFIXES = (
@@ -50,24 +52,39 @@ _PREFIXES = (
     ("RFLK", DEVICE_LEVEL_KEEPER),
     ("RFTC", DEVICE_THERMO),
     ("RFSF", DEVICE_FEEDER),
+    ("RFBP", DEVICE_BASE_PUMP),
+    ("RFDQ", DEVICE_DOSING_PUMP),
 )
 CONNECT_TOPIC = {
     DEVICE_LEVEL_KEEPER: "lkConnect",
     DEVICE_THERMO: "tcConnect",
     DEVICE_FLARE: "rfConnect",
     DEVICE_FEEDER: "sfConnect",
+    DEVICE_BASE_PUMP: "bpConnect",
+    DEVICE_DOSING_PUMP: "dqConnect",  # yes, dq - the reports and requests use dp
 }
 MODEL_NAME = {
     DEVICE_LEVEL_KEEPER: "Level keeper",
     DEVICE_THERMO: "Thermo control",
     DEVICE_FLARE: "Reef Flare",
     DEVICE_FEEDER: "Smart feeder",
+    DEVICE_BASE_PUMP: "Base pump",
+    DEVICE_DOSING_PUMP: "Dosing pump Pro X4",
 }
 # Smart feeder: feeding modes (sfSet/mode) and units
 FEEDER_MODES = {"period": "schedule", "sequence": "interval"}
 FEEDER_MODES_REV = {v: k for k, v in FEEDER_MODES.items()}
 FEEDER_GRAM_UNITS = 100  # container/dose values are hundredths of a gram
 FEEDER_MAX_ROTATIONS = 10
+# Dosing pump Pro X4: every volume is in microlitres, four channels
+DOSING_UL = 1000
+DOSING_CHANNELS = 4
+# "give me everything" request per cloud device: topic, subtopic, payload
+GET_ALL = {
+    DEVICE_FEEDER: ("sfGet", "all", None),
+    DEVICE_BASE_PUMP: ("bpGet", "all", None),
+    DEVICE_DOSING_PUMP: ("dpGet", "all", {"id": 0}),
+}
 FEEDER_DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")  # bit 0 = Monday (127 = daily)
 
 # Level keeper refill cycle (byte 0 of lkRefresh/settings, same value for lkSet/settings)
@@ -392,12 +409,134 @@ def frame_cloud_subscribe(serial: str, joinid: str) -> bytes:
     return build_frame(CONNECT_TOPIC[kind], "join", serial.encode(), serial, joinid)
 
 
-def _prefix(serial: str) -> str:
-    return CONNECT_TOPIC[device_type(serial)][:2]
-
-
 def frame_cloud_get_all(serial: str, joinid: str) -> bytes:
-    return build_frame(f"{_prefix(serial)}Get", "all", b"", serial, joinid)
+    kind = device_type(serial)
+    if kind not in GET_ALL:
+        raise ValueError(f"unsupported device {serial!r}")
+    topic, subtopic, obj = GET_ALL[kind]
+    return frame_json(serial, topic, subtopic, obj, joinid)
+
+
+def frame_cloud_get_wifi(serial: str, joinid: str) -> bytes:
+    """geGet/wifiStrength - answered with geReport/wifiStrength {"value": <dBm>} (all cloud devices)."""
+    return build_frame("geGet", "wifiStrength", b"", serial, joinid)
+
+
+def _decode_wifi(frame: "Frame") -> dict | None:
+    if frame.topic == "geReport" and frame.subtopic == "wifiStrength":
+        obj = parse_json(frame)
+        return None if obj is None else {"wifi_rssi": obj.get("value")}
+    return None
+
+
+def _on_off(value) -> bool | None:
+    if value is None:
+        return None
+    return value in ("on", "enabled", 1, True, "1")
+
+
+# --- Base pump ----------------------------------------------------------------
+
+def decode_base_pump(frame: "Frame") -> dict | None:
+    """bpReport/all of the Base pump (plus the generic wifi report)."""
+    if (wifi := _decode_wifi(frame)) is not None:
+        return wifi
+    if frame.topic != "bpReport" or frame.subtopic != "all":
+        return None
+    obj = parse_json(frame)
+    if obj is None:
+        return None
+    return {
+        "mode": obj.get("mode"),
+        "alert": obj.get("alert"),
+        "alert_active": obj.get("alert") not in (None, "noErrors"),
+        "speed": obj.get("speed"),
+        "feed_mode_time": obj.get("feedModeTime"),
+        "feed_speed": obj.get("feedSpeed"),
+        "display": _on_off(obj.get("display")),
+        "backlight": _on_off(obj.get("backlight")),
+    }
+
+
+def frame_bp_set_settings(serial: str, speed: int, feed_mode_time: int, feed_speed: int,
+                          display: bool, backlight: bool, joinid: str = "") -> bytes:
+    """bpSet/settings - the app always sends all five values together."""
+    return frame_json(serial, "bpSet", "settings", {
+        "speed": int(speed), "feedModeTime": int(feed_mode_time), "feedSpeed": int(feed_speed),
+        "display": "on" if display else "off", "backlight": "on" if backlight else "off",
+    }, joinid)
+
+
+# --- Dosing pump Pro X4 ---------------------------------------------------------
+
+def _ml(value) -> float | None:
+    return None if value is None else round(value / DOSING_UL, 3)
+
+
+def _minute_to_hhmm(minute: int) -> str:
+    return f"{int(minute) // 60:02d}:{int(minute) % 60:02d}"
+
+
+def decode_dosing_pump(frame: "Frame") -> dict | None:
+    """dpReport/all of the Dosing pump Pro X4 - one frame per channel, keys prefixed ch<n>_."""
+    if (wifi := _decode_wifi(frame)) is not None:
+        return wifi
+    if frame.topic != "dpReport" or frame.subtopic != "all":
+        return None
+    obj = parse_json(frame)
+    if obj is None:
+        return None
+    cid = obj.get("id")
+    if not isinstance(cid, int) or not 1 <= cid <= DOSING_CHANNELS:
+        return None
+    st = obj.get("settings") or {}
+    cont = obj.get("container") or {}
+    cal = obj.get("calibration") or {}
+    hist = (obj.get("history") or {}).get("history") or []
+    nxt = st.get("nextDose") or {}
+    p = f"ch{cid}_"
+    schedule = []
+    for e in st.get("schedule") or []:
+        if isinstance(e, dict) and "t" in e:
+            schedule.append({"time": _minute_to_hhmm(e["t"]), "days": _days_from_mask(int(e.get("d", 127))),
+                             "ml": _ml(e.get("v")), "direction": e.get("dir")})
+    cd = cal.get("calibDate") or {}
+    cal_date = None
+    if cd.get("year"):
+        cal_date = (2000 + int(cd["year"]) if int(cd["year"]) < 100 else int(cd["year"]), int(cd.get("month") or 1), int(cd.get("day") or 1))
+    last = hist[0] if hist else {}
+    history = [{"date": h.get("d"), "time": h.get("t"), "auto_ml": _ml(h.get("ad")), "manual_ml": _ml(h.get("md"))}
+               for h in hist[:10] if isinstance(h, dict)]
+    out = {
+        p + "present": True,
+        p + "name": st.get("name") or "",
+        p + "mode": st.get("mode"),
+        p + "off_duration": st.get("offDuration"),
+        p + "schedule": schedule,
+        p + "next_dose": f"{nxt['date']} {nxt['time']}" if nxt.get("date") and nxt.get("time") else None,
+        p + "next_dose_ml": _ml(nxt.get("value")),
+        p + "container_status": cont.get("status"),
+        p + "container_ml": _ml(cont.get("value")),
+        p + "container_size_ml": _ml(cont.get("capacity")),
+        p + "days_to_replace": cont.get("daysToReplace"),
+        p + "reminder_days": cont.get("reminderDays"),
+        p + "daily_target_ml": _ml((cont.get("auto") or {}).get("targetDose")),
+        p + "dosed_today_ml": _ml((cont.get("auto") or {}).get("currentDose")),
+        p + "manual_target_ml": _ml((cont.get("manual") or {}).get("targetDose")),
+        p + "manual_done_ml": _ml((cont.get("manual") or {}).get("currentDose")),
+        p + "pump_min_ml_min": _ml((cont.get("pump") or {}).get("minMlPerMin")),
+        p + "pump_max_ml_min": _ml((cont.get("pump") or {}).get("maxMlPerMin")),
+        p + "calibration_state": cal.get("state"),
+        p + "calibration_coeff": cal.get("calibCoeff"),
+        p + "calibration_date": cal_date,
+        p + "calibration_reminder_days": cal.get("reminderDays"),
+        p + "days_to_next_calibration": cal.get("daysToNextCalib"),
+        p + "last_dose": f"{last['d']} {last['t']}" if last.get("d") and last.get("t") else None,
+        p + "last_dose_ml": _ml((last.get("ad") or 0) + (last.get("md") or 0)) if last else None,
+        p + "last_dose_type": (None if not last else ("manual" if last.get("md") else "auto")),
+        p + "history": history,
+    }
+    return out
 
 
 # --- Smart feeder -----------------------------------------------------------
@@ -421,6 +560,8 @@ def _grams(value) -> float | None:
 
 def decode_feeder(frame: "Frame") -> dict | None:
     """sfReport/all and sfLog/* of the Smart feeder."""
+    if (wifi := _decode_wifi(frame)) is not None:
+        return wifi
     if frame.topic == "sfReport" and frame.subtopic == "all":
         obj = parse_json(frame)
         if obj is None:
@@ -778,6 +919,8 @@ def parse_config(frame: Frame) -> dict | None:
 
 _DECODERS = {
     DEVICE_FEEDER: decode_feeder,
+    DEVICE_BASE_PUMP: decode_base_pump,
+    DEVICE_DOSING_PUMP: decode_dosing_pump,
     DEVICE_LEVEL_KEEPER: decode_level_keeper,
     DEVICE_THERMO: decode_thermo,
     DEVICE_FLARE: decode_flare,

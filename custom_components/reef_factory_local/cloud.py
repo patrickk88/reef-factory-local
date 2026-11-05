@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime
+import json
 import logging
 import os
 import socket
@@ -156,6 +157,33 @@ def ensure_certificate(cert_path: str, key_path: str) -> None:
 
 # --- one connected device --------------------------------------------------------
 
+_SECRET_KEYS = {"key", "token", "email", "password", "pass", "ssid", "psk"}
+
+
+def _redact(obj):
+    if isinstance(obj, dict):
+        return {k: ("***" if str(k).lower() in _SECRET_KEYS else _redact(v)) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_redact(v) for v in obj]
+    return obj
+
+
+def frame_dump(frame: pr.Frame, limit: int = 4000) -> str:
+    """Payload of a cloud frame for the debug log - JSON with login secrets masked, else hex.
+
+    Enable debug logging for ``custom_components.reef_factory_local`` and click through the
+    device pages in the Reef Factory app to capture the protocol of a device the integration
+    does not decode yet; paste the lines into an issue.
+    """
+    blob = frame.blob.rstrip(b"\x00")  # the devices terminate JSON with NUL
+    try:
+        obj = json.loads(blob.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return blob[:limit // 2].hex()
+    text = json.dumps(_redact(obj), ensure_ascii=False, separators=(",", ":"))
+    return text if len(text) <= limit else text[:limit] + "...(%d B)" % len(text)
+
+
 def reset_transport(transport) -> None:
     """Drop a device connection with a TCP reset instead of a WebSocket close handshake.
 
@@ -208,6 +236,7 @@ class CloudDevice:
         if self.kind in pr.CLOUD_ONLY:
             await self.async_send(pr.frame_cloud_subscribe(self.serial, self.join_id))
             await self.async_send(pr.frame_cloud_get_all(self.serial, self.join_id))
+            await self.async_send(pr.frame_cloud_get_wifi(self.serial, self.join_id))
 
 
 class ReefCloudServer:
@@ -462,15 +491,16 @@ class ReefCloudServer:
             device.firmware = info.get("firmware") or device.firmware
             return
         if device.kind is None:
-            _LOGGER.debug("cloud: unknown device %s: %s/%s %d B", device.serial, frame.topic, frame.subtopic, len(frame.blob))
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug("cloud: unknown device %s -> cloud %s/%s %s", device.serial, frame.topic, frame.subtopic, frame_dump(frame))
             return
         data = pr.decode(device.kind, frame)
         if data:
             device.data = {**device.data, **data}
             device.last_data = time.monotonic()
             device.notify()
-        else:
-            _LOGGER.debug("cloud: %s %s/%s %d B", device.serial, frame.topic, frame.subtopic, len(frame.blob))
+        elif _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("cloud: %s -> cloud %s/%s %s", device.serial, frame.topic, frame.subtopic, frame_dump(frame))
 
     async def _pump_upstream(self, device: CloudDevice, upstream, ws: web.WebSocketResponse) -> None:
         """Forward frames from the real cloud to the device (and learn from them)."""
@@ -482,8 +512,8 @@ class ReefCloudServer:
                         break
                     await ws.send_bytes(raw)
                     frame = pr.parse_frame(raw)
-                    if frame:
-                        _LOGGER.debug("cloud->%s: %s/%s %d B", device.serial, frame.topic, frame.subtopic, len(frame.blob))
+                    if frame and _LOGGER.isEnabledFor(logging.DEBUG):
+                        _LOGGER.debug("cloud -> %s %s/%s %s", device.serial, frame.topic, frame.subtopic, frame_dump(frame))
                 elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):
                     break
         except (aiohttp.ClientError, ConnectionResetError):

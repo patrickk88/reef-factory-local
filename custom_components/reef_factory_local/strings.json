@@ -117,6 +117,30 @@
       },
       "schedule": {
         "name": "Schedule"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      },
+      "bp_mode": {
+        "name": "Mode"
+      },
+      "dp_next_dose": {
+        "name": "Channel {channel} next dose"
+      },
+      "dp_last_dose": {
+        "name": "Channel {channel} last dose"
+      },
+      "dp_dosed_today": {
+        "name": "Channel {channel} dosed today"
+      },
+      "dp_container": {
+        "name": "Channel {channel} container"
+      },
+      "dp_days_to_replace": {
+        "name": "Channel {channel} days until empty"
+      },
+      "dp_calibration": {
+        "name": "Channel {channel} calibrated on"
       }
     },
     "select": {
@@ -171,6 +195,9 @@
       },
       "cloud_passthrough": {
         "name": "Real cloud"
+      },
+      "bp_alert": {
+        "name": "Alert"
       }
     },
     "number": {
@@ -212,6 +239,15 @@
       },
       "feeder_reminder_days": {
         "name": "Refill reminder"
+      },
+      "bp_speed": {
+        "name": "Speed"
+      },
+      "bp_feed_mode_time": {
+        "name": "Feed mode duration"
+      },
+      "bp_feed_speed": {
+        "name": "Feed mode speed"
       }
     },
     "switch": {
@@ -229,6 +265,12 @@
       },
       "feeder_feeding_button": {
         "name": "Feeding button"
+      },
+      "bp_display": {
+        "name": "Display"
+      },
+      "bp_backlight": {
+        "name": "Backlight"
       }
     },
     "button": {

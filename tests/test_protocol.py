@@ -30,7 +30,7 @@ def test_device_type():
     assert pr.device_type("RFLK012304200017") == pr.DEVICE_LEVEL_KEEPER
     assert pr.device_type("RFTC012310240015") == pr.DEVICE_THERMO
     assert pr.device_type("RFRFS62310180008") == pr.DEVICE_FLARE
-    assert pr.device_type("RFBP052309210012") is None  # base pump: cloud only
+    assert pr.device_type("RFXX052309210012") is None  # unknown prefix
 
 def test_build_frames():
     assert pr.frame_get_config() == b"0000000000000000\x00get\x00config\x00\x00\x00"
@@ -280,6 +280,65 @@ def test_feeder_logs_and_commands():
     assert p(pr.frame_login_ok(s))[4] == b'{"status":"success","pingInterval":20}\x00'
     assert p(pr.frame_cloud_subscribe(s, "17937"))[1:5] == [b"sfConnect", b"join", b"17937", b"RFSF012309180013\x00"]
     assert p(pr.frame_cloud_get_all(s, "17937"))[1:4] == [b"sfGet", b"all", b"17937"]
+
+
+# --- Base pump / Dosing pump Pro X4 (captured 2026-11-05 through the cloud replacement) --------------
+BP_REPORT = (b"RFBP052309210012\x00bpReport\x00all\x001793701213648\x00"
+             b'{"mode":"auto","alert":"noErrors","speed":41,"feedModeTime":15,"feedSpeed":20,"display":"on","backlight":"on"}\x00')
+WIFI_REPORT = b"RFBP052309210012\x00geReport\x00wifiStrength\x001793701213648\x00" + b'{"value":-44}\x00'
+DP_REPORT = (b"RFDQ012310100304\x00dpReport\x00all\x001793701213648\x00" + (
+    b'{"id":3,"settings":{"id":3,"name":"All 4 Reef","mode":"dosing","offDuration":10,'
+    b'"schedule":[{"t":700,"d":127,"v":27500,"dir":"f"},{"t":900,"d":127,"v":12500,"dir":"f"},{"t":1020,"d":127,"v":10000,"dir":"f"}],'
+    b'"nextDose":{"date":"2026-11-05","time":"11:40","value":27500,"dir":"f"}},'
+    b'"container":{"id":3,"mode":"dosing","status":"enabled","capacity":30000000,"value":19086535,"reminderDays":5,'
+    b'"pump":{"minMlPerMin":230,"maxMlPerMin":138120},"manual":{"currentDose":0,"targetDose":0},"auto":{"currentDose":0,"targetDose":50000},"daysToReplace":381},'
+    b'"manual":{"id":3},"calibration":{"id":3,"state":"idle","calibCoeff":130304,"calibDate":{"day":25,"month":1,"year":26},"reminderDays":30,"daysToNextCalib":0},'
+    b'"history":{"id":3,"history":[{"d":"2026-11-04","t":"17:00","ad":10000,"md":0,"dir":"f"},{"d":"2026-11-04","t":"15:00","ad":12494,"md":0,"dir":"f"}]}}\x00'))
+DP_EMPTY = (b"RFDQ012310100304\x00dpReport\x00all\x001793701213648\x00" + (
+    b'{"id":4,"settings":{"id":4,"name":"","mode":"dosing","offDuration":10,"schedule":[]},'
+    b'"container":{"id":4,"mode":"dosing","status":"enabled","capacity":0,"value":0,"reminderDays":2,"pump":{"minMlPerMin":230,"maxMlPerMin":134700},'
+    b'"manual":{"currentDose":0,"targetDose":0},"auto":{"currentDose":0,"targetDose":0}},"manual":{"id":4},'
+    b'"calibration":{"id":4,"state":"idle","calibCoeff":133580,"calibDate":{"day":0,"month":0,"year":0},"reminderDays":30,"daysToNextCalib":0},"history":{"id":4,"history":[]}}\x00'))
+
+
+def test_pump_types_and_requests():
+    assert pr.device_type("RFBP052309210012") == pr.DEVICE_BASE_PUMP
+    assert pr.device_type("RFDQ012310100304") == pr.DEVICE_DOSING_PUMP
+    assert pr.DEVICE_BASE_PUMP in pr.CLOUD_ONLY and pr.DEVICE_DOSING_PUMP in pr.CLOUD_ONLY
+    p = lambda f: f.split(b"\x00", 4)
+    assert p(pr.frame_cloud_subscribe("RFBP052309210012", "17937"))[1:5] == [b"bpConnect", b"join", b"17937", b"RFBP052309210012\x00"]
+    assert p(pr.frame_cloud_get_all("RFBP052309210012", "17937"))[1:5] == [b"bpGet", b"all", b"17937", b"\x00"]
+    assert p(pr.frame_cloud_subscribe("RFDQ012310100304", "17937"))[1:3] == [b"dqConnect", b"join"]
+    assert p(pr.frame_cloud_get_all("RFDQ012310100304", "17937"))[1:5] == [b"dpGet", b"all", b"17937", b'{"id":0}\x00']
+    assert p(pr.frame_cloud_get_wifi("RFBP052309210012", "17937"))[1:3] == [b"geGet", b"wifiStrength"]
+    assert p(pr.frame_bp_set_settings("RFBP052309210012", 41, 15, 20, False, True))[4] == \
+        b'{"speed":41,"feedModeTime":15,"feedSpeed":20,"display":"off","backlight":"on"}\x00'
+
+
+def test_base_pump_report():
+    d = pr.decode(pr.DEVICE_BASE_PUMP, pr.parse_frame(BP_REPORT))
+    assert d == {"mode": "auto", "alert": "noErrors", "alert_active": False, "speed": 41, "feed_mode_time": 15,
+                 "feed_speed": 20, "display": True, "backlight": True}
+    assert pr.decode(pr.DEVICE_BASE_PUMP, pr.parse_frame(WIFI_REPORT)) == {"wifi_rssi": -44}
+    assert pr.decode(pr.DEVICE_FEEDER, pr.parse_frame(WIFI_REPORT)) == {"wifi_rssi": -44}
+
+
+def test_dosing_pump_report():
+    d = pr.decode(pr.DEVICE_DOSING_PUMP, pr.parse_frame(DP_REPORT))
+    assert d["ch3_present"] and d["ch3_name"] == "All 4 Reef" and d["ch3_mode"] == "dosing"
+    assert d["ch3_schedule"] == [
+        {"time": "11:40", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 27.5, "direction": "f"},
+        {"time": "15:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 12.5, "direction": "f"},
+        {"time": "17:00", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "ml": 10.0, "direction": "f"}]
+    assert d["ch3_next_dose"] == "2026-11-05 11:40" and d["ch3_next_dose_ml"] == 27.5
+    assert d["ch3_container_ml"] == 19086.535 and d["ch3_container_size_ml"] == 30000.0 and d["ch3_days_to_replace"] == 381
+    assert d["ch3_daily_target_ml"] == 50.0 and d["ch3_dosed_today_ml"] == 0.0
+    assert d["ch3_pump_max_ml_min"] == 138.12 and d["ch3_calibration_date"] == (2026, 1, 25)
+    assert d["ch3_last_dose"] == "2026-11-04 17:00" and d["ch3_last_dose_ml"] == 10.0 and d["ch3_last_dose_type"] == "auto"
+    assert len(d["ch3_history"]) == 2 and d["ch3_history"][1]["auto_ml"] == 12.494
+    e = pr.decode(pr.DEVICE_DOSING_PUMP, pr.parse_frame(DP_EMPTY))
+    assert e["ch4_present"] and e["ch4_name"] == "" and e["ch4_calibration_date"] is None and e["ch4_last_dose"] is None
+    assert e["ch4_schedule"] == [] and e["ch4_container_size_ml"] == 0.0
 
 if __name__ == "__main__":
     n = 0

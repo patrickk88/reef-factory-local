@@ -11,7 +11,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass, UnitOfTemperature, UnitOfTime, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -48,6 +56,69 @@ def _flare_attrs(d: dict) -> dict:
     if d.get("mode") == "manual":
         out["manual_duration_min"] = None if d.get("manual_time_s") is None else round(d["manual_time_s"] / 60)
     return out
+
+
+def _date_tuple(v):
+    if v is None:
+        return None
+    try:
+        return datetime.date(*v)
+    except (TypeError, ValueError):
+        return None
+
+
+WIFI = ReefSensorDescription(
+    key="wifi_rssi", translation_key="wifi_rssi", device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT, state_class=SensorStateClass.MEASUREMENT,
+    entity_category=EntityCategory.DIAGNOSTIC, entity_registry_enabled_default=False,
+    value_fn=lambda d: d.get("wifi_rssi"),
+)
+
+
+def _dosing_sensors(ch: int) -> tuple[ReefSensorDescription, ...]:
+    """Six sensors per channel of the Dosing pump Pro X4; keys ch<n>_*, names with a {channel} placeholder."""
+    p = f"ch{ch}_"
+    g = lambda key: (lambda d: d.get(p + key))
+    return (
+        ReefSensorDescription(
+            key=p + "next_dose", translation_key="dp_next_dose", icon="mdi:calendar-clock",
+            translation_placeholders={"channel": str(ch)}, value_fn=g("next_dose"),
+            attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "next_dose_ml", p + "daily_target_ml",
+                                                           p + "mode", p + "schedule") if d.get(k) is not None},
+        ),
+        ReefSensorDescription(
+            key=p + "last_dose", translation_key="dp_last_dose", icon="mdi:history",
+            translation_placeholders={"channel": str(ch)}, value_fn=g("last_dose"),
+            attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "last_dose_ml", p + "last_dose_type",
+                                                           p + "history") if d.get(k) is not None},
+        ),
+        ReefSensorDescription(
+            key=p + "dosed_today", translation_key="dp_dosed_today", icon="mdi:water",
+            translation_placeholders={"channel": str(ch)}, native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+            state_class=SensorStateClass.TOTAL_INCREASING, suggested_display_precision=2, value_fn=g("dosed_today_ml"),
+            attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "daily_target_ml") if d.get(k) is not None},
+        ),
+        ReefSensorDescription(
+            key=p + "container", translation_key="dp_container", icon="mdi:cup-water",
+            translation_placeholders={"channel": str(ch)}, native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+            state_class=SensorStateClass.MEASUREMENT, suggested_display_precision=0, value_fn=g("container_ml"),
+            attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "container_size_ml", p + "container_status",
+                                                           p + "reminder_days") if d.get(k) is not None},
+        ),
+        ReefSensorDescription(
+            key=p + "days_to_replace", translation_key="dp_days_to_replace", icon="mdi:calendar-alert",
+            translation_placeholders={"channel": str(ch)}, native_unit_of_measurement=UnitOfTime.DAYS,
+            state_class=SensorStateClass.MEASUREMENT, value_fn=g("days_to_replace"),
+        ),
+        ReefSensorDescription(
+            key=p + "calibration", translation_key="dp_calibration", device_class=SensorDeviceClass.DATE,
+            translation_placeholders={"channel": str(ch)}, entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda d: _date_tuple(d.get(p + "calibration_date")),
+            attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "calibration_state", p + "calibration_coeff",
+                                                           p + "calibration_reminder_days", p + "days_to_next_calibration",
+                                                           p + "pump_min_ml_min", p + "pump_max_ml_min") if d.get(k) is not None},
+        ),
+    )
 
 
 def _lk_attrs(d: dict) -> dict:
@@ -142,7 +213,16 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
             attrs_fn=lambda d: {"entries": [{"time": e["time"], "rotations": e["rotations"], "days": e["days"]}
                                            for e in d.get("schedule") or []]},
         ),
+        WIFI,
     ),
+    pr.DEVICE_BASE_PUMP: (
+        ReefSensorDescription(
+            key="bp_mode", translation_key="bp_mode", icon="mdi:pump", value_fn=lambda d: d.get("mode"),
+            attrs_fn=lambda d: {k: d[k] for k in ("alert",) if d.get(k) is not None},
+        ),
+        WIFI,
+    ),
+    pr.DEVICE_DOSING_PUMP: tuple(desc for ch in range(1, pr.DOSING_CHANNELS + 1) for desc in _dosing_sensors(ch)) + (WIFI,),
 }
 
 
@@ -159,6 +239,15 @@ class ReefSensor(ReefEntity, SensorEntity):
     def __init__(self, coordinator, description: ReefSensorDescription) -> None:
         super().__init__(coordinator, description.key)
         self.entity_description = description
+
+    @property
+    def available(self) -> bool:
+        if not super().available:
+            return False
+        key = self.entity_description.key
+        if key.startswith("ch"):  # dosing pump channel: only once the device reported it
+            return bool((self.coordinator.data or {}).get(key.split("_", 1)[0] + "_present"))
+        return True
 
     @property
     def native_value(self):

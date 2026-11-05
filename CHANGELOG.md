@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - 2026-11-05
+- Base pump (`RFBP…`, via the cloud replacement): mode, alert, speed, feed-mode duration and speed,
+  display, backlight - reading and writing (`bpSet/settings`), Wi-Fi signal.
+- Dosing pump Pro X4 (`RFDQ…`, via the cloud replacement, reading): per channel next / last dose,
+  dosed today, container, days until empty, calibration, schedule and history as attributes.
+- Cloud replacement: debug logging shows the (secret-free) JSON of every frame - the way to capture
+  the protocol of a device the integration does not decode yet.
+
 ## 0.5.1 - 2026-11-05
 - Cloud replacement: device connections are dropped with a TCP reset instead of a WebSocket close
   handshake (Home Assistant stop / reload, loss of the real cloud). The Smart feeder never reconnects

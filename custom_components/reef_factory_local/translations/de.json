@@ -117,6 +117,30 @@
       },
       "schedule": {
         "name": "Zeitplan"
+      },
+      "wifi_rssi": {
+        "name": "WLAN-Signal"
+      },
+      "bp_mode": {
+        "name": "Modus"
+      },
+      "dp_next_dose": {
+        "name": "Kanal {channel} nächste Dosis"
+      },
+      "dp_last_dose": {
+        "name": "Kanal {channel} letzte Dosis"
+      },
+      "dp_dosed_today": {
+        "name": "Kanal {channel} heute dosiert"
+      },
+      "dp_container": {
+        "name": "Kanal {channel} Behälter"
+      },
+      "dp_days_to_replace": {
+        "name": "Kanal {channel} Tage bis leer"
+      },
+      "dp_calibration": {
+        "name": "Kanal {channel} kalibriert am"
       }
     },
     "select": {
@@ -171,6 +195,9 @@
       },
       "cloud_passthrough": {
         "name": "Echte Cloud"
+      },
+      "bp_alert": {
+        "name": "Störung"
       }
     },
     "number": {
@@ -212,6 +239,15 @@
       },
       "feeder_reminder_days": {
         "name": "Nachfüll-Erinnerung"
+      },
+      "bp_speed": {
+        "name": "Leistung"
+      },
+      "bp_feed_mode_time": {
+        "name": "Futterpause Dauer"
+      },
+      "bp_feed_speed": {
+        "name": "Futterpause Leistung"
       }
     },
     "switch": {
@@ -229,6 +265,12 @@
       },
       "feeder_feeding_button": {
         "name": "Fütterungsknopf"
+      },
+      "bp_display": {
+        "name": "Display"
+      },
+      "bp_backlight": {
+        "name": "Hintergrundbeleuchtung"
       }
     },
     "button": {

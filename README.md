@@ -17,10 +17,9 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Thermo control (`RFTC…`) | temperature, heating/cooling, all four thresholds, beeper, display light, cloud connected | thresholds (alarm below / target range low / target range high / alarm above, always sent together, order checked), beeper, display light (°C units only so far) | 1.0.0 |
 | Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, acclimation, manual presets, cloud connected | mode (program / manual / off), active program, active manual preset, intensity; actions: manual mode with timer, change manual preset, write / rename program, acclimation start / stop, program preview — **experimental, see below** | 1.0.0 |
 
-| Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
-
-Base pump and Dosing pump Pro X4 are cloud-only like the feeder and will very likely work the same way
-(same platform) - not tested yet.
+| Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
+| Base pump (`RFBP…`) - via the **cloud replacement** | mode, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | speed, feed-mode duration and speed, display, backlight (always sent together, like the app does) | - |
+| Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | read-only for now (no write command captured yet - the app's manual dose / schedule frames are welcome in an issue) | - |
 
 ## Important
 
