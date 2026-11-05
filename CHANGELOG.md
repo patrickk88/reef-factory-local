@@ -7,6 +7,7 @@
   light itself does not report it.
 - Reef Flare *Program* sensor: the attributes `levels` and `presets` only in manual mode (they stayed from
   the last manual mode before).
+- README: every row of the confirmed-writes table names its device.
 
 ## 0.9.0 - 2026-11-05
 - Reef Flare: action `flare_manual` - timed manual mode (the app's *timer mode*): manual mode, optional new

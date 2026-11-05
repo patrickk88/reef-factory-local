@@ -32,10 +32,9 @@ only until someone confirms it on hardware.
 | Device (firmware) | Confirmed writes | Date |
 |---|---|---|
 | Level keeper (1.0.0) | display light, max refill time, set clock, pause refill, fill hose + stop, calibration run, calibration value and reminder | 2026-11-03 |
-| | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
+| Level keeper (1.0.0) | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
 | Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
-| Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop | 2026-11-05 |
-| | timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
+| Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
