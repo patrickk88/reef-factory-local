@@ -140,12 +140,12 @@ Use a password for Smart Reef that you use nowhere else.
 
 Level keeper: manual refill, calibration run and filling the hose run the refill pump. Dosing pump Pro X4:
 dosing now and replacing a channel's schedule put additives into the tank. These are only available as
-actions (no dashboard button) and only after enabling *Allow pump actions* - for the Level keeper in its
+actions (no dashboard button) and only after enabling *Allow pump actions* - for each Level keeper in its
 own entry's options, for the Dosing pump in the options of the *cloud replacement* entry
 (*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
 works (button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
 
-Instead of leaving the option on, the Level keeper and the Dosing pump Pro X4 have a switch *Allow pump
+Instead of leaving the option on, every Level keeper and the Dosing pump Pro X4 have a switch *Allow pump
 actions (10 min)*: it unlocks the actions of that entry for ten minutes and then turns itself off (it is
 not stored - after a restart it is off). A dashboard script can turn it on, call the action and turn it
 off again. Nothing is sent to the device by the switch itself.
@@ -326,6 +326,11 @@ type *Integration*. Or copy `custom_components/reef_factory_local` into your Hom
 Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*, or:
 
 [![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=reef_factory_local)
+
+Add the integration once per device with a local port (Level keeper, Thermo control, Reef Flare, Smart Roller)
+by its IP address. Several devices of the same kind are fine - for example two Level keepers on two tanks or
+two Reef Flares over one tank; each one gets its own entry and its own entities. The devices without a local
+port (Smart feeder, Base pump, Dosing pump Pro X4) all come in through one *Cloud replacement* entry (below).
 
 ## Protocol notes
 
