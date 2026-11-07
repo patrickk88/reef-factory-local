@@ -312,7 +312,8 @@ def test_feeder_logs_and_commands():
     fr = pr.parse_frame(b"RFSF012309180013\x00sfLog\x00container\x00\x00" + b'{"container":{"alert":"empty","value":0,"size":0}}' + b"\x00")
     assert pr.decode(pr.DEVICE_FEEDER, fr) == {"container_alert": "empty", "container_empty": True}
     fr = pr.parse_frame(b"RFSF012309180013\x00sfLog\x00dose\x00\x00" + b'{"dose":{"type":"manually","value":100},"container":{"value":4900,"size":0}}' + b"\x00")
-    assert pr.decode(pr.DEVICE_FEEDER, fr)["last_dose_event"] == {"type": "manually", "grams": 1.0}
+    ev = pr.decode(pr.DEVICE_FEEDER, fr)["last_dose_event"]
+    assert {k: ev[k] for k in ("type", "grams")} == {"type": "manually", "grams": 1.0} and ev["at"] > 0, ev
     p = lambda f: f.split(b"\x00", 4)
     f = p(pr.frame_sf_feed(s, 1, "1793701213648"))
     assert f[1:4] == [b"sfExecute", b"manual", b"1793701213648"] and f[4] == b'{"rotations":1}\x00'
@@ -409,7 +410,8 @@ def test_dosing_pump_commands():
     assert p(pr.frame_dp_calibration(s, 4, True))[4] == b'{"id":4,"command":"startCalib","time":30}\x00'
     assert p(pr.frame_dp_calibration(s, 4, False))[4] == b'{"id":4,"command":"cancelCalib"}\x00'
     log = pr.parse_frame(b"RFDQ012310100304\x00dpLog\x00dose\x001793701213648\x00" + b'{"id":4,"value":50000}\x00')
-    assert pr.decode(pr.DEVICE_DOSING_PUMP, log) == {"ch4_dose_event_ml": 5.0}
+    ev = pr.decode(pr.DEVICE_DOSING_PUMP, log)
+    assert ev["ch4_dose_event_ml"] == 5.0 and ev["ch4_dose_event_at"] > 0 and len(ev) == 2, ev
 
 
 def test_base_pump_feed_mode():

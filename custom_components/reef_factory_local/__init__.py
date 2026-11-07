@@ -22,19 +22,20 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: dict[str, list[Platform]] = {
     pr.DEVICE_LEVEL_KEEPER: [
         Platform.SENSOR, Platform.SELECT, Platform.BINARY_SENSOR,
-        Platform.NUMBER, Platform.SWITCH, Platform.BUTTON,
+        Platform.NUMBER, Platform.SWITCH, Platform.BUTTON, Platform.EVENT,
     ],
     pr.DEVICE_THERMO: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH],
     pr.DEVICE_SMART_ROLLER: [Platform.SENSOR, Platform.BINARY_SENSOR],  # read only until writes are confirmed
     pr.DEVICE_FLARE: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT, Platform.NUMBER],
     pr.DEVICE_FEEDER: [
         Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT,
-        Platform.NUMBER, Platform.SWITCH, Platform.BUTTON,
+        Platform.NUMBER, Platform.SWITCH, Platform.BUTTON, Platform.EVENT,
     ],
 }
 # the cloud replacement entry hosts any cloud-only device, so it loads every platform
 CLOUD_PLATFORMS = [
     Platform.SENSOR, Platform.SELECT, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH, Platform.BUTTON,
+    Platform.EVENT,
 ]
 
 type ReefConfigEntry = ConfigEntry

@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v0.8)
+## Supported devices (v0.10)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -199,6 +199,27 @@ is a property of the devices, not of this integration.
 The cloud host name is a plain string in the device firmware. With a serial adapter you can read the
 flash, replace the name by the Home Assistant IP and write it back; `tools/` will get a script for
 that. Only for people who are comfortable with soldering and esptool - a mistake can brick the device.
+
+## Events and times
+
+- **Events** (for automations and the logbook): *Feeding* (Smart feeder; type and grams), *Refill* (Level keeper;
+  mL of this refill and today's total), *Dose* (Dosing pump Pro X4; channel, name and mL). An event fires when
+  the device reports something new while Home Assistant is running - nothing is replayed after a restart.
+- **Times are timestamps:** next / last feeding and next / last dose per X4 channel. A time trigger can use them
+  directly, e.g. a feed pause 30 seconds before the next feeding:
+
+```yaml
+triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.<your feeder>_next_feeding
+      offset: "-00:00:30"
+```
+
+- **Reef Flare:** *Timed manual mode ends* - when the light goes back to its program (also when the manual
+  mode was started from the app).
+- **Last report** (diagnostic, every device, disabled by default): when the device last sent anything, to
+  the minute. Stays readable while the device is away.
 
 ## Reef Flare programs
 

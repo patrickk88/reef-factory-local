@@ -191,6 +191,12 @@
       },
       "sr_start_delay": {
         "name": "Ritardo di avvio"
+      },
+      "manual_end": {
+        "name": "Fine modalità manuale a tempo"
+      },
+      "last_seen": {
+        "name": "Ultimo rapporto"
       }
     },
     "select": {
@@ -347,6 +353,38 @@
       },
       "feed_now": {
         "name": "Alimenta ora"
+      }
+    },
+    "event": {
+      "feeding_event": {
+        "name": "Alimentazione",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "feeding": "Alimentazione"
+            }
+          }
+        }
+      },
+      "refill_event": {
+        "name": "Rabbocco",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "refill": "Rabbocco"
+            }
+          }
+        }
+      },
+      "dose_event": {
+        "name": "Dosaggio",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "dose": "Dosaggio"
+            }
+          }
+        }
       }
     }
   },

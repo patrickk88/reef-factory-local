@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
+import time
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -67,6 +68,17 @@ def _flare_attrs(d: dict) -> dict:
     return out
 
 
+def _local_dt(value):
+    """'YYYY-MM-DD HH:MM' in the devices' local time (= Home Assistant's time zone) -> aware datetime."""
+    if not value:
+        return None
+    try:
+        naive = datetime.datetime.strptime(str(value)[:16], "%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
+    return naive.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+
 def _mm_to_m(v):
     return None if v is None else v / 1000
 
@@ -95,13 +107,15 @@ def _dosing_sensors(ch: int) -> tuple[ReefSensorDescription, ...]:
     return (
         ReefSensorDescription(
             key=p + "next_dose", translation_key="dp_next_dose", icon="mdi:calendar-clock",
-            translation_placeholders={"channel": str(ch)}, value_fn=g("next_dose"),
+            device_class=SensorDeviceClass.TIMESTAMP,
+            translation_placeholders={"channel": str(ch)}, value_fn=lambda d: _local_dt(d.get(p + "next_dose")),
             attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "next_dose_ml", p + "daily_target_ml",
                                                            p + "mode", p + "schedule") if d.get(k) is not None},
         ),
         ReefSensorDescription(
             key=p + "last_dose", translation_key="dp_last_dose", icon="mdi:history",
-            translation_placeholders={"channel": str(ch)}, value_fn=g("last_dose"),
+            device_class=SensorDeviceClass.TIMESTAMP,
+            translation_placeholders={"channel": str(ch)}, value_fn=lambda d: _local_dt(d.get(p + "last_dose")),
             attrs_fn=lambda d: {k[len(p):]: d[k] for k in (p + "name", p + "last_dose_ml", p + "last_dose_type",
                                                            p + "history") if d.get(k) is not None},
         ),
@@ -209,12 +223,12 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
     pr.DEVICE_FEEDER: (
         ReefSensorDescription(
             key="next_feeding", translation_key="next_feeding", icon="mdi:fish",
-            value_fn=lambda d: d.get("next_feeding"),
+            device_class=SensorDeviceClass.TIMESTAMP, value_fn=lambda d: _local_dt(d.get("next_feeding")),
             attrs_fn=lambda d: {k: d[k] for k in ("next_feeding_g",) if d.get(k) is not None},
         ),
         ReefSensorDescription(
             key="last_feeding", translation_key="last_feeding", icon="mdi:history",
-            value_fn=lambda d: d.get("last_feeding"),
+            device_class=SensorDeviceClass.TIMESTAMP, value_fn=lambda d: _local_dt(d.get("last_feeding")),
             attrs_fn=lambda d: {k: d[k] for k in ("last_feeding_type", "last_feeding_g", "history") if d.get(k) is not None},
         ),
         ReefSensorDescription(
@@ -301,8 +315,14 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ReefConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
-    setup_entities(hass, entry, async_add_entities,
-                   lambda c: [ReefSensor(c, desc) for desc in SENSORS.get(pr.device_type(c.serial), ())])
+    def factory(c):
+        kind = pr.device_type(c.serial)
+        extra = [ReefLastSeen(c)]
+        if kind == pr.DEVICE_FLARE:
+            extra.append(ReefFlareManualEnd(c))
+        return [ReefSensor(c, desc) for desc in SENSORS.get(kind, ())] + extra
+
+    setup_entities(hass, entry, async_add_entities, factory)
 
 
 class ReefSensor(ReefEntity, SensorEntity):
@@ -332,3 +352,59 @@ class ReefSensor(ReefEntity, SensorEntity):
         if self.entity_description.attrs_fn is None or self.coordinator.data is None:
             return None
         return self.entity_description.attrs_fn(self.coordinator.data) or None
+
+
+class ReefFlareManualEnd(ReefEntity, SensorEntity):
+    """When the timed manual mode ends (the light reports the seconds left). Unknown outside manual mode
+    and for "always". Small jitter between reports is ignored so the state only changes when the time does."""
+
+    _attr_translation_key = "manual_end"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:timer-sand"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "manual_end")
+        self._end: datetime.datetime | None = None
+
+    @property
+    def native_value(self) -> datetime.datetime | None:
+        data = self.coordinator.data or {}
+        seconds = data.get("manual_time_s")
+        if data.get("mode") != "manual" or seconds is None:
+            self._end = None
+            return None
+        end = (dt_util.utcnow() + datetime.timedelta(seconds=seconds)).replace(microsecond=0)
+        if self._end is None or abs((end - self._end).total_seconds()) > 15:
+            self._end = end
+        return self._end
+
+
+class ReefLastSeen(ReefEntity, SensorEntity):
+    """Diagnostic: when the device last sent anything (to the minute). Stays readable while the device
+    is away - that is when it is interesting. Disabled by default (one state per minute)."""
+
+    _attr_translation_key = "last_seen"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "last_seen")
+
+    def _monotonic(self) -> float | None:
+        source = self.coordinator.client
+        value = getattr(source, "last_seen", None) or getattr(source, "last_data", None)
+        return value or None
+
+    @property
+    def available(self) -> bool:
+        return self._monotonic() is not None
+
+    @property
+    def native_value(self) -> datetime.datetime | None:
+        mono = self._monotonic()
+        if mono is None:
+            return None
+        seen = dt_util.utcnow() - datetime.timedelta(seconds=max(time.monotonic() - mono, 0))
+        return seen.replace(second=0, microsecond=0)

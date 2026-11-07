@@ -191,6 +191,12 @@
       },
       "sr_start_delay": {
         "name": "Délai de démarrage"
+      },
+      "manual_end": {
+        "name": "Fin du mode manuel temporisé"
+      },
+      "last_seen": {
+        "name": "Dernier rapport"
       }
     },
     "select": {
@@ -347,6 +353,38 @@
       },
       "feed_now": {
         "name": "Nourrir maintenant"
+      }
+    },
+    "event": {
+      "feeding_event": {
+        "name": "Nourrissage",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "feeding": "Nourrissage"
+            }
+          }
+        }
+      },
+      "refill_event": {
+        "name": "Remplissage",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "refill": "Remplissage"
+            }
+          }
+        }
+      },
+      "dose_event": {
+        "name": "Dosage",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "dose": "Dosage"
+            }
+          }
+        }
       }
     }
   },

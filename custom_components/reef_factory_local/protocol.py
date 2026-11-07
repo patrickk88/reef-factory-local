@@ -589,7 +589,8 @@ def decode_dosing_pump(frame: "Frame") -> dict | None:
     if frame.topic == "dpLog" and frame.subtopic == "dose":  # a dose just finished
         cid = obj.get("id")
         if isinstance(cid, int):
-            return {f"ch{cid}_dose_event_ml": _ml(obj.get("value"))}
+            # *_at tells two equal doses apart (event entity)
+            return {f"ch{cid}_dose_event_ml": _ml(obj.get("value")), f"ch{cid}_dose_event_at": time.time()}
         return None
     if frame.topic != "dpReport" or frame.subtopic != "all":
         return None
@@ -707,7 +708,7 @@ def decode_feeder(frame: "Frame") -> dict | None:
             return {"container_alert": cont.get("alert"), "container_empty": cont.get("alert") == "empty"}
         if frame.subtopic == "dose":
             dose = obj.get("dose") or {}
-            return {"last_dose_event": {"type": dose.get("type"), "grams": _grams(dose.get("value"))},
+            return {"last_dose_event": {"type": dose.get("type"), "grams": _grams(dose.get("value")), "at": time.time()},
                     "container_empty": False}
     return None
 

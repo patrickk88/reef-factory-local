@@ -191,6 +191,12 @@
       },
       "sr_start_delay": {
         "name": "Startverzögerung"
+      },
+      "manual_end": {
+        "name": "Zeitschaltmodus endet"
+      },
+      "last_seen": {
+        "name": "Zuletzt gemeldet"
       }
     },
     "select": {
@@ -347,6 +353,38 @@
       },
       "feed_now": {
         "name": "Jetzt füttern"
+      }
+    },
+    "event": {
+      "feeding_event": {
+        "name": "Fütterung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "feeding": "Fütterung"
+            }
+          }
+        }
+      },
+      "refill_event": {
+        "name": "Nachfüllung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "refill": "Nachfüllung"
+            }
+          }
+        }
+      },
+      "dose_event": {
+        "name": "Dosierung",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "dose": "Dosierung"
+            }
+          }
+        }
       }
     }
   },

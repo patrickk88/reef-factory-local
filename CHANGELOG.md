@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.0 - 2026-11-07
+- Events: *Feeding* (Smart feeder, from the device's own log message: type and grams), *Refill* (Level keeper,
+  every rise of the daily counter: mL and today's total), *Dose* (Dosing pump Pro X4, from the device's dose
+  log: channel, name, mL). Nothing fires at start-up for things that happened before.
+- **Changed:** next / last feeding (Smart feeder) and next / last dose (X4 channels) are now timestamp sensors
+  in Home Assistant's time zone instead of text - usable in time triggers (with an offset). Templates that
+  parsed the old text (`YYYY-MM-DD HH:MM`) need updating.
+- Reef Flare: sensor *Timed manual mode ends* (from the seconds left the light reports; also when started from
+  the app). Small jitter between reports does not change the state.
+- Every device: diagnostic sensor *Last report* (to the minute, readable while the device is away; disabled
+  by default).
+
 ## 0.9.3 - 2026-11-07
 - Cloud replacement, app passthrough: if a port is already taken on one address of the host (e.g. Tailscale
   Funnel or Serve on 443 of the tailnet address), the passthrough now listens on the LAN addresses instead of

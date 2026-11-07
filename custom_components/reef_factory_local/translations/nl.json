@@ -191,6 +191,12 @@
       },
       "sr_start_delay": {
         "name": "Startvertraging"
+      },
+      "manual_end": {
+        "name": "Einde getimede handmatige modus"
+      },
+      "last_seen": {
+        "name": "Laatste melding"
       }
     },
     "select": {
@@ -347,6 +353,38 @@
       },
       "feed_now": {
         "name": "Nu voeren"
+      }
+    },
+    "event": {
+      "feeding_event": {
+        "name": "Voeren",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "feeding": "Voeren"
+            }
+          }
+        }
+      },
+      "refill_event": {
+        "name": "Bijvullen",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "refill": "Bijvullen"
+            }
+          }
+        }
+      },
+      "dose_event": {
+        "name": "Dosering",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "dose": "Dosering"
+            }
+          }
+        }
       }
     }
   },

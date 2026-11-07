@@ -191,6 +191,12 @@
       },
       "sr_start_delay": {
         "name": "Start delay"
+      },
+      "manual_end": {
+        "name": "Timed manual mode ends"
+      },
+      "last_seen": {
+        "name": "Last report"
       }
     },
     "select": {
@@ -347,6 +353,38 @@
       },
       "feed_now": {
         "name": "Feed now"
+      }
+    },
+    "event": {
+      "feeding_event": {
+        "name": "Feeding",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "feeding": "Feeding"
+            }
+          }
+        }
+      },
+      "refill_event": {
+        "name": "Refill",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "refill": "Refill"
+            }
+          }
+        }
+      },
+      "dose_event": {
+        "name": "Dose",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "dose": "Dose"
+            }
+          }
+        }
       }
     }
   },
