@@ -185,6 +185,44 @@ def test_flare_timed_manual_and_new_program_helpers():
     assert pr.flare_same_points(rep, pts) and not pr.flare_same_points(rep[:1], pts) and not pr.flare_same_points(None, pts)
     assert pr.FLARE_MANUAL_MAX_MIN * 60 <= 0xFFFE
 
+
+def test_flare_preset_helpers():
+    """Timed programs of the app = manual presets: name a free slot, activate one, compare the answer."""
+    name = lambda s: s.encode("utf-16-be") + b"\x00\x00"
+    presets = name("Grün") + b"\x01" + bytes([10, 10, 10, 54, 100, 10, 10]) + (name("") + b"\x00" + bytes(7)) * 7
+    blob = bytes([30, 0x02, 0x00, 0xEE, 8]) + presets + bytes([63] + [0] * 7)
+    d = pr.decode(pr.DEVICE_FLARE, pr.Frame("RFRFS62403220038", "rfRefresh", "manualData", "", blob))
+    p = d["manual_presets"]
+    assert d["program"] == "Grün" and d["intensity"] == 63 and len(p) == 8, d
+    assert pr.flare_preset_index(p, "Grün") == 0 and pr.flare_preset_index(p, "") is None and pr.flare_preset_index(p, "x") is None
+    assert pr.flare_preset_free_slot(p) == 1 and pr.flare_preset_free_slot(None) is None
+    assert pr.flare_preset_free_slot([dict(q, name="A") for q in p]) is None
+    new = pr.flare_presets_edit(p, 1, name="Test", levels=[5] * 6 + [105], intensity=100)
+    assert new[1] == {"name": "Test", "active": False, "levels": [5] * 6 + [100], "intensity": 100}, new[1]
+    assert new[0] == p[0] and p[1]["name"] == "" and p[1]["levels"] == [0] * 7  # input untouched
+    act = pr.flare_presets_edit(new, 1, activate=True)
+    assert [q["active"] for q in act] == [False, True] + [False] * 6 and pr.flare_active_preset(act) == 1
+    assert pr.flare_active_preset(new) == 0 and pr.flare_active_preset([]) == 0
+    assert pr.flare_same_preset(dict(new[1]), new[1]) and not pr.flare_same_preset(p[1], new[1])
+    assert pr.flare_same_preset(dict(new[1], intensity=None), new[1]) and not pr.flare_same_preset(None, new[1])
+    assert pr.flare_presets_edit(p, 0, name="X" * 20)[0]["name"] == "X" * 16
+    # delete like the app: name empty, channels 10 %, intensity and active flag stay
+    gone = pr.flare_presets_edit(act, 1, name="", levels=list(pr.FLARE_PRESET_DELETED_LEVELS))
+    assert gone[1] == {"name": "", "active": True, "levels": [10] * 7, "intensity": 100}, gone[1]
+    assert pr.flare_preset_index(gone, "Test") is None and pr.flare_preset_free_slot(gone) == 1
+    # the update frame carries the whole list: slot 1 named, everything else as reported
+    payload = pr.frame_rf_manual_update("RFRFS62403220038", new).split(b"\x00", 4)[4][:-1]
+    want = blob[4:].replace(name("") + b"\x00" + bytes(7), name("Test") + b"\x00" + bytes([5] * 6 + [100]), 1)
+    want = want[:-7] + bytes([100]) + want[-6:]
+    assert payload == want, (payload.hex(), want.hex())
+    for bad in ([], [{"name": "", "active": True, "levels": [0] * 7}]):
+        try:
+            pr.flare_presets_edit(bad, 3)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("bad slot accepted")
+
 def test_flare_output_now():
     """Output: program points interpolated at the minute, x intensity; manual preset; off = 0."""
     pts = pr.normalize_flare_points([

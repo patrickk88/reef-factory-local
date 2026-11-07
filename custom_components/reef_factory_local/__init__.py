@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import Store
 
 from . import protocol as pr
 from .client import ReefClient
@@ -14,7 +15,7 @@ from .cloud import MODE_PASSTHROUGH, CloudDevice, ReefCloudServer
 from .const import (
     CONF_CLOUD, CONF_CLOUD_MODE, CONF_DEVICE_TYPE, CONF_SERIAL, CONF_UPSTREAM_IPS, DOMAIN, SIGNAL_NEW_CLOUD_DEVICE,
 )
-from .coordinator import CloudCoordinator, ReefCoordinator
+from .coordinator import PRESET_STORE_VERSION, CloudCoordinator, ReefCoordinator, preset_store_key
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -65,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> bool
     if kind := entry.data.get(CONF_DEVICE_TYPE):
         pr.register_device_type(serial, kind)
     coordinator = ReefCoordinator(hass, entry)
+    await coordinator.async_restore()
     coordinator.client = ReefClient(
         async_get_clientsession(hass),
         entry.data[CONF_HOST],
@@ -114,3 +116,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> boo
     return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS[pr.device_type(entry.data[CONF_SERIAL])]
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Drop the stored manual presets of a removed Reef Flare."""
+    if not is_cloud_entry(entry) and entry.data.get(CONF_SERIAL):
+        await Store(hass, PRESET_STORE_VERSION, preset_store_key(entry.data[CONF_SERIAL])).async_remove()

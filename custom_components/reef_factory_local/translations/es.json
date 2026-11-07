@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare: modo manual temporizado",
-      "description": "Pone la(s) luz(ces) en modo manual durante un tiempo, opcionalmente con nuevos niveles para el preajuste manual activo. Al terminar el tiempo, la luz vuelve sola a su programa.",
+      "description": "Pasar la(s) luz(ces) al modo manual durante un tiempo, opcionalmente con un preajuste manual guardado y/o niveles nuevos para él. Al terminar, la luz vuelve sola a su programa.",
       "fields": {
         "device_id": {
           "name": "Dispositivo",
           "description": "Una o varias Reef Flare."
         },
+        "preset": {
+          "name": "Preajuste manual",
+          "description": "Preajuste manual (programa temporizado en la app) que se ejecuta; pasa a ser el activo (por defecto: el activo)."
+        },
         "levels": {
           "name": "Niveles",
-          "description": "7 × 0–100 (UV, violeta, índigo, azul, verde, rojo, blanco) para el preajuste manual activo (por defecto: sin cambios)."
+          "description": "7 × 0–100 (UV, violeta, índigo, azul, verde, rojo, blanco) para ese preajuste o el activo (por defecto: sin cambios)."
         },
         "duration_min": {
           "name": "Duración",
           "description": "Minutos en modo manual (1–360); después vuelve a funcionar el programa."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare: guardar preajuste manual",
+      "description": "Guardar un preajuste manual (programa temporizado en la app): sobrescribir el indicado o usar el primer hueco libre. La luz solo informa de sus preajustes en modo manual, así que pasa a él unos segundos y vuelve a su modo anterior.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "preset": {
+          "name": "Preajuste manual",
+          "description": "Preajuste existente que se sobrescribe (por defecto: uno nuevo en un hueco libre)."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Nombre (máx. 16 caracteres; por defecto: se mantiene)."
+        },
+        "levels": {
+          "name": "Niveles",
+          "description": "7 × 0–100 (UV, violeta, índigo, azul, verde, rojo, blanco)."
+        },
+        "intensity": {
+          "name": "Intensidad",
+          "description": "Intensidad general (por defecto: se mantiene; 100 % en uno nuevo)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare: borrar preajuste manual",
+      "description": "Borrar un preajuste manual (programa temporizado en la app) como lo hace la app: el nombre queda vacío y todos los canales al 10 %. La luz pasa unos segundos al modo manual y vuelve.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "preset": {
+          "name": "Preajuste manual",
+          "description": "Nombre del preajuste que se borra."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Esta acción solo está disponible para la Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "No hay ningún preajuste manual llamado {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Ya existe un preajuste manual llamado {name}."
+    },
+    "flare_no_free_preset": {
+      "message": "No hay hueco libre: la luz guarda 8 preajustes manuales."
     }
   }
 }

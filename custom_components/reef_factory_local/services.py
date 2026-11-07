@@ -7,6 +7,7 @@ Stop actions are always allowed.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 
 import voluptuous as vol
@@ -169,30 +170,124 @@ def async_setup_services(hass: HomeAssistant) -> None:
                                                        points, intensity)))
         await _each(jobs, lambda job: _send(*job))
 
+    async def _to_manual(c) -> tuple[dict, str | None]:
+        """The light reports its manual presets only in manual mode - switch there for a fresh list."""
+        data = c.data or {}
+        before = data.get("mode")
+        if before != "manual":
+            await _send(c, pr.frame_rf_mode(c.serial, "manual"))
+            data = await _wait_for(c, lambda d: d.get("mode") == "manual" and bool(d.get("manual_presets")), 20)
+        return data, before
+
+    async def _back_from_manual(c, before: str | None) -> None:
+        """Back to the mode before. Seen 2026-11-07 on both lights: right after rfManual/update a late
+        manualData frame can still arrive after the switch (the light then shows as manual until its
+        next refresh) - so settle first and check that the mode stuck."""
+        if before not in ("program", "off"):
+            return
+        await asyncio.sleep(1.0)
+        for _ in range(3):
+            await _send(c, pr.frame_rf_mode(c.serial, before))
+            await _wait_for(c, lambda d: d.get("mode") == before, 20)
+            await asyncio.sleep(1.5)
+            if (c.data or {}).get("mode") == before:
+                return
+
+    def _preset_slot(presets: list, name: str) -> int:
+        idx = pr.flare_preset_index(presets, name)
+        if idx is None:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_preset_unknown",
+                                         translation_placeholders={"name": name})
+        return idx
+
+    def _preset_at(d: dict, idx: int):
+        presets = d.get("manual_presets") or []
+        return presets[idx] if idx < len(presets) else None
+
     async def flare_manual(call: ServiceCall) -> None:
-        """Timed manual mode (Zeitschaltmodus): manual mode, levels of the active preset, duration.
+        """Timed manual mode (Zeitschaltmodus): manual mode, optionally a stored preset (timed program of
+        the app) made active and/or new levels for it, then the duration.
         Order confirmed 2026-11-05: the duration is only taken while the light is in manual mode;
         when it runs out the light goes back to its program by itself."""
         seconds = call.data["duration_min"] * 60
         levels = call.data.get("levels")
+        preset = call.data.get("preset")
+        coordinators = _flares(call)
+        if preset is not None:
+            for c in coordinators:  # check the known lists before switching any light
+                if (c.data or {}).get("manual_presets"):
+                    _preset_slot(c.data["manual_presets"], preset)
 
         async def job(c) -> None:
-            data = c.data or {}
-            if data.get("mode") != "manual":
-                await _send(c, pr.frame_rf_mode(c.serial, "manual"))
-                data = await _wait_for(c, lambda d: d.get("mode") == "manual" and bool(d.get("manual_presets")), 20)
-            if levels is not None:
-                try:
-                    presets = pr.flare_presets_with_levels(data.get("manual_presets") or [], levels)
-                except ValueError as err:
-                    raise _invalid(str(err)) from err
-                await _send(c, pr.frame_rf_manual_update(c.serial, presets))
-                await _wait_for(c, lambda d: d.get("levels") == list(levels), 15)
+            data, before = await _to_manual(c)
+            presets = data.get("manual_presets") or []
+            try:
+                if preset is not None or levels is not None:
+                    if not presets:
+                        raise _invalid("no manual presets reported")
+                    idx = _preset_slot(presets, preset) if preset is not None else pr.flare_active_preset(presets)
+                    new = pr.flare_presets_edit(presets, idx, levels=levels, activate=True)
+                    if new != presets:
+                        await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                        await _wait_for(c, lambda d: pr.flare_active_preset(d.get("manual_presets") or []) == idx
+                                        and pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
+            except Exception:
+                with contextlib.suppress(HomeAssistantError):
+                    await _back_from_manual(c, before)
+                raise
             await _send(c, pr.frame_rf_manual_time(c.serial, seconds))
             await _wait_for(c, lambda d: d.get("mode") == "manual" and d.get("manual_time_s") is not None
                             and abs(d["manual_time_s"] - seconds) <= 30, 20)
 
-        await _each(_flares(call), job)
+        await _each(coordinators, job)
+
+    async def flare_preset_save(call: ServiceCall) -> None:
+        """Save a manual preset (timed program of the app): overwrite the named one or fill the first free
+        slot. The light reports its presets only in manual mode, so it goes there for a few seconds and
+        back to its previous mode; the active preset stays active."""
+        old = call.data.get("preset")
+        name = call.data.get("name") or old
+        if not name:
+            raise _invalid("name missing")
+        levels = call.data["levels"]
+        intensity = call.data.get("intensity")
+        coordinators = _flares(call)
+
+        def plan(presets: list) -> tuple[int, list]:
+            idx = _preset_slot(presets, old) if old is not None else None
+            other = pr.flare_preset_index(presets, name)
+            if other is not None and other != idx:
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_preset_exists",
+                                             translation_placeholders={"name": name})
+            if idx is None:
+                idx = pr.flare_preset_free_slot(presets)
+                if idx is None:
+                    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_no_free_preset")
+            value = intensity
+            if value is None:
+                value = presets[idx].get("intensity") if old is not None else None
+                value = 100 if value is None else value
+            return idx, pr.flare_presets_edit(presets, idx, name=name, levels=levels, intensity=value)
+
+        for c in coordinators:  # check the known lists before switching any light
+            if (c.data or {}).get("manual_presets"):
+                plan(c.data["manual_presets"])
+
+        async def job(c) -> None:
+            data, before = await _to_manual(c)
+            try:
+                presets = data.get("manual_presets") or []
+                idx, new = plan(presets)
+                if new != presets:
+                    await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                    await _wait_for(c, lambda d: pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
+            except Exception:
+                with contextlib.suppress(HomeAssistantError):
+                    await _back_from_manual(c, before)
+                raise
+            await _back_from_manual(c, before)
+
+        await _each(coordinators, job)
 
     async def flare_program_create(call: ServiceCall) -> None:
         """New program in a free slot: select the slot, write the points, name it, select back
@@ -237,6 +332,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if not activate:
                 await _send(c, pr.frame_rf_select_program(c.serial, back))
                 await _wait_for(c, lambda d: d.get("program_index") == back, 15)
+
+        await _each(coordinators, job)
+
+    async def flare_preset_delete(call: ServiceCall) -> None:
+        """Delete a manual preset the way the app does: name empty, all channels 10 %, intensity and
+        active flag unchanged. Same manual-mode round trip as saving."""
+        name = call.data["preset"]
+        coordinators = _flares(call)
+        for c in coordinators:  # check the known lists before switching any light
+            if (c.data or {}).get("manual_presets"):
+                _preset_slot(c.data["manual_presets"], name)
+
+        async def job(c) -> None:
+            data, before = await _to_manual(c)
+            try:
+                presets = data.get("manual_presets") or []
+                idx = _preset_slot(presets, name)
+                new = pr.flare_presets_edit(presets, idx, name="", levels=list(pr.FLARE_PRESET_DELETED_LEVELS))
+                await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                await _wait_for(c, lambda d: pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
+            except Exception:
+                with contextlib.suppress(HomeAssistantError):
+                    await _back_from_manual(c, before)
+                raise
+            await _back_from_manual(c, before)
 
         await _each(coordinators, job)
 
@@ -314,7 +434,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vol.Optional("intensity"): pct,
         vol.Optional("activate", default=False): cv.boolean,
     }))
+    preset_name = vol.All(cv.string, vol.Strip, vol.Length(min=1, max=pr.FLARE_PRESET_NAME_MAX))
+    reg(DOMAIN, "flare_preset_save", flare_preset_save, FLARE_BASE.extend({
+        vol.Optional("preset"): preset_name,
+        vol.Optional("name"): preset_name,
+        vol.Required("levels"): vol.All(cv.ensure_list, [pct], vol.Length(min=pr.FLARE_CHANNELS, max=pr.FLARE_CHANNELS)),
+        vol.Optional("intensity"): pct,
+    }))
+    reg(DOMAIN, "flare_preset_delete", flare_preset_delete, FLARE_BASE.extend({vol.Required("preset"): preset_name}))
     reg(DOMAIN, "flare_manual", flare_manual, FLARE_BASE.extend({
+        vol.Optional("preset"): preset_name,
         vol.Optional("levels"): vol.All(cv.ensure_list, [pct], vol.Length(min=pr.FLARE_CHANNELS, max=pr.FLARE_CHANNELS)),
         vol.Required("duration_min"): vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.FLARE_MANUAL_MAX_MIN)),
     }))

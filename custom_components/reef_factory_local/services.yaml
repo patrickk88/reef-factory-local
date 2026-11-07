@@ -107,6 +107,10 @@ flare_program_create:
 flare_manual:
   fields:
     device_id: *flare_device
+    preset:
+      example: Grün
+      selector:
+        text:
     levels:
       example: "[20, 44, 42, 39, 42, 41, 75]"
       selector:
@@ -120,6 +124,36 @@ flare_manual:
           max: 360
           unit_of_measurement: min
           mode: box
+flare_preset_save:
+  fields:
+    device_id: *flare_device
+    preset:
+      example: Grün
+      selector:
+        text:
+    name:
+      example: Mondlicht
+      selector:
+        text:
+    levels:
+      required: true
+      example: "[10, 10, 10, 54, 100, 10, 10]"
+      selector:
+        object:
+    intensity:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+flare_preset_delete:
+  fields:
+    device_id: *flare_device
+    preset:
+      required: true
+      example: Mondlicht
+      selector:
+        text:
 flare_acclimation_start:
   fields:
     device_id: *flare_device

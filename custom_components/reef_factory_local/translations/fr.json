@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare : mode manuel temporisé",
-      "description": "Passe la ou les lampes en mode manuel pendant un temps, avec en option de nouveaux niveaux pour le préréglage manuel actif. À la fin du temps, la lampe revient seule à son programme.",
+      "description": "Passer la ou les lampes en mode manuel pendant un temps, éventuellement avec un préréglage manuel enregistré et/ou de nouveaux niveaux pour celui-ci. À la fin, la lampe revient d'elle-même à son programme.",
       "fields": {
         "device_id": {
           "name": "Appareil",
           "description": "Une ou plusieurs Reef Flare."
         },
+        "preset": {
+          "name": "Préréglage manuel",
+          "description": "Préréglage manuel (programme minuté dans l'app) à lancer ; il devient le préréglage actif (par défaut : l'actif)."
+        },
         "levels": {
           "name": "Niveaux",
-          "description": "7 × 0–100 (UV, violet, indigo, bleu, vert, rouge, blanc) pour le préréglage manuel actif (par défaut : inchangés)."
+          "description": "7 × 0–100 (UV, violet, indigo, bleu, vert, rouge, blanc) pour ce préréglage ou l'actif (par défaut : inchangés)."
         },
         "duration_min": {
           "name": "Durée",
           "description": "Minutes en mode manuel (1–360) ; ensuite le programme reprend."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare : enregistrer un préréglage manuel",
+      "description": "Enregistrer un préréglage manuel (programme minuté dans l'app) : remplacer celui indiqué ou utiliser le premier emplacement libre. La lampe n'indique ses préréglages qu'en mode manuel ; elle y passe donc quelques secondes puis revient à son mode précédent.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Une ou plusieurs Reef Flare."
+        },
+        "preset": {
+          "name": "Préréglage manuel",
+          "description": "Préréglage existant à remplacer (par défaut : un nouveau dans un emplacement libre)."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom (16 caractères max. ; par défaut : inchangé)."
+        },
+        "levels": {
+          "name": "Niveaux",
+          "description": "7 × 0–100 (UV, violet, indigo, bleu, vert, rouge, blanc)."
+        },
+        "intensity": {
+          "name": "Intensité",
+          "description": "Intensité globale (par défaut : inchangée ; 100 % pour un nouveau)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare : supprimer un préréglage manuel",
+      "description": "Supprimer un préréglage manuel (programme minuté dans l'app) comme le fait l'app : le nom est effacé et tous les canaux passent à 10 %. La lampe passe quelques secondes en mode manuel puis revient.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Une ou plusieurs Reef Flare."
+        },
+        "preset": {
+          "name": "Préréglage manuel",
+          "description": "Nom du préréglage à supprimer."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Cette action n'est disponible que pour la Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "Aucun préréglage manuel nommé {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Un préréglage manuel nommé {name} existe déjà."
+    },
+    "flare_no_free_preset": {
+      "message": "Aucun emplacement libre : la lampe enregistre 8 préréglages manuels."
     }
   }
 }

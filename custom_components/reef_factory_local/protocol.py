@@ -389,6 +389,58 @@ def flare_presets_with_levels(presets: list[dict], levels: list) -> list[dict]:
     return out
 
 
+FLARE_PRESET_NAME_MAX = 16
+# what the app writes when it deletes a timed program (seen 2026-11-07): name empty, all channels 10 %,
+# intensity and the active flag stay on that slot
+FLARE_PRESET_DELETED_LEVELS = (10,) * 7
+
+
+def flare_active_preset(presets: list[dict]) -> int:
+    """Slot of the active manual preset (0 if none is flagged)."""
+    return _active(presets or [])
+
+
+def flare_preset_index(presets: list[dict], name: str) -> int | None:
+    """Slot of the named manual preset (a timed program in the app); unnamed slots never match."""
+    return next((i for i, p in enumerate(presets or []) if p.get("name") and p["name"] == name), None)
+
+
+def flare_preset_free_slot(presets: list[dict]) -> int | None:
+    """First unnamed manual preset. The app names the first unnamed slot (seen 2026-11-07: a new timed
+    program landed in slot 0, the unnamed active preset)."""
+    return next((i for i, p in enumerate(presets or []) if not p.get("name")), None)
+
+
+def flare_presets_edit(presets: list[dict], index: int, *, name: str | None = None, levels: list | None = None,
+                       intensity: int | None = None, activate: bool = False) -> list[dict]:
+    """Copy of the manual preset list with one preset changed (rfManual/update writes the whole list)."""
+    out = [dict(p, levels=list(p["levels"])) for p in presets or []]
+    if not out:
+        raise ValueError("no manual presets reported")
+    if not 0 <= index < len(out):
+        raise ValueError("manual preset slot out of range")
+    preset = out[index]
+    if name is not None:
+        preset["name"] = name[:FLARE_PRESET_NAME_MAX]
+    if levels is not None:
+        preset["levels"] = [_pct(v) for v in levels][:FLARE_CHANNELS]
+    if intensity is not None:
+        preset["intensity"] = _pct(intensity)
+    if activate:
+        for i, other in enumerate(out):
+            other["active"] = i == index
+    return out
+
+
+def flare_same_preset(reported: dict | None, wanted: dict | None) -> bool:
+    """Name, levels and intensity as written (intensity only if the firmware reports it)."""
+    if not reported or not wanted:
+        return False
+    return (reported.get("name") == wanted.get("name")
+            and list(reported.get("levels") or []) == list(wanted.get("levels") or [])
+            and (reported.get("intensity") is None or reported.get("intensity") == wanted.get("intensity")))
+
+
 FLARE_CHANNEL_KEYS = ("uv", "violet", "indigo", "blue", "green", "red", "white")
 
 

@@ -60,6 +60,9 @@ def _flare_attrs(d: dict) -> dict:
         out["points"] = [{"time": p["time"], "levels": p["levels"]} for p in d["points"]]
     if d.get("acclimation") is not None:
         out["acclimation"] = d["acclimation"]
+    if d.get("manual_presets"):  # timed programs of the app; the light reports them only in manual mode
+        out["manual_presets"] = [{"slot": i, "name": p["name"], "levels": p["levels"], "intensity": p.get("intensity"),
+                                  "active": p["active"]} for i, p in enumerate(d["manual_presets"]) if p.get("name")]
     if d.get("mode") == "manual":  # manual preset values stay in the data after manual mode ended
         for key in ("levels", "presets"):
             if d.get(key) is not None:

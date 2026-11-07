@@ -7,6 +7,7 @@ import time
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import protocol as pr
@@ -14,7 +15,13 @@ from .client import ReefClient
 from .cloud import CloudDevice
 from .const import CONF_SERIAL, DOMAIN, STALE_SECONDS
 
+PRESET_STORE_VERSION = 1
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def preset_store_key(serial: str) -> str:
+    return f"{DOMAIN}.{serial}.manual_presets"
 
 
 class ReefCoordinator(DataUpdateCoordinator[dict]):
@@ -31,10 +38,27 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
         self.device_name: str = entry.title
         self.configuration_url: str | None = f"http://{entry.data.get('host')}" if entry.data.get("host") else None
         self.firmware: str | None = None
+        # Reef Flare: the light reports its manual presets (timed programs of the app) only in manual mode;
+        # the last known list is kept so it can be shown after a restart. Writes always read it fresh.
+        self._preset_store: Store | None = (
+            Store(hass, PRESET_STORE_VERSION, preset_store_key(self.serial))
+            if pr.device_type(self.serial) == pr.DEVICE_FLARE else None
+        )
+
+    async def async_restore(self) -> None:
+        if self._preset_store is None:
+            return
+        stored = await self._preset_store.async_load()
+        if stored and stored.get("manual_presets") and not (self.data or {}).get("manual_presets"):
+            self.data = {**(self.data or {}), "manual_presets": stored["manual_presets"]}
 
     @callback
     def handle_data(self, data: dict) -> None:
-        self.async_set_updated_data({**(self.data or {}), **data})
+        new = {**(self.data or {}), **data}
+        presets = data.get("manual_presets")
+        if self._preset_store is not None and presets and presets != (self.data or {}).get("manual_presets"):
+            self._preset_store.async_delay_save(lambda: {"manual_presets": presets}, 5)
+        self.async_set_updated_data(new)
 
     @callback
     def handle_connection(self, connected: bool) -> None:

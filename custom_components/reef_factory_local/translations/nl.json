@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare: getimede handmatige modus",
-      "description": "Zet de lamp(en) een tijdje in handmatige modus, optioneel met nieuwe niveaus voor de actieve handmatige voorinstelling. Als de tijd om is, gaat de lamp vanzelf terug naar haar programma.",
+      "description": "De lamp(en) een tijdje in de handmatige modus zetten, optioneel met een opgeslagen handmatige voorinstelling en/of nieuwe waarden daarvoor. Na afloop keert de lamp vanzelf terug naar het programma.",
       "fields": {
         "device_id": {
           "name": "Apparaat",
           "description": "Eén of meer Reef Flares."
         },
+        "preset": {
+          "name": "Handmatige voorinstelling",
+          "description": "Handmatige voorinstelling (getimed programma in de app) die moet lopen; wordt de actieve (standaard: de actieve)."
+        },
         "levels": {
           "name": "Niveaus",
-          "description": "7 × 0–100 (UV, violet, indigo, blauw, groen, rood, wit) voor de actieve handmatige voorinstelling (standaard: ongewijzigd)."
+          "description": "7 × 0–100 (UV, violet, indigo, blauw, groen, rood, wit) voor die of de actieve voorinstelling (standaard: ongewijzigd)."
         },
         "duration_min": {
           "name": "Duur",
           "description": "Minuten in handmatige modus (1–360); daarna loopt het programma weer."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare: handmatige voorinstelling opslaan",
+      "description": "Een handmatige voorinstelling (getimed programma in de app) opslaan: de genoemde overschrijven of de eerste vrije plek gebruiken. De lamp meldt zijn voorinstellingen alleen in de handmatige modus, dus schakelt hij daar een paar seconden naartoe en daarna terug naar de vorige modus.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "preset": {
+          "name": "Handmatige voorinstelling",
+          "description": "Bestaande voorinstelling die wordt overschreven (standaard: een nieuwe op een vrije plek)."
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Naam (max. 16 tekens; standaard: ongewijzigd)."
+        },
+        "levels": {
+          "name": "Niveaus",
+          "description": "7 × 0–100 (UV, violet, indigo, blauw, groen, rood, wit)."
+        },
+        "intensity": {
+          "name": "Intensiteit",
+          "description": "Totale intensiteit (standaard: ongewijzigd; 100 % bij een nieuwe)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare: handmatige voorinstelling verwijderen",
+      "description": "Een handmatige voorinstelling (getimed programma in de app) verwijderen zoals de app dat doet: de naam wordt leeg en alle kanalen gaan naar 10 %. De lamp gaat een paar seconden naar de handmatige modus en terug.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "preset": {
+          "name": "Handmatige voorinstelling",
+          "description": "Naam van de voorinstelling die wordt verwijderd."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Deze actie is alleen beschikbaar voor de Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "Geen handmatige voorinstelling met de naam {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Er bestaat al een handmatige voorinstelling met de naam {name}."
+    },
+    "flare_no_free_preset": {
+      "message": "Geen vrije plek - de lamp bewaart 8 handmatige voorinstellingen."
     }
   }
 }

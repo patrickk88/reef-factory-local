@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare: modalità manuale a tempo",
-      "description": "Mette la lampada (o le lampade) in modalità manuale per un certo tempo, opzionalmente con nuovi livelli per il preset manuale attivo. Allo scadere del tempo la lampada torna da sola al suo programma.",
+      "description": "Porta la/e lampada/e in modalità manuale per un po', facoltativamente con un preset manuale salvato e/o nuovi valori. Allo scadere la lampada torna da sola al suo programma.",
       "fields": {
         "device_id": {
           "name": "Dispositivo",
           "description": "Una o più Reef Flare."
         },
+        "preset": {
+          "name": "Preset manuale",
+          "description": "Preset manuale (programma a tempo nell'app) da avviare; diventa quello attivo (predefinito: quello attivo)."
+        },
         "levels": {
           "name": "Livelli",
-          "description": "7 × 0–100 (UV, viola, indaco, blu, verde, rosso, bianco) per il preset manuale attivo (predefinito: invariati)."
+          "description": "7 × 0–100 (UV, viola, indaco, blu, verde, rosso, bianco) per quel preset o quello attivo (predefinito: invariati)."
         },
         "duration_min": {
           "name": "Durata",
           "description": "Minuti in modalità manuale (1–360); poi riprende il programma."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare: salva preset manuale",
+      "description": "Salva un preset manuale (programma a tempo nell'app): sovrascrive quello indicato o usa il primo slot libero. La lampada comunica i suoi preset solo in modalità manuale, quindi vi passa per qualche secondo e poi torna alla modalità precedente.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o più Reef Flare."
+        },
+        "preset": {
+          "name": "Preset manuale",
+          "description": "Preset esistente da sovrascrivere (predefinito: uno nuovo in uno slot libero)."
+        },
+        "name": {
+          "name": "Nome",
+          "description": "Nome (max 16 caratteri; predefinito: invariato)."
+        },
+        "levels": {
+          "name": "Livelli",
+          "description": "7 × 0–100 (UV, viola, indaco, blu, verde, rosso, bianco)."
+        },
+        "intensity": {
+          "name": "Intensità",
+          "description": "Intensità generale (predefinito: invariata; 100 % per uno nuovo)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare: elimina preset manuale",
+      "description": "Elimina un preset manuale (programma a tempo nell'app) come fa l'app: il nome viene cancellato e tutti i canali vanno al 10 %. La lampada passa per qualche secondo in modalità manuale e poi torna.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o più Reef Flare."
+        },
+        "preset": {
+          "name": "Preset manuale",
+          "description": "Nome del preset da eliminare."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Questa azione è disponibile solo per la Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "Nessun preset manuale chiamato {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Esiste già un preset manuale chiamato {name}."
+    },
+    "flare_no_free_preset": {
+      "message": "Nessuno slot libero: la lampada memorizza 8 preset manuali."
     }
   }
 }

@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare: Zeitschaltmodus",
-      "description": "Licht für eine Weile in den manuellen Modus schalten, optional mit neuen Kanalwerten für die aktive manuelle Voreinstellung. Nach Ablauf kehrt das Licht von selbst ins Programm zurück.",
+      "description": "Licht für eine Weile in den manuellen Modus schalten, optional mit einem gespeicherten Zeitschaltprogramm und/oder neuen Kanalwerten dafür. Nach Ablauf kehrt das Licht von selbst ins Programm zurück.",
       "fields": {
         "device_id": {
           "name": "Gerät",
           "description": "Eine oder mehrere Reef Flares."
         },
+        "preset": {
+          "name": "Zeitschaltprogramm",
+          "description": "Zeitschaltprogramm (manuelle Voreinstellung), das laufen soll; es wird das aktive (Standard: das aktive)."
+        },
         "levels": {
           "name": "Kanalwerte",
-          "description": "7 × 0–100 (UV, violett, indigoblau, blau, grün, rot, weiß) für die aktive manuelle Voreinstellung (Standard: unverändert)."
+          "description": "7 × 0–100 (UV, violett, indigoblau, blau, grün, rot, weiß) für dieses bzw. das aktive Zeitschaltprogramm (Standard: unverändert)."
         },
         "duration_min": {
           "name": "Dauer",
           "description": "Minuten im manuellen Modus (1–360); danach läuft wieder das Programm."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare: Zeitschaltprogramm speichern",
+      "description": "Zeitschaltprogramm (manuelle Voreinstellung) speichern: das genannte überschreiben oder auf dem ersten freien Platz anlegen. Die Leuchte meldet ihre Zeitschaltprogramme nur im manuellen Modus, deshalb schaltet sie dafür ein paar Sekunden dorthin und dann zurück.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Eine oder mehrere Reef Flares."
+        },
+        "preset": {
+          "name": "Zeitschaltprogramm",
+          "description": "Vorhandenes Zeitschaltprogramm, das überschrieben wird (Standard: neues auf einem freien Platz)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name (max. 16 Zeichen; Standard: Name bleibt)."
+        },
+        "levels": {
+          "name": "Kanalwerte",
+          "description": "7 × 0–100 (UV, violett, indigoblau, blau, grün, rot, weiß)."
+        },
+        "intensity": {
+          "name": "Intensität",
+          "description": "Gesamtintensität (Standard: bleibt; bei einem neuen 100 %)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare: Zeitschaltprogramm löschen",
+      "description": "Zeitschaltprogramm löschen wie die App: Name leer, alle Kanäle auf 10 %. Die Leuchte geht dafür ein paar Sekunden in den manuellen Modus und zurück.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Eine oder mehrere Reef Flares."
+        },
+        "preset": {
+          "name": "Zeitschaltprogramm",
+          "description": "Name des Zeitschaltprogramms, das gelöscht wird."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Diese Aktion gibt es nur für die Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "Kein Zeitschaltprogramm namens {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Ein Zeitschaltprogramm namens {name} gibt es schon."
+    },
+    "flare_no_free_preset": {
+      "message": "Kein freier Platz – die Leuchte speichert 8 Zeitschaltprogramme."
     }
   }
 }

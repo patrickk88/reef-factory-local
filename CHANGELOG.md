@@ -9,6 +9,12 @@
   parsed the old text (`YYYY-MM-DD HH:MM`) need updating.
 - Reef Flare: sensor *Timed manual mode ends* (from the seconds left the light reports; also when started from
   the app). Small jitter between reports does not change the state.
+- Reef Flare: actions *Save manual preset* (`flare_preset_save`, the app's timed programs): overwrite one by
+  name or fill the first free slot - name, levels, intensity. The light goes to manual mode for a few seconds
+  to report its list, then back to its previous mode. *Timed manual mode* takes `preset`: runs a stored one
+  (it becomes the active preset). *Delete manual preset* (`flare_preset_delete`) clears one the way the
+  app does. The *Program* sensor has the presets in the attribute `manual_presets` at
+  all times; the last known list is kept over a restart (the light reports it only in manual mode).
 - Every device: diagnostic sensor *Last report* (to the minute, readable while the device is away; disabled
   by default).
 

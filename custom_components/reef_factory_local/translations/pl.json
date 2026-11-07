@@ -535,19 +535,63 @@
     },
     "flare_manual": {
       "name": "Flare: tryb ręczny na czas",
-      "description": "Przełącza lampę (lub lampy) na pewien czas w tryb ręczny, opcjonalnie z nowymi poziomami dla aktywnego ustawienia ręcznego. Po upływie czasu lampa sama wraca do programu.",
+      "description": "Przełącz lampę (lampy) na pewien czas w tryb ręczny, opcjonalnie z zapisanym ustawieniem ręcznym i/lub nowymi wartościami dla niego. Po upływie czasu lampa sama wraca do programu.",
       "fields": {
         "device_id": {
           "name": "Urządzenie",
           "description": "Jedna lub więcej lamp Reef Flare."
         },
+        "preset": {
+          "name": "Ustawienie ręczne",
+          "description": "Ustawienie ręczne (program czasowy w aplikacji) do uruchomienia; staje się aktywnym (domyślnie: aktywne)."
+        },
         "levels": {
           "name": "Poziomy",
-          "description": "7 × 0–100 (UV, fiolet, indygo, niebieski, zielony, czerwony, biały) dla aktywnego ustawienia ręcznego (domyślnie: bez zmian)."
+          "description": "7 × 0–100 (UV, fiolet, indygo, niebieski, zielony, czerwony, biały) dla tego lub aktywnego ustawienia (domyślnie: bez zmian)."
         },
         "duration_min": {
           "name": "Czas trwania",
           "description": "Minuty w trybie ręcznym (1–360); potem znowu działa program."
+        }
+      }
+    },
+    "flare_preset_save": {
+      "name": "Flare: zapisz ustawienie ręczne",
+      "description": "Zapisz ustawienie ręczne (program czasowy w aplikacji): nadpisz podane albo użyj pierwszego wolnego miejsca. Lampa podaje swoje ustawienia tylko w trybie ręcznym, więc przełącza się do niego na kilka sekund i wraca do poprzedniego trybu.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "preset": {
+          "name": "Ustawienie ręczne",
+          "description": "Istniejące ustawienie do nadpisania (domyślnie: nowe w wolnym miejscu)."
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Nazwa (maks. 16 znaków; domyślnie: bez zmian)."
+        },
+        "levels": {
+          "name": "Poziomy",
+          "description": "7 × 0–100 (UV, fiolet, indygo, niebieski, zielony, czerwony, biały)."
+        },
+        "intensity": {
+          "name": "Intensywność",
+          "description": "Intensywność ogólna (domyślnie: bez zmian; 100 % dla nowego)."
+        }
+      }
+    },
+    "flare_preset_delete": {
+      "name": "Flare: usuń ustawienie ręczne",
+      "description": "Usuń ustawienie ręczne (program czasowy w aplikacji) tak jak aplikacja: nazwa zostaje wyczyszczona, a wszystkie kanały ustawione na 10 %. Lampa przełącza się na kilka sekund w tryb ręczny i wraca.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "preset": {
+          "name": "Ustawienie ręczne",
+          "description": "Nazwa ustawienia do usunięcia."
         }
       }
     },
@@ -708,6 +752,15 @@
     },
     "not_dosing_pump": {
       "message": "Ta akcja jest dostępna tylko dla pompy Dosing pump Pro X4."
+    },
+    "flare_preset_unknown": {
+      "message": "Brak ustawienia ręcznego o nazwie {name}."
+    },
+    "flare_preset_exists": {
+      "message": "Ustawienie ręczne o nazwie {name} już istnieje."
+    },
+    "flare_no_free_preset": {
+      "message": "Brak wolnego miejsca – lampa przechowuje 8 ustawień ręcznych."
     }
   }
 }
