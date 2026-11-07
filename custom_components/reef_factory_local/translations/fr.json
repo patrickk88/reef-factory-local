@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare : importer un fichier de l'app",
+      "description": "Importer un fichier exporté depuis l'app. Un fichier de programme remplace le programme actif (ou devient un nouveau programme avec Nom) ; un fichier de programme minuté est enregistré comme préréglage manuel : celui de ce nom est remplacé, sinon un nouveau est créé.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Une ou plusieurs Reef Flare."
+        },
+        "file": {
+          "name": "Fichier",
+          "description": "Contenu du fichier .json (coller le texte)."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Programme : nom d'un nouveau programme (par défaut : remplacer l'actif). Programme minuté : autre nom (par défaut : celui du fichier)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare : exporter un fichier de l'app",
+      "description": "Le programme actif, ou un préréglage manuel, au format de fichier de l'app (renvoie le JSON).",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Une Reef Flare."
+        },
+        "preset": {
+          "name": "Préréglage manuel",
+          "description": "Exporter ce préréglage manuel au lieu du programme actif."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare : démarrer l'acclimatation",
       "description": "Fait évoluer l'intensité du programme actif de la valeur de départ à la valeur finale sur le nombre de jours indiqué.",

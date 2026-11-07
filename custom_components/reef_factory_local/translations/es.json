@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare: importar archivo de la app",
+      "description": "Importar un archivo exportado desde la app. Un archivo de programa sobrescribe el programa activo (o se convierte en un programa nuevo con Nombre); un archivo de programa temporizado se guarda como preajuste manual: se sobrescribe uno con ese nombre o se crea uno nuevo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "file": {
+          "name": "Archivo",
+          "description": "Contenido del archivo .json (pegar el texto)."
+        },
+        "name": {
+          "name": "Nombre",
+          "description": "Programa: nombre de un programa nuevo (por defecto: sobrescribir el activo). Programa temporizado: otro nombre (por defecto: el del archivo)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare: exportar archivo de la app",
+      "description": "El programa activo, o un preajuste manual, como archivo de la app (devuelve el JSON).",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una Reef Flare."
+        },
+        "preset": {
+          "name": "Preajuste manual",
+          "description": "Exportar este preajuste manual en lugar del programa activo."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: iniciar aclimatación",
       "description": "Aumenta gradualmente la intensidad del programa activo desde el valor inicial hasta el final a lo largo del número de días indicado.",

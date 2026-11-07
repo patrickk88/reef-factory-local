@@ -186,6 +186,41 @@ def test_flare_timed_manual_and_new_program_helpers():
     assert pr.FLARE_MANUAL_MAX_MIN * 60 <= 0xFFFE
 
 
+APP_PROGRAM = ('{"Points":[{"t":0,"l":[0,0,0,0,0,0,0]},{"t":619,"l":[0,0,0,0,0,0,0]},{"t":696,"l":[1,1,1,1,0.5,0.5,0.8]},'
+               '{"t":1080,"l":[0.71,0.72,1,1,0.5,0.5,0.7]},{"t":1212,"l":[0.61,0.66,0.67,1,0.42,0.36,0.12]},'
+               '{"t":1305,"l":[0,0,0.02,0,0,0,0]},{"t":1349,"l":[0,0,0,0,0,0,0]},{"t":1440,"l":[0,0,0,0,0,0,0]}],"intensity":40}')
+APP_TIMER = '{"n":"Grün","s":true,"l":[0.1,0.1,0.1,0.54,1,0.1,0.1],"intensity":63}'
+
+
+def test_flare_app_files():
+    """Real export files of the app (program "Gemischte Kora75", timed program "Grün"): read and write back
+    byte for byte."""
+    import json
+    prog, timer = json.loads(APP_PROGRAM), json.loads(APP_TIMER)
+    assert pr.flare_app_kind(prog) == "program" and pr.flare_app_kind(timer) == "preset" and pr.flare_app_kind({"x": 1}) is None
+    points, intensity = pr.flare_program_from_app(prog)
+    assert intensity == 40 and points[2] == {"time": "11:36", "levels": [100, 100, 100, 100, 50, 50, 80]} and points[-1]["time"] == "24:00"
+    reported = pr.normalize_flare_points(points)  # what the light reports: minute + levels
+    assert pr.app_json(pr.flare_program_to_app(reported, 40)) == APP_PROGRAM
+    preset = pr.flare_preset_from_app(timer)
+    assert preset == {"name": "Grün", "levels": [10, 10, 10, 54, 100, 10, 10], "intensity": 63}, preset
+    assert pr.app_json(pr.flare_preset_to_app(dict(preset, active=True))) == APP_TIMER
+    for bad in ({"Points": [{"t": 0, "l": [2] * 7}, {"t": 1440, "l": [0] * 7}]}, {"Points": [{"t": 5, "l": [0] * 7}, {"t": 1440, "l": [0] * 7}]},
+                {"Points": [{"t": 0, "l": [0] * 6}, {"t": 1440, "l": [0] * 7}]}):
+        try:
+            pr.flare_program_from_app(bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(bad)
+    try:
+        pr.flare_preset_from_app({"n": " ", "l": [0] * 7})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("nameless timed program accepted")
+
+
 def test_flare_preset_helpers():
     """Timed programs of the app = manual presets: name a free slot, activate one, compare the answer."""
     name = lambda s: s.encode("utf-16-be") + b"\x00\x00"

@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare: App-Datei importieren",
+      "description": "Eine aus der App exportierte Datei importieren. Eine Programmdatei überschreibt das aktive Programm (oder wird mit Name ein neues Programm); eine Zeitschaltprogramm-Datei wird als Zeitschaltprogramm gespeichert – eines mit diesem Namen wird überschrieben, sonst neu angelegt.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Eine oder mehrere Reef Flares."
+        },
+        "file": {
+          "name": "Datei",
+          "description": "Inhalt der .json-Datei (Text einfügen)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Programm: Name eines neuen Programms (Standard: aktives überschreiben). Zeitschaltprogramm: anderer Name (Standard: der aus der Datei)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare: App-Datei exportieren",
+      "description": "Das aktive Programm oder ein Zeitschaltprogramm als Datei der App (liefert das JSON zurück).",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Eine Reef Flare."
+        },
+        "preset": {
+          "name": "Zeitschaltprogramm",
+          "description": "Dieses Zeitschaltprogramm statt des aktiven Programms exportieren."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: Eingewöhnung starten",
       "description": "Intensität des aktiven Programms über die angegebenen Tage von Start- auf Endwert steigern.",

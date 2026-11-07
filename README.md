@@ -35,7 +35,7 @@ only until someone confirms it on hardware.
 | Level keeper (1.0.0) | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
 | Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
 | Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
-| Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action | 2026-11-07 |
+| Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program, timed program) | 2026-11-07 |
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
@@ -297,6 +297,18 @@ data:
 
 `flare_preset_delete` (with `preset`) deletes one the way the app does: the name is cleared and all
 channels go to 10 %; the slot is free again.
+
+The app can export a program or a timed program as a small JSON file. `flare_import` takes the content of
+such a file (paste the text): a program file overwrites the active program (with `name` it becomes a new
+program instead), a timed program file is saved as manual preset. `flare_export` returns the active program
+(or, with `preset`, a manual preset) in the same format - the result can be imported in the app again.
+
+```yaml
+action: reef_factory_local.flare_import
+data:
+  device_id: [<Reef Flare 1>, <Reef Flare 2>]
+  file: '{"n":"Grün","s":true,"l":[0.1,0.1,0.1,0.54,1,0.1,0.1],"intensity":63}'
+```
 
 ## Installation
 

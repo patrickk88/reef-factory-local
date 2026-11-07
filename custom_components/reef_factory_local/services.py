@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import time
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -360,6 +361,70 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         await _each(coordinators, job)
 
+    def _app_file(raw) -> tuple[str, dict]:
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except ValueError as err:
+                raise _invalid(f"not JSON: {err}") from err
+        kind = pr.flare_app_kind(raw)
+        if kind is None:
+            raise _invalid("neither a program nor a timed program file of the app")
+        return kind, raw
+
+    async def flare_import(call: ServiceCall) -> ServiceResponse:
+        """File exported by the app: a program overwrites the active program (or becomes a new program
+        with `name`), a timed program is saved as manual preset (overwrites one of that name, else new).
+        Uses the confirmed write paths of flare_program_set / _create / flare_preset_save."""
+        kind, obj = _app_file(call.data["file"])
+        name = call.data.get("name")
+        devices = list(dict.fromkeys(call.data[ATTR_DEVICE_ID]))
+        coordinators = _flares(call)
+        try:
+            if kind == "program":
+                points, intensity = pr.flare_program_from_app(obj)
+            else:
+                preset = pr.flare_preset_from_app(obj)
+        except (KeyError, TypeError, ValueError) as err:
+            raise _invalid(str(err)) from err
+        if kind == "program":
+            data = {ATTR_DEVICE_ID: devices, "points": points}
+            if intensity is not None:
+                data["intensity"] = intensity
+            if name:
+                await hass.services.async_call(DOMAIN, "flare_program_create", {**data, "name": name}, blocking=True)
+                return {"kind": kind, "name": name}
+            await hass.services.async_call(DOMAIN, "flare_program_set", data, blocking=True)
+            wanted = pr.normalize_flare_points(points)
+            await _each(coordinators, lambda c: _wait_for(
+                c, lambda d: pr.flare_same_points(d.get("points"), wanted)
+                and (intensity is None or d.get("intensity") == intensity), 15))
+            return {"kind": kind, "name": (coordinators[0].data or {}).get("program")}
+        target = (name or preset["name"])[:pr.FLARE_PRESET_NAME_MAX]
+        for device_id, c in zip(devices, coordinators):  # overwrite where that name exists, else a new one
+            data = {ATTR_DEVICE_ID: [device_id], "name": target, "levels": preset["levels"]}
+            if preset["intensity"] is not None:
+                data["intensity"] = preset["intensity"]
+            if pr.flare_preset_index((c.data or {}).get("manual_presets") or [], target) is not None:
+                data["preset"] = target
+            await hass.services.async_call(DOMAIN, "flare_preset_save", data, blocking=True)
+        return {"kind": kind, "name": target}
+
+    async def flare_export(call: ServiceCall) -> ServiceResponse:
+        """The active program or a manual preset as the app's file (response: file + compact text)."""
+        c = _coordinator(hass, call, kind=pr.DEVICE_FLARE)
+        data = c.data or {}
+        preset = call.data.get("preset")
+        if preset:
+            presets = data.get("manual_presets") or []
+            obj = pr.flare_preset_to_app(presets[_preset_slot(presets, preset)])
+        else:
+            data = _program_mode(c)  # in manual mode the intensity is the preset's
+            if not data.get("points"):
+                raise _invalid("no program reported yet")
+            obj = pr.flare_program_to_app(data["points"], data.get("intensity"))
+        return {"file": obj, "text": pr.app_json(obj)}
+
     async def flare_acclimation_start(call: ServiceCall) -> None:
         await _each(_flares(call), lambda c: _send(c, pr.frame_rf_acclimation(
             c.serial, call.data["days"], call.data["start_pct"], call.data["end_pct"])))
@@ -441,6 +506,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vol.Required("levels"): vol.All(cv.ensure_list, [pct], vol.Length(min=pr.FLARE_CHANNELS, max=pr.FLARE_CHANNELS)),
         vol.Optional("intensity"): pct,
     }))
+    reg(DOMAIN, "flare_import", flare_import, FLARE_BASE.extend({
+        vol.Required("file"): vol.Any(dict, cv.string),
+        vol.Optional("name"): vol.All(cv.string, vol.Strip, vol.Length(min=1, max=pr.FLARE_NAME_MAX)),
+    }), supports_response=SupportsResponse.OPTIONAL)
+    reg(DOMAIN, "flare_export", flare_export, BASE.extend({vol.Optional("preset"): preset_name}),
+        supports_response=SupportsResponse.ONLY)
     reg(DOMAIN, "flare_preset_delete", flare_preset_delete, FLARE_BASE.extend({vol.Required("preset"): preset_name}))
     reg(DOMAIN, "flare_manual", flare_manual, FLARE_BASE.extend({
         vol.Optional("preset"): preset_name,

@@ -16,6 +16,7 @@ This module has no Home Assistant dependency so it can be tested on its own.
 from __future__ import annotations
 
 import json
+import math
 import re
 import struct
 import time
@@ -439,6 +440,67 @@ def flare_same_preset(reported: dict | None, wanted: dict | None) -> bool:
     return (reported.get("name") == wanted.get("name")
             and list(reported.get("levels") or []) == list(wanted.get("levels") or [])
             and (reported.get("intensity") is None or reported.get("intensity") == wanted.get("intensity")))
+
+
+# --- files of the app's export (seen 2026-11-07, app "Smart Reef"): levels as fractions 0..1, compact JSON
+# program:       {"Points": [{"t": minute, "l": [7 x 0..1]}, ...], "intensity": %}
+# timed program: {"n": name, "s": active, "l": [7 x 0..1], "intensity": %}
+
+def flare_app_kind(obj) -> str | None:
+    if isinstance(obj, dict) and isinstance(obj.get("Points"), list):
+        return "program"
+    if isinstance(obj, dict) and "n" in obj and isinstance(obj.get("l"), list):
+        return "preset"
+    return None
+
+
+def _from_fraction(value) -> int:
+    f = float(value)
+    if not 0 <= f <= 1:
+        raise ValueError("levels in the app file are fractions 0..1")
+    return int(math.floor(f * 100 + 0.5))
+
+
+def _to_fraction(value):
+    v = _pct(value)
+    return v // 100 if v in (0, 100) else round(v / 100, 2)
+
+
+def flare_program_from_app(obj: dict) -> tuple[list[dict], int | None]:
+    """App program file -> points in the action format ({time, levels}) and intensity."""
+    points = []
+    for p in obj["Points"]:
+        minute = parse_hhmm(int(p["t"]))
+        points.append({"time": f"{minute // 60:02d}:{minute % 60:02d}", "levels": [_from_fraction(v) for v in p["l"]]})
+    normalize_flare_points(points)  # same rules as the device UI
+    intensity = obj.get("intensity")
+    return points, None if intensity is None else _pct(intensity)
+
+
+def flare_program_to_app(points: list[dict], intensity) -> dict:
+    return {"Points": [{"t": p["minute"], "l": [_to_fraction(v) for v in p["levels"]]} for p in points],
+            "intensity": intensity}
+
+
+def flare_preset_from_app(obj: dict) -> dict:
+    name = str(obj.get("n") or "").strip()
+    if not name:
+        raise ValueError("the timed program in the file has no name")
+    levels = [_from_fraction(v) for v in obj["l"]]
+    if len(levels) != FLARE_CHANNELS:
+        raise ValueError(f"a timed program needs {FLARE_CHANNELS} levels")
+    intensity = obj.get("intensity")
+    return {"name": name[:FLARE_PRESET_NAME_MAX], "levels": levels, "intensity": None if intensity is None else _pct(intensity)}
+
+
+def flare_preset_to_app(preset: dict) -> dict:
+    return {"n": preset["name"], "s": bool(preset.get("active")), "l": [_to_fraction(v) for v in preset["levels"]],
+            "intensity": preset.get("intensity")}
+
+
+def app_json(obj: dict) -> str:
+    """Compact like the app writes its files."""
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
 
 FLARE_CHANNEL_KEYS = ("uv", "violet", "indigo", "blue", "green", "red", "white")

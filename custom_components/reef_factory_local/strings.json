@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare: import app file",
+      "description": "Import a file exported by the app. A program file overwrites the active program (or becomes a new program with Name); a timed program file is saved as manual preset - one of that name is overwritten, otherwise a new one is created.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "One or more Reef Flares."
+        },
+        "file": {
+          "name": "File",
+          "description": "Content of the .json file (paste the text)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Program: name of a new program (default: overwrite the active one). Timed program: other name (default: the one in the file)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare: export app file",
+      "description": "The active program, or a manual preset, as the app's file (returns the JSON).",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "One Reef Flare."
+        },
+        "preset": {
+          "name": "Manual preset",
+          "description": "Export this manual preset instead of the active program."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: start acclimation",
       "description": "Ramp the active program's intensity from start to end over the given number of days.",

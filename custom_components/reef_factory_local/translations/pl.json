@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare: importuj plik z aplikacji",
+      "description": "Importuj plik wyeksportowany z aplikacji. Plik programu nadpisuje aktywny program (albo z Nazwą staje się nowym programem); plik programu czasowego zapisuje się jako ustawienie ręczne – ustawienie o tej nazwie zostaje nadpisane, w przeciwnym razie powstaje nowe.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "file": {
+          "name": "Plik",
+          "description": "Zawartość pliku .json (wklej tekst)."
+        },
+        "name": {
+          "name": "Nazwa",
+          "description": "Program: nazwa nowego programu (domyślnie: nadpisz aktywny). Program czasowy: inna nazwa (domyślnie: ta z pliku)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare: eksportuj plik aplikacji",
+      "description": "Aktywny program lub ustawienie ręczne jako plik aplikacji (zwraca JSON).",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna Reef Flare."
+        },
+        "preset": {
+          "name": "Ustawienie ręczne",
+          "description": "Eksportuj to ustawienie ręczne zamiast aktywnego programu."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: rozpocznij aklimatyzację",
       "description": "Stopniowo zmienia intensywność aktywnego programu od wartości początkowej do końcowej w ciągu podanej liczby dni.",

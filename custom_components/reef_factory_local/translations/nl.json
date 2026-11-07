@@ -595,6 +595,38 @@
         }
       }
     },
+    "flare_import": {
+      "name": "Flare: app-bestand importeren",
+      "description": "Een uit de app geëxporteerd bestand importeren. Een programmabestand overschrijft het actieve programma (of wordt met Naam een nieuw programma); een bestand met een getimed programma wordt opgeslagen als handmatige voorinstelling: die met deze naam wordt overschreven, anders wordt er een nieuwe aangemaakt.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "file": {
+          "name": "Bestand",
+          "description": "Inhoud van het .json-bestand (tekst plakken)."
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Programma: naam van een nieuw programma (standaard: actieve overschrijven). Getimed programma: andere naam (standaard: die uit het bestand)."
+        }
+      }
+    },
+    "flare_export": {
+      "name": "Flare: app-bestand exporteren",
+      "description": "Het actieve programma, of een handmatige voorinstelling, als bestand van de app (geeft de JSON terug).",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén Reef Flare."
+        },
+        "preset": {
+          "name": "Handmatige voorinstelling",
+          "description": "Deze handmatige voorinstelling exporteren in plaats van het actieve programma."
+        }
+      }
+    },
     "flare_acclimation_start": {
       "name": "Flare: acclimatisatie starten",
       "description": "Verhoog de intensiteit van het actieve programma over het opgegeven aantal dagen van begin- naar eindwaarde.",

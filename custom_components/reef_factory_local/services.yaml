@@ -154,6 +154,30 @@ flare_preset_delete:
       example: Mondlicht
       selector:
         text:
+flare_import:
+  fields:
+    device_id: *flare_device
+    file:
+      required: true
+      example: '{"n":"Grün","s":true,"l":[0.1,0.1,0.1,0.54,1,0.1,0.1],"intensity":63}'
+      selector:
+        text:
+          multiline: true
+    name:
+      example: Sommer
+      selector:
+        text:
+flare_export:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: reef_factory_local
+    preset:
+      example: Grün
+      selector:
+        text:
 flare_acclimation_start:
   fields:
     device_id: *flare_device
