@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v0.10)
+## Supported devices (v1.0)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|

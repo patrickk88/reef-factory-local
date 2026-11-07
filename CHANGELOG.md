@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.0 - 2026-11-07
+- Same code as 0.10.0 - first 1.x version number (0.10.0 was easily read as 0.1).
+
 ## 0.10.0 - 2026-11-07
 - Events: *Feeding* (Smart feeder, from the device's own log message: type and grams), *Refill* (Level keeper,
   every rise of the daily counter: mL and today's total), *Dose* (Dosing pump Pro X4, from the device's dose
