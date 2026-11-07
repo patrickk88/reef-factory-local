@@ -154,6 +154,14 @@ flare_preset_delete:
       example: Mondlicht
       selector:
         text:
+flare_program_delete:
+  fields:
+    device_id: *flare_device
+    program:
+      required: true
+      example: Test
+      selector:
+        text:
 flare_import:
   fields:
     device_id: *flare_device

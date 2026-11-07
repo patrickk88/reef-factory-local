@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: delete program",
+      "description": "Set a stored program back to the light's empty program (the app shows it as empty): 08:00-20:00 at 40/35/30/25/20/15/10 %, intensity 100 %, no name. The light briefly selects that program and then goes back to the previous one. Not the active program.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "One or more Reef Flares."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Name of the program to delete."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: timed manual mode",
       "description": "Switch the light(s) to manual mode for a while, optionally with a stored manual preset and/or new levels for it. When the time runs out the light goes back to its program by itself.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "No free manual preset slot - the light stores 8."
+    },
+    "flare_program_active": {
+      "message": "{name} is the active program - activate another program first."
     }
   }
 }

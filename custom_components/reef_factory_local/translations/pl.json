@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: usuń program",
+      "description": "Przywróć zapisany program do pustego programu lampy (w aplikacji pusty): 08:00–20:00 przy 40/35/30/25/20/15/10 %, intensywność 100 %, bez nazwy. Lampa na chwilę wybiera ten program, a potem wraca do poprzedniego. Nie dotyczy aktywnego programu.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Jedna lub więcej lamp Reef Flare."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Nazwa programu do usunięcia."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: tryb ręczny na czas",
       "description": "Przełącz lampę (lampy) na pewien czas w tryb ręczny, opcjonalnie z zapisanym ustawieniem ręcznym i/lub nowymi wartościami dla niego. Po upływie czasu lampa sama wraca do programu.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "Brak wolnego miejsca – lampa przechowuje 8 ustawień ręcznych."
+    },
+    "flare_program_active": {
+      "message": "{name} jest aktywnym programem – najpierw aktywuj inny program."
     }
   }
 }

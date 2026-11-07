@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: Programm löschen",
+      "description": "Ein gespeichertes Programm auf das leere Programm der Leuchte zurücksetzen (in der App „Leer“): 08:00–20:00 mit 40/35/30/25/20/15/10 %, Intensität 100 %, ohne Namen. Die Leuchte wählt dafür kurz dieses Programm und dann wieder das vorherige. Nicht das aktive Programm.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Eine oder mehrere Reef Flares."
+        },
+        "program": {
+          "name": "Programm",
+          "description": "Name des Programms, das gelöscht wird."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: Zeitschaltmodus",
       "description": "Licht für eine Weile in den manuellen Modus schalten, optional mit einem gespeicherten Zeitschaltprogramm und/oder neuen Kanalwerten dafür. Nach Ablauf kehrt das Licht von selbst ins Programm zurück.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "Kein freier Platz – die Leuchte speichert 8 Zeitschaltprogramme."
+    },
+    "flare_program_active": {
+      "message": "{name} ist das aktive Programm – erst ein anderes Programm aktivieren."
     }
   }
 }

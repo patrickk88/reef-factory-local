@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: elimina programma",
+      "description": "Riporta un programma salvato al programma vuoto della lampada (vuoto nell'app): 08:00–20:00 a 40/35/30/25/20/15/10 %, intensità 100 %, senza nome. La lampada seleziona brevemente quel programma e poi torna al precedente. Non il programma attivo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o più Reef Flare."
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Nome del programma da eliminare."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: modalità manuale a tempo",
       "description": "Porta la/e lampada/e in modalità manuale per un po', facoltativamente con un preset manuale salvato e/o nuovi valori. Allo scadere la lampada torna da sola al suo programma.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "Nessuno slot libero: la lampada memorizza 8 preset manuali."
+    },
+    "flare_program_active": {
+      "message": "{name} è il programma attivo: attiva prima un altro programma."
     }
   }
 }

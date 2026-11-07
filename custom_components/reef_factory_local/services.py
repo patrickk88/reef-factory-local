@@ -425,6 +425,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
             obj = pr.flare_program_to_app(data["points"], data.get("intensity"))
         return {"file": obj, "text": pr.app_json(obj)}
 
+    async def flare_program_delete(call: ServiceCall) -> None:
+        """Set a stored program back to the light's empty program (the app's "Leer"): select it, write the
+        empty program at 100 %, clear the name, select the previous program again. Not the active one."""
+        name = call.data["program"]
+        empty = pr.normalize_flare_points(list(pr.FLARE_EMPTY_PROGRAM))
+        plans = {}
+        coordinators = _flares(call)
+        for c in coordinators:  # check every light before writing to any
+            data = _program_mode(c)
+            names = data.get("programs") or []
+            if name not in names:
+                raise _invalid(f"unknown program {name!r}")
+            slot = names.index(name)
+            if slot == data.get("program_index"):
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_program_active",
+                                             translation_placeholders={"name": name})
+            plans[id(c)] = (slot, data.get("program_index", 0))
+
+        async def job(c) -> None:
+            slot, back = plans[id(c)]
+            await _send(c, pr.frame_rf_select_program(c.serial, slot))
+            try:
+                data = await _wait_for(c, lambda d: d.get("program_index") == slot, 15)
+                await _send(c, pr.frame_rf_precise_update(c.serial, slot, data.get("program_time_raw") or 0,
+                                                          empty, pr.FLARE_EMPTY_INTENSITY))
+                await _wait_for(c, lambda d: d.get("program_index") == slot and d.get("intensity") == pr.FLARE_EMPTY_INTENSITY
+                                and pr.flare_same_points(d.get("points"), empty), 15)
+                await _send(c, pr.frame_rf_program_name(c.serial, slot, ""))
+                await _wait_for(c, lambda d: (d.get("programs") or [])[slot:slot + 1] == [""], 15)
+            finally:  # never leave the light on the empty program
+                await _send(c, pr.frame_rf_select_program(c.serial, back))
+            await _wait_for(c, lambda d: d.get("program_index") == back, 15)
+
+        await _each(coordinators, job)
+
     async def flare_acclimation_start(call: ServiceCall) -> None:
         await _each(_flares(call), lambda c: _send(c, pr.frame_rf_acclimation(
             c.serial, call.data["days"], call.data["start_pct"], call.data["end_pct"])))
@@ -506,6 +541,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vol.Required("levels"): vol.All(cv.ensure_list, [pct], vol.Length(min=pr.FLARE_CHANNELS, max=pr.FLARE_CHANNELS)),
         vol.Optional("intensity"): pct,
     }))
+    reg(DOMAIN, "flare_program_delete", flare_program_delete, FLARE_BASE.extend({vol.Required("program"): cv.string}))
     reg(DOMAIN, "flare_import", flare_import, FLARE_BASE.extend({
         vol.Required("file"): vol.Any(dict, cv.string),
         vol.Optional("name"): vol.All(cv.string, vol.Strip, vol.Length(min=1, max=pr.FLARE_NAME_MAX)),

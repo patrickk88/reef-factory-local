@@ -375,6 +375,20 @@ def normalize_flare_points(points: list) -> list[dict]:
 FLARE_MANUAL_MAX_MIN = 360  # device UI: manual mode for 1 min .. 6 h
 
 
+# What the light puts into an unnamed slot when it is selected (reported 2026-11-05 and 2026-11-07 on both
+# lights; the app lists it as "Leer"/empty). The app cannot delete a program, only set it up again;
+# deleting here means: this program, intensity 100 %, name empty.
+FLARE_EMPTY_PROGRAM = (
+    {"time": "00:00", "levels": [0, 0, 0, 0, 0, 0, 0]},
+    {"time": "08:00", "levels": [0, 0, 0, 0, 0, 0, 0]},
+    {"time": "09:00", "levels": [40, 35, 30, 25, 20, 15, 10]},
+    {"time": "19:00", "levels": [40, 35, 30, 25, 20, 15, 10]},
+    {"time": "20:00", "levels": [0, 0, 0, 0, 0, 0, 0]},
+    {"time": "24:00", "levels": [0, 0, 0, 0, 0, 0, 0]},
+)
+FLARE_EMPTY_INTENSITY = 100
+
+
 def flare_free_slot(programs: list) -> int | None:
     """First unnamed program slot after slot 0. Selecting it makes the light create a default program
     there (confirmed 2026-11-05), which is then overwritten and named."""

@@ -16,7 +16,7 @@ The devices below already speak a local WebSocket protocol, which this integrati
 |---|---|---|---|
 | Level keeper (`RFLK…`) | refilled today, state (ok / refilling / water high / water low / paused / calibrating / filling hose / manual refill), current refill time, calibration date, calibration due, cloud connected | refill cycle, max refill time (safety limit), pause refill, display light, set clock; **opt-in pump actions:** manual refill (max 1000 mL), calibration run, fill hose, plus stop | 1.0.0 |
 | Thermo control (`RFTC…`) | temperature, heating/cooling, all four thresholds, beeper, display light, cloud connected | thresholds (alarm below / target range low / target range high / alarm above, always sent together, order checked), beeper, display light (°C units only so far) | 1.0.0 |
-| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, current output (computed), acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, create a program, timed manual mode (also with a stored manual preset), save a manual preset, acclimation start / stop (one or more lights) | 1.0.0 |
+| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, current output (computed), acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, create or delete a program, timed manual mode (also with a stored manual preset), save a manual preset, acclimation start / stop (one or more lights) | 1.0.0 |
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions); rename a channel (action, not a pump action) | 1.2.3 |
@@ -35,7 +35,7 @@ only until someone confirms it on hardware.
 | Level keeper (1.0.0) | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
 | Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
 | Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
-| Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program, timed program) | 2026-11-07 |
+| Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program or as new program, timed program); delete a program (reset to the light's empty program) | 2026-11-07 |
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
@@ -256,6 +256,10 @@ data:
   name: Summer
   activate: true
 ```
+
+The app cannot really delete a program, only set it up again; `flare_program_delete` sets a stored program
+(not the active one) back to what the light puts into a free slot - 08:00-20:00 at 40/35/30/25/20/15/10 %,
+intensity 100 %, no name (the app lists it as empty). The light briefly selects it and goes back.
 
 Timed manual mode (the app's *timer mode*): the light switches to manual mode with the given levels for the
 active manual preset and goes back to its program by itself when the time is up (1 to 360 minutes). To end

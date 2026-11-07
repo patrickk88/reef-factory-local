@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare : supprimer un programme",
+      "description": "Remettre un programme enregistré au programme vide de la lampe (vide dans l'app) : 08:00–20:00 à 40/35/30/25/20/15/10 %, intensité 100 %, sans nom. La lampe sélectionne brièvement ce programme puis revient au précédent. Pas le programme actif.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Une ou plusieurs Reef Flare."
+        },
+        "program": {
+          "name": "Programme",
+          "description": "Nom du programme à supprimer."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare : mode manuel temporisé",
       "description": "Passer la ou les lampes en mode manuel pendant un temps, éventuellement avec un préréglage manuel enregistré et/ou de nouveaux niveaux pour celui-ci. À la fin, la lampe revient d'elle-même à son programme.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "Aucun emplacement libre : la lampe enregistre 8 préréglages manuels."
+    },
+    "flare_program_active": {
+      "message": "{name} est le programme actif - activez d'abord un autre programme."
     }
   }
 }

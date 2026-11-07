@@ -15,6 +15,8 @@
   (it becomes the active preset). *Delete manual preset* (`flare_preset_delete`) clears one the way the
   app does. The *Program* sensor has the presets in the attribute `manual_presets` at
   all times; the last known list is kept over a restart (the light reports it only in manual mode).
+- Reef Flare: *Delete program* (`flare_program_delete`): resets a stored program (not the active one) to the
+  light's empty program - the app itself can only set a program up again.
 - Reef Flare: *Import app file* (`flare_import`) and *Export app file* (`flare_export`, returns the JSON) for
   the app's export files - programs and timed programs, byte for byte the app's format.
 - Every device: diagnostic sensor *Last report* (to the minute, readable while the device is away; disabled

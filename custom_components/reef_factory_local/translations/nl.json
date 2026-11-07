@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: programma verwijderen",
+      "description": "Een opgeslagen programma terugzetten naar het lege programma van de lamp (leeg in de app): 08:00–20:00 op 40/35/30/25/20/15/10 %, intensiteit 100 %, zonder naam. De lamp kiest kort dat programma en daarna weer het vorige. Niet het actieve programma.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Eén of meer Reef Flares."
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Naam van het programma dat wordt verwijderd."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: getimede handmatige modus",
       "description": "De lamp(en) een tijdje in de handmatige modus zetten, optioneel met een opgeslagen handmatige voorinstelling en/of nieuwe waarden daarvoor. Na afloop keert de lamp vanzelf terug naar het programma.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "Geen vrije plek - de lamp bewaart 8 handmatige voorinstellingen."
+    },
+    "flare_program_active": {
+      "message": "{name} is het actieve programma - activeer eerst een ander programma."
     }
   }
 }

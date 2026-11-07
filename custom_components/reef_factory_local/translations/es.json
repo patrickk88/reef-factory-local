@@ -533,6 +533,20 @@
         }
       }
     },
+    "flare_program_delete": {
+      "name": "Flare: borrar programa",
+      "description": "Devolver un programa guardado al programa vacío de la luz (en la app aparece vacío): 08:00–20:00 con 40/35/30/25/20/15/10 %, intensidad 100 %, sin nombre. La luz selecciona brevemente ese programa y luego vuelve al anterior. No el programa activo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "Una o varias Reef Flare."
+        },
+        "program": {
+          "name": "Programa",
+          "description": "Nombre del programa que se borra."
+        }
+      }
+    },
     "flare_manual": {
       "name": "Flare: modo manual temporizado",
       "description": "Pasar la(s) luz(ces) al modo manual durante un tiempo, opcionalmente con un preajuste manual guardado y/o niveles nuevos para él. Al terminar, la luz vuelve sola a su programa.",
@@ -793,6 +807,9 @@
     },
     "flare_no_free_preset": {
       "message": "No hay hueco libre: la luz guarda 8 preajustes manuales."
+    },
+    "flare_program_active": {
+      "message": "{name} es el programa activo: activa primero otro programa."
     }
   }
 }

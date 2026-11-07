@@ -192,6 +192,13 @@ APP_PROGRAM = ('{"Points":[{"t":0,"l":[0,0,0,0,0,0,0]},{"t":619,"l":[0,0,0,0,0,0
 APP_TIMER = '{"n":"Grün","s":true,"l":[0.1,0.1,0.1,0.54,1,0.1,0.1],"intensity":63}'
 
 
+def test_flare_empty_program():
+    """The light's empty program (what a free slot gets) passes the device UI's rules."""
+    pts = pr.normalize_flare_points(list(pr.FLARE_EMPTY_PROGRAM))
+    assert [p["minute"] for p in pts] == [0, 480, 540, 1140, 1200, 1440] and pts[2]["levels"] == [40, 35, 30, 25, 20, 15, 10]
+    assert pr.FLARE_EMPTY_INTENSITY == 100
+
+
 def test_flare_app_files():
     """Real export files of the app (program "Gemischte Kora75", timed program "Grün"): read and write back
     byte for byte."""
