@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3 - 2026-11-07
+- Cloud replacement, app passthrough: if a port is already taken on one address of the host (e.g. Tailscale
+  Funnel or Serve on 443 of the tailnet address), the passthrough now listens on the LAN addresses instead of
+  giving up - the official app works at home again. The message is now a warning, so it shows in the log.
+- Device page: the firmware version is no longer blanked for a moment when a device reconnects.
+
 ## 0.9.2 - 2026-11-05
 - Reef Flare *Current output*: two decimals (a light that is nearly off showed 0.0 %).
 

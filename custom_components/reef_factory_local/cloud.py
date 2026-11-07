@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime
+import ipaddress
 import json
 import logging
 import os
@@ -42,6 +43,7 @@ LOCAL_POLL_SECONDS = 300
 NO_DEVICE_HINT_SECONDS = 600
 APP_PORTS = (80, 443, 445, 446)  # app: REST/devices 443, ERP 445, social 446 (from the web client config)
 MODE_PASSTHROUGH = "passthrough"
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")  # Tailscale and other overlay networks
 MODE_LOCAL = "local"
 
 
@@ -239,6 +241,30 @@ class CloudDevice:
             await self.async_send(pr.frame_cloud_get_wifi(self.serial, self.join_id))
 
 
+def lan_ipv4_addresses(adapters=None) -> list[str]:
+    """IPv4 addresses of this host for the app relay: no loopback, link-local or 100.64.0.0/10 (Tailscale).
+    ``adapters`` as returned by ifaddr.get_adapters() (ifaddr ships with Home Assistant)."""
+    if adapters is None:
+        try:
+            import ifaddr  # noqa: PLC0415
+        except ImportError:
+            return []
+        adapters = ifaddr.get_adapters()
+    out = set()
+    for adapter in adapters:
+        for ip in adapter.ips:
+            if not isinstance(ip.ip, str):  # IPv6 entries are tuples
+                continue
+            try:
+                addr = ipaddress.ip_address(ip.ip)
+            except ValueError:
+                continue
+            if addr.is_loopback or addr.is_link_local or addr in _CGNAT:
+                continue
+            out.add(ip.ip)
+    return sorted(out, key=ipaddress.ip_address)
+
+
 class ReefCloudServer:
     """Listens on 442 (plain) and 444 (TLS) and serves every device that connects."""
 
@@ -315,17 +341,31 @@ class ReefCloudServer:
 
     async def _start_app_relays(self) -> None:
         """Ports 80/443: the official app also talks to api.reeffactory.com. Those connections are
-        passed through untouched (end-to-end TLS with the real cloud) so the app keeps working at home."""
+        passed through untouched (end-to-end TLS with the real cloud) so the app keeps working at home.
+
+        If a port is taken on one address only (e.g. Tailscale Funnel/Serve listens on 443 of the
+        tailnet address), binding 0.0.0.0 fails - then the relay listens on the LAN addresses instead."""
         for port in APP_PORTS:
+            handler = lambda r, w, p=port: self._relay_raw(r, w, p)  # noqa: E731
             try:
-                server = await asyncio.start_server(lambda r, w, p=port: self._relay_raw(r, w, p), "0.0.0.0", port,
-                                                    reuse_address=True)
-            except OSError as err:
-                _LOGGER.info("Cloud replacement: port %s not available for the app passthrough (%s) - the official "
-                             "app will only work outside your network", port, err)
+                self._raw_servers.append(await asyncio.start_server(handler, "0.0.0.0", port, reuse_address=True))
+                _LOGGER.info("Cloud replacement passing port %s through to the real cloud", port)
                 continue
-            self._raw_servers.append(server)
-            _LOGGER.info("Cloud replacement passing port %s through to the real cloud", port)
+            except OSError as err:
+                wildcard_error = err
+            bound = []
+            for address in lan_ipv4_addresses():
+                try:
+                    self._raw_servers.append(await asyncio.start_server(handler, address, port, reuse_address=True))
+                    bound.append(address)
+                except OSError:
+                    continue
+            if bound:
+                _LOGGER.warning("Cloud replacement: port %s is in use on another address (%s) - passing it through "
+                                "on %s only", port, wildcard_error, ", ".join(bound))
+            else:
+                _LOGGER.warning("Cloud replacement: port %s not available for the app passthrough (%s) - the "
+                                "official app will only work outside your network", port, wildcard_error)
 
     async def _relay_raw(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, port: int) -> None:
         peer = writer.get_extra_info("peername")

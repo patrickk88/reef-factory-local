@@ -22,8 +22,9 @@ class ReefEntity(CoordinatorEntity):
             name=coordinator.device_name,
             serial_number=serial,
             configuration_url=coordinator.configuration_url,
-            sw_version=coordinator.firmware,
         )
+        if coordinator.firmware:  # unknown right after a reconnect - do not blank the stored version
+            self._attr_device_info["sw_version"] = coordinator.firmware
 
     @property
     def available(self) -> bool:

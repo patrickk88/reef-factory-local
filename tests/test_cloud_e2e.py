@@ -108,4 +108,36 @@ async def main():
     print("ok  passthrough fallback: cloud unreachable -> local answers")
     print("cloud e2e passed")
 
+def test_lan_addresses():
+    class IP:  # ifaddr.IP lookalike
+        def __init__(self, ip): self.ip = ip
+    class Adapter:
+        def __init__(self, *ips): self.ips = [IP(i) for i in ips]
+    got = cloud.lan_ipv4_addresses([Adapter("127.0.0.1", ("::1", 0, 0)), Adapter("192.168.177.50"),
+                                    Adapter("100.113.127.4"), Adapter("169.254.1.2"), Adapter("10.42.1.1")])
+    assert got == ["10.42.1.1", "192.168.177.50"], got
+    print("ok  lan addresses (no loopback, link-local, Tailscale)")
+
+
+async def test_relay_fallback():
+    """Port taken on one address (like Tailscale Funnel on 443, 07.11.2026): the app relay binds the LAN address."""
+    holder = socket.socket(); holder.bind(("127.0.0.1", 0)); holder.listen(); port = holder.getsockname()[1]
+    ports, lan = cloud.APP_PORTS, cloud.lan_ipv4_addresses
+    cloud.APP_PORTS = (port,)
+    cloud.lan_ipv4_addresses = lambda adapters=None: ["127.0.0.2"]
+    srv = cloud.ReefCloudServer.__new__(cloud.ReefCloudServer); srv._raw_servers = []
+    try:
+        await srv._start_app_relays()
+        bound = [sock.getsockname() for server in srv._raw_servers for sock in server.sockets]
+        assert bound == [("127.0.0.2", port)], bound
+    finally:
+        for server in srv._raw_servers:
+            server.close()
+        holder.close(); cloud.APP_PORTS, cloud.lan_ipv4_addresses = ports, lan
+    print("ok  app relay falls back to the LAN address when the port is taken elsewhere")
+
+
+import socket
+test_lan_addresses()
+asyncio.run(test_relay_fallback())
 asyncio.run(main())
