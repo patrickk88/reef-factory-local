@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 PUBLIC_DNS = ("1.1.1.1", "9.9.9.9", "8.8.8.8")
 RESOLVE_TTL = 600
 UPSTREAM_TIMEOUT = 8
+STOP_TIMEOUT = 10  # per listener when stopping; open connections are reset first
+UPSTREAM_RETRY_SECONDS = 120  # served locally because the real cloud was away: look again this often
 LOCAL_POLL_SECONDS = 300
 NO_DEVICE_HINT_SECONDS = 600
 APP_PORTS = (80, 443, 445, 446)  # app: REST/devices 443, ERP 445, social 446 (from the web client config)
@@ -286,6 +288,8 @@ class ReefCloudServer:
         self.cert_path = os.path.join(self._dir, "cloud-cert.pem")
         self.key_path = os.path.join(self._dir, "cloud-key.pem")
         self._session: aiohttp.ClientSession | None = None
+        self._upstream_hosts: dict[str, list[str]] = {}  # read by the session's resolver on every connect
+        self._transports: set = set()  # every open connection (devices, also before their first frame, and the app)
         self.listen_errors: dict[int, str] = {}
         # where the real cloud listens; only tests change these
         self.upstream_ports = (pr.CLOUD_PORT_PLAIN, pr.CLOUD_PORT_TLS)
@@ -394,7 +398,12 @@ class ReefCloudServer:
                 if not dst.is_closing():
                     dst.close()
 
-        await asyncio.gather(pump(reader, uw), pump(ur, writer))
+        both = (writer.transport, uw.transport)
+        self._transports.update(both)
+        try:
+            await asyncio.gather(pump(reader, uw), pump(ur, writer))
+        finally:
+            self._transports.difference_update(both)
 
     async def async_stop(self) -> None:
         if self._hint_task:
@@ -410,8 +419,17 @@ class ReefCloudServer:
             dev._transport = None
             dev.connected = False
             dev.cloud_connected = False
+        # also the connections no device is known for (nothing sent yet, replaced by a newer one) and the app's:
+        # an open connection keeps the listener from closing - seen 2026-11-11, a reload hung in "unloading"
+        for transport in list(self._transports):
+            reset_transport(transport)
+        self._transports.clear()
         for runner in self._runners:
-            await runner.cleanup()
+            try:
+                async with asyncio.timeout(STOP_TIMEOUT):
+                    await runner.cleanup()
+            except asyncio.TimeoutError:
+                _LOGGER.warning("Cloud replacement: a listener did not close within %s s - going on", STOP_TIMEOUT)
         self._runners = []
         if self._session is not None:
             await self._session.close()
@@ -433,14 +451,42 @@ class ReefCloudServer:
         ips = await self._upstream_ips()
         if not ips:
             raise ConnectionError("cloud address unknown")
+        # the cloud sits behind a load balancer whose addresses change: always hand the session the current ones
+        self._upstream_hosts[pr.CLOUD_HOST] = ips
         if self._session is None:
-            self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(resolver=_StaticResolver({pr.CLOUD_HOST: ips})))
+            self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(
+                resolver=_StaticResolver(self._upstream_hosts), use_dns_cache=False))
         tls = port == self._ports[1]
         url = f"{'wss' if tls else 'ws'}://{pr.CLOUD_HOST}:{self.upstream_ports[1] if tls else self.upstream_ports[0]}{path}"
         kwargs = {} if self.upstream_verify else {"ssl": False}
-        async with asyncio.timeout(UPSTREAM_TIMEOUT):
-            return await self._session.ws_connect(url, protocols=protocols, autoping=True, heartbeat=None,
-                                                  headers={"User-Agent": "reef_factory_local"}, **kwargs)
+        try:
+            async with asyncio.timeout(UPSTREAM_TIMEOUT):
+                return await self._session.ws_connect(url, protocols=protocols, autoping=True, heartbeat=None,
+                                                      headers={"User-Agent": "reef_factory_local"}, **kwargs)
+        except (aiohttp.ClientError, OSError, asyncio.TimeoutError):
+            self._resolved = (0.0, [])  # look the address up again next time
+            raise
+
+    async def _retry_upstream(self, device: CloudDevice, ws: web.WebSocketResponse, port: int, path: str,
+                              protocols: tuple[str, ...]) -> None:
+        """The device is served locally because the real cloud did not answer when it connected. Look again
+        every UPSTREAM_RETRY_SECONDS; once the cloud answers, drop the device's connection with a TCP reset -
+        it reconnects within seconds and logs in to the real cloud through the passthrough (seen 2026-11-11:
+        after a short cloud outage the devices stayed "local" and the app showed them offline for hours)."""
+        while True:
+            await asyncio.sleep(UPSTREAM_RETRY_SECONDS)
+            if ws.closed or device._ws is not ws:
+                return
+            try:
+                probe = await self._connect_upstream(port, path, protocols)
+            except (aiohttp.ClientError, ConnectionError, OSError, asyncio.TimeoutError):
+                continue
+            await probe.close()
+            if ws.closed or device._ws is not ws:
+                return
+            _LOGGER.info("cloud: real cloud reachable again - reconnecting %s", device.serial)
+            reset_transport(device._transport)
+            return
 
     # -- connection handler ----------------------------------------------------------
     async def _handle(self, request: web.Request) -> web.StreamResponse:
@@ -449,12 +495,15 @@ class ReefCloudServer:
         offered = tuple(p.strip() for p in request.headers.get("Sec-WebSocket-Protocol", "").split(",") if p.strip())
         ws = web.WebSocketResponse(protocols=offered or (), autoping=False, max_msg_size=1 << 20)
         await ws.prepare(request)
+        transport = request.transport
+        self._transports.add(transport)
         peer = request.remote
         port = request.transport.get_extra_info("sockname")[1] if request.transport else 0
         _LOGGER.debug("cloud: connection from %s on port %s path %s", peer, port, request.path)
         device: CloudDevice | None = None
         upstream = None
         local_task: asyncio.Task | None = None
+        retry_task: asyncio.Task | None = None
         try:
             async for msg in ws:
                 if msg.type is aiohttp.WSMsgType.PING:
@@ -483,8 +532,11 @@ class ReefCloudServer:
                             device.cloud_connected = True
                             asyncio.get_running_loop().create_task(self._pump_upstream(device, upstream, ws))
                         except (aiohttp.ClientError, ConnectionError, OSError, asyncio.TimeoutError) as err:
-                            _LOGGER.warning("cloud: real cloud unreachable for %s (%s) - serving locally", device.serial, err)
+                            _LOGGER.warning("cloud: real cloud unreachable for %s (%s) - serving locally, looking again "
+                                            "every %s s", device.serial, err or type(err).__name__, UPSTREAM_RETRY_SECONDS)
                             upstream = None
+                            retry_task = asyncio.get_running_loop().create_task(
+                                self._retry_upstream(device, ws, port, request.path, offered))
                     device.notify()
                 device.last_seen = time.monotonic()
                 self._learn(device, frame, raw)
@@ -497,8 +549,11 @@ class ReefCloudServer:
                     # our own subscription, in both modes (the real cloud only subscribes while the app is open)
                     local_task = asyncio.get_running_loop().create_task(self._poll(device))
         finally:
+            self._transports.discard(transport)
             if local_task:
                 local_task.cancel()
+            if retry_task:
+                retry_task.cancel()
             if upstream is not None and not upstream.closed:
                 await upstream.close()
             if device is not None and device._ws is ws:

@@ -106,6 +106,53 @@ async def main():
     assert dev.mode == cloud.MODE_LOCAL and not dev.cloud_connected and dev.data.get("container_g") == 50.0
     await q.put(None); task.cancel(); await srv.async_stop()
     print("ok  passthrough fallback: cloud unreachable -> local answers")
+
+    # --- round 4: the cloud comes back -> the device is reconnected and passed through (2026-11-11)
+    real = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(18442, 18444))
+    await real.async_start(); assert not real.listen_errors
+    retry = cloud.UPSTREAM_RETRY_SECONDS; cloud.UPSTREAM_RETRY_SECONDS = 0.5
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_PASSTHROUGH, upstream_ips=["127.0.0.1"], ports=(19442, 19444))
+    srv.upstream_ports = (1, 1); srv.upstream_verify = False
+    await srv.async_start()
+    received, q = [], asyncio.Queue()
+
+    async def device_that_reconnects():  # like the firmware after a TCP reset
+        while True:
+            try:
+                await fake_feeder(19444, True, received, q)
+            except (aiohttp.ClientError, OSError):
+                pass
+            await asyncio.sleep(0.3)
+    task = asyncio.create_task(device_that_reconnects())
+    await asyncio.sleep(2)
+    dev = srv.devices[SERIAL]
+    assert dev.mode == cloud.MODE_LOCAL and not dev.cloud_connected and SERIAL not in real.devices
+    first = dev._ws
+    srv.upstream_ports = (18442, 18444)  # the cloud is back
+    await asyncio.sleep(4)
+    assert dev._ws is not None and dev._ws is not first, "device was not reconnected"
+    assert dev.mode == cloud.MODE_PASSTHROUGH and dev.cloud_connected and dev.connected, (dev.mode, dev.cloud_connected)
+    assert real.devices[SERIAL].data.get("container_g") == 50.0
+    assert srv._upstream_hosts == {pr.CLOUD_HOST: ["127.0.0.1"]}
+    task.cancel(); cloud.UPSTREAM_RETRY_SECONDS = retry
+    await srv.async_stop(); await real.async_stop()
+    print("ok  passthrough recovery: cloud back -> device reconnected through the real cloud")
+
+    # --- round 5: stopping must not hang on a connection that never sent a frame (2026-11-11)
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(20442, 20444))
+    await srv.async_start()
+    received, q = [], asyncio.Queue()
+    task = asyncio.create_task(fake_feeder(20444, True, received, q))
+    silent = aiohttp.ClientSession()
+    quiet_ws = await silent.ws_connect("ws://127.0.0.1:20442/hardware32", autoping=False)  # connects, says nothing
+    await asyncio.sleep(1.5)
+    assert SERIAL in srv.devices and len(srv._transports) == 2, len(srv._transports)
+    t0 = time.monotonic()
+    async with asyncio.timeout(6):
+        await srv.async_stop()
+    assert time.monotonic() - t0 < 5 and not srv._transports and not srv._runners
+    task.cancel(); await quiet_ws.close(); await silent.close()
+    print("ok  stop: all connections reset, listeners closed in %.1f s" % (time.monotonic() - t0))
     print("cloud e2e passed")
 
 def test_lan_addresses():

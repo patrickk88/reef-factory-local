@@ -6,6 +6,12 @@
   reminder*, button *Finish calibration*, sensor *Calibration run time left*. The buttons send the same
   frames as the actions `calibration_start` / `calibration_value`; the values are kept in Home Assistant.
   Suggested by Steven Downer.
+- Cloud replacement: finds the real cloud again by itself. If the cloud did not answer when a device connected,
+  the device was served locally until Home Assistant restarted and the official app showed it offline. Now the
+  cloud is tried again every two minutes and the device is reconnected through it; the cloud's addresses are
+  looked up again after a failed attempt (they change).
+- Cloud replacement: reloading the entry or changing its options could hang ("unloading") when a connection
+  was open that had not sent anything yet - every open connection is reset now and stopping has a time limit.
 
 ## 1.1.0 - 2026-11-11
 - Smart Roller: control. Switch *Automatic advance*, selects *Advance length* and *Start delay*, buttons
