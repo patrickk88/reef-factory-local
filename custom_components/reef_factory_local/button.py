@@ -1,4 +1,4 @@
-"""Level keeper: set device clock, stop any running pump action."""
+"""Level keeper: set device clock, stop any running pump action; feeder; Smart Roller."""
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
@@ -12,6 +12,7 @@ from . import ReefConfigEntry
 from . import protocol as pr
 from .entity import ReefEntity
 from .platform_setup import setup_entities
+from .roller import async_send_roller
 
 
 async def async_setup_entry(
@@ -23,6 +24,8 @@ async def async_setup_entry(
             return [ReefSyncTime(c), ReefStopPump(c)]
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeedNow(c)]
+        if kind == pr.DEVICE_SMART_ROLLER:
+            return [ReefRollerAdvance(c), ReefRollerUnblock(c), ReefRollerNewRoll(c), ReefRollerUsedRoll(c)]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -74,3 +77,63 @@ class ReefFeedNow(_ReefButton):
     async def async_press(self) -> None:
         d = self.coordinator.device
         await self._send(pr.frame_sf_feed(d.serial, 1, d.join_id))
+
+
+class ReefRollerAdvance(ReefEntity, ButtonEntity):
+    """Smart Roller: advance the fleece now by the set advance length (srExecute/manual)."""
+
+    _attr_translation_key = "sr_advance"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_advance")
+
+    async def async_press(self) -> None:
+        length = (self.coordinator.data or {}).get("shift_mm")
+        if length not in pr.SR_MANUAL_MM:
+            raise HomeAssistantError("Set an advance length (3-15 cm) first, or use the action smart_roller_advance")
+        await async_send_roller(self.coordinator, pr.frame_sr_manual(self.coordinator.serial, length),
+                                f"advance {length} mm now")
+
+
+class ReefRollerUnblock(ReefEntity, ButtonEntity):
+    """Smart Roller: clear a jam (srSet/unblock) - only offered while the roller reports jammed."""
+
+    _attr_translation_key = "sr_unblock"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_unblock")
+
+    @property
+    def available(self) -> bool:
+        return super().available and bool((self.coordinator.data or {}).get("jammed"))
+
+    async def async_press(self) -> None:
+        await async_send_roller(self.coordinator, pr.frame_sr_unblock(self.coordinator.serial), "clear jam")
+
+
+class ReefRollerNewRoll(ReefEntity, ButtonEntity):
+    """Smart Roller: a new roll was inserted (srSet/newRoll ffffffff00)."""
+
+    _attr_translation_key = "sr_new_roll"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_new_roll")
+
+    async def async_press(self) -> None:
+        await async_send_roller(self.coordinator, pr.frame_sr_new_roll(self.coordinator.serial), "new roll")
+
+
+class ReefRollerUsedRoll(ReefEntity, ButtonEntity):
+    """Smart Roller: a used (partial) roll was inserted - srSet/newRoll with its outer diameter, taken from
+    the number entity *Used roll diameter*. The roller works out the remaining length itself. Same two
+    steps as the app and Steven Downer's integration (choose used, enter the diameter, apply)."""
+
+    _attr_translation_key = "sr_used_roll"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_used_roll")
+
+    async def async_press(self) -> None:
+        diameter = self.coordinator.sr_used_diameter_mm
+        await async_send_roller(self.coordinator, pr.frame_sr_new_roll(self.coordinator.serial, diameter),
+                                f"used roll, outer diameter {diameter} mm")

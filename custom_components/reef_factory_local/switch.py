@@ -16,6 +16,7 @@ from . import protocol as pr
 from .const import CONF_ALLOW_PUMP_ACTIONS, DOMAIN, PUMP_UNLOCK_SECONDS
 from .entity import ReefEntity
 from .platform_setup import setup_entities
+from .roller import async_send_roller
 
 
 async def async_setup_entry(
@@ -33,6 +34,8 @@ async def async_setup_entry(
             return [ReefFeederFlag(c, "led"), ReefFeederFlag(c, "feeding_button")]
         if kind == pr.DEVICE_BASE_PUMP:
             return [ReefBasePumpFeed(c), ReefBasePumpFlag(c, "display"), ReefBasePumpFlag(c, "backlight")]
+        if kind == pr.DEVICE_SMART_ROLLER:
+            return [ReefRollerAuto(c)]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -260,3 +263,23 @@ class ReefPumpUnlock(ReefEntity, SwitchEntity):
         if self._cancel:
             self._cancel()
         await super().async_will_remove_from_hass()
+
+
+class ReefRollerAuto(ReefEntity, SwitchEntity):
+    """Smart Roller automatic advance: srSet/mode 01 / 00."""
+
+    _attr_translation_key = "sr_auto"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_auto")
+
+    @property
+    def is_on(self) -> bool | None:
+        data = self.coordinator.data or {}
+        return None if "auto" not in data else bool(data["auto"])
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await async_send_roller(self.coordinator, pr.frame_sr_mode(self.coordinator.serial, True), "automatic advance on")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await async_send_roller(self.coordinator, pr.frame_sr_mode(self.coordinator.serial, False), "automatic advance off")

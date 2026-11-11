@@ -228,6 +228,29 @@
           "schedule": "Schema",
           "interval": "Interval"
         }
+      },
+      "sr_shift": {
+        "name": "Doorvoerlengte",
+        "state": {
+          "30": "3 cm",
+          "40": "4 cm",
+          "50": "5 cm",
+          "60": "6 cm",
+          "80": "8 cm",
+          "100": "10 cm",
+          "150": "15 cm"
+        }
+      },
+      "sr_delay": {
+        "name": "Startvertraging",
+        "state": {
+          "0": "Geen",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "900": "15 min",
+          "1800": "30 min"
+        }
       }
     },
     "binary_sensor": {
@@ -313,6 +336,9 @@
       },
       "bp_feed_speed": {
         "name": "Snelheid voermodus"
+      },
+      "sr_used_diameter": {
+        "name": "Diameter gebruikte rol"
       }
     },
     "switch": {
@@ -342,6 +368,9 @@
       },
       "pump_actions_unlock": {
         "name": "Pompacties toestaan (10 min)"
+      },
+      "sr_auto": {
+        "name": "Automatische doorvoer"
       }
     },
     "button": {
@@ -353,6 +382,18 @@
       },
       "feed_now": {
         "name": "Nu voeren"
+      },
+      "sr_advance": {
+        "name": "Nu doorvoeren"
+      },
+      "sr_unblock": {
+        "name": "Blokkade opheffen"
+      },
+      "sr_new_roll": {
+        "name": "Nieuwe rol geplaatst"
+      },
+      "sr_used_roll": {
+        "name": "Gebruikte rol geplaatst"
       }
     },
     "event": {
@@ -754,6 +795,34 @@
           "description": "Tot 32 tekens; leeg verwijdert de naam."
         }
       }
+    },
+    "smart_roller_advance": {
+      "name": "Smart Roller: nu doorvoeren",
+      "description": "Voer het vlies nu de opgegeven lengte door.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Smart Roller."
+        },
+        "length_mm": {
+          "name": "Lengte",
+          "description": "Millimeter: 30, 40, 50, 60, 80, 100 of 150."
+        }
+      }
+    },
+    "smart_roller_new_roll": {
+      "name": "Smart Roller: rol vervangen",
+      "description": "Meld de Smart Roller dat de rol is vervangen. Zonder diameter: nieuwe rol. Met diameter: gebruikte rol met deze buitendiameter (het apparaat berekent de resterende lengte).",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "De Smart Roller."
+        },
+        "used_diameter_mm": {
+          "name": "Buitendiameter (gebruikte rol)",
+          "description": "45-140 mm; leeg laten bij een nieuwe rol."
+        }
+      }
     }
   },
   "exceptions": {
@@ -810,6 +879,9 @@
     },
     "flare_program_active": {
       "message": "{name} is het actieve programma - activeer eerst een ander programma."
+    },
+    "not_smart_roller": {
+      "message": "Dit apparaat is geen Smart Roller."
     }
   }
 }

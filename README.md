@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v1.0)
+## Supported devices (v1.1)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -20,14 +20,15 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions); rename a channel (action, not a pump action) | 1.2.3 |
-| Smart Roller (serial prefix not known yet - recognised during setup) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | **none - read only** | **untested** - report layout from Steven Downer's [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller); testers welcome |
+| Smart Roller (serial prefix not known yet - recognised during setup) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | automatic advance (switch), advance length, start delay, advance now, clear a jam, new roll, used roll by its outer diameter | not on the author's bench - tested by Steven Downer on his roller; layout and commands from his [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) |
 
 ## Only confirmed writes are sent
 
 Every write this integration offers was checked on a real device: the change was sent from Home
 Assistant, the device reported the new value (for pump runs: the new state and its end), and the old
 value was put back. Anything that could not be confirmed this way is not offered - it stays readable
-only until someone confirms it on hardware.
+only until someone confirms it on hardware. The author owns no Smart Roller: its writes were tested by
+Steven Downer on his device (last row).
 
 | Device (firmware) | Confirmed writes | Date |
 |---|---|---|
@@ -39,6 +40,7 @@ only until someone confirms it on hardware.
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
+| Smart Roller (Steven Downer's device, firmware not noted) | automatic advance on / off, advance length, start delay, advance now, clear a jam, new roll - tested by Steven Downer with the 1.1.0b1 test build. Used roll by outer diameter: the same frame his own integration sends on that roller (the entities for it are new in 1.1.0) | 2026-11-10 |
 
 Removed in 0.7.1 because they could not be confirmed: Reef Flare manual-preset select, the intensity in
 manual mode, renaming a program (the light switched to the renamed program), program preview (the light
@@ -46,9 +48,8 @@ reports nothing back), and writing a program other than the active one. Manual m
 levels of the active manual preset are back since 0.9.0 (confirmed: the duration is only taken while the
 light is already in manual mode, which `flare_manual` takes care of). Their frames stay documented in `protocol.py` but are never sent.
 
-The **Smart Roller** is read only: nobody has checked this integration on one yet. Its commands (automatic
-advance, advance length, start delay, advance now, clear a jam, new roll) are known from Steven Downer's
-integration but will only be offered once an owner has confirmed them on a real device.
+The **Smart Roller** commands are byte for byte the ones Steven Downer's integration sends (the unit tests
+compare them with his `build_message()`), and only the values his integration offers are accepted.
 
 ## Use at your own risk
 
@@ -345,21 +346,32 @@ minutes of the day, days as a bit mask with bit 0 = Monday); commands `sfExecute
 `sfSet/mode|settings|container`; events `sfLog/dose`, `sfLog/container`.
 See `custom_components/reef_factory_local/protocol.py` and `cloud.py`.
 
-## Smart Roller testers wanted
+## Smart Roller
 
 The Smart Roller is recognised during setup: its serial number prefix is not known yet, so when a device
 answers with an unknown serial, the setup sends it the Smart Roller subscription and waits a few seconds
-for its report (nothing is written). If you own one, please set it up, compare the values with the app and
-open an issue with the *Download diagnostics* file (it contains the raw report, `report_hex`, which lets us
-check every value).
+for its report (nothing is written).
+
+- **Controls:** switch *Automatic advance*, buttons *Advance now* (uses the advance length), *Clear jam*
+  (only available while the roller reports jammed), *New roll inserted* and *Used roll inserted*.
+- **Configuration:** selects *Advance length* (3-15 cm) and *Start delay*, number *Used roll diameter*.
+- **Changing the roll**, as in the app: for a new roll press *New roll inserted*. For a used (partial) roll
+  set *Used roll diameter* to its outer diameter (45-140 mm) and press *Used roll inserted* - the roller
+  works out the length left. The diameter is only kept in Home Assistant; nothing is sent until the button
+  is pressed. Both buttons reset the roll counter.
+- Actions `smart_roller_advance` (any offered length) and `smart_roller_new_roll` (optional
+  `used_diameter_mm`) do the same from automations.
+
+If you own one: an issue with the *Download diagnostics* file (it contains the raw report, `report_hex`) and
+the firmware shown on the device page helps - serial prefix and firmware are still missing in the tables above.
 
 ## Credits and related projects
 
-- **Steven Downer** - the Smart Roller report layout comes from his
+- **Steven Downer** - the Smart Roller report layout and commands come from his
   [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) (MIT License,
-  Copyright (c) 2026 Steven Downer), re-implemented here. He also wrote a local
-  [Level keeper integration](https://github.com/downerhouse/ha-reef-factory-level-keeper); both offer
-  controls for these devices.
+  Copyright (c) 2026 Steven Downer), re-implemented here, and he tested the Smart Roller controls of this
+  integration on his own roller. He also wrote a local
+  [Level keeper integration](https://github.com/downerhouse/ha-reef-factory-level-keeper).
 - Other Home Assistant integrations for Reef Factory devices this one does not cover:
   [ha-reeffactory-ph](https://github.com/dominikhartl/ha-reeffactory-ph) (pH meters, local),
   [reef-factory-kh](https://github.com/realiztw/reef-factory-kh) (KH Keeper Plus, via the Smart Reef cloud),
@@ -377,4 +389,4 @@ buy me a coffee - it goes into test hardware (a spare Reef Flare board, dosing p
 MIT - see `LICENSE`. This repository contains only original code: no firmware, app files, certificates
 or keys from the manufacturer. Protocol knowledge comes from the devices' own web pages (served by the
 devices themselves) and from network captures of the author's own devices; the Smart Roller report layout
-comes from Steven Downer's MIT-licensed integration (see *Credits*).
+and commands come from Steven Downer's MIT-licensed integration (see *Credits*).

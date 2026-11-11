@@ -228,6 +228,29 @@
           "schedule": "Horario",
           "interval": "Intervalo"
         }
+      },
+      "sr_shift": {
+        "name": "Longitud de avance",
+        "state": {
+          "30": "3 cm",
+          "40": "4 cm",
+          "50": "5 cm",
+          "60": "6 cm",
+          "80": "8 cm",
+          "100": "10 cm",
+          "150": "15 cm"
+        }
+      },
+      "sr_delay": {
+        "name": "Retardo de inicio",
+        "state": {
+          "0": "Sin retardo",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "900": "15 min",
+          "1800": "30 min"
+        }
       }
     },
     "binary_sensor": {
@@ -313,6 +336,9 @@
       },
       "bp_feed_speed": {
         "name": "Velocidad en modo alimentación"
+      },
+      "sr_used_diameter": {
+        "name": "Diámetro del rollo usado"
       }
     },
     "switch": {
@@ -342,6 +368,9 @@
       },
       "pump_actions_unlock": {
         "name": "Permitir acciones de bomba (10 min)"
+      },
+      "sr_auto": {
+        "name": "Avance automático"
       }
     },
     "button": {
@@ -353,6 +382,18 @@
       },
       "feed_now": {
         "name": "Alimentar ahora"
+      },
+      "sr_advance": {
+        "name": "Avanzar ahora"
+      },
+      "sr_unblock": {
+        "name": "Liberar atasco"
+      },
+      "sr_new_roll": {
+        "name": "Rollo nuevo colocado"
+      },
+      "sr_used_roll": {
+        "name": "Rollo usado colocado"
       }
     },
     "event": {
@@ -754,6 +795,34 @@
           "description": "Hasta 32 caracteres; vacío elimina el nombre."
         }
       }
+    },
+    "smart_roller_advance": {
+      "name": "Smart Roller: avanzar ahora",
+      "description": "Avanza el vellón la longitud indicada ahora mismo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Smart Roller."
+        },
+        "length_mm": {
+          "name": "Longitud",
+          "description": "Milímetros: 30, 40, 50, 60, 80, 100 o 150."
+        }
+      }
+    },
+    "smart_roller_new_roll": {
+      "name": "Smart Roller: rollo cambiado",
+      "description": "Indica al Smart Roller que se ha cambiado el rollo. Sin diámetro: rollo nuevo. Con diámetro: rollo usado con ese diámetro exterior (el aparato calcula la longitud restante).",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El Smart Roller."
+        },
+        "used_diameter_mm": {
+          "name": "Diámetro exterior (rollo usado)",
+          "description": "45-140 mm; dejar vacío para un rollo nuevo."
+        }
+      }
     }
   },
   "exceptions": {
@@ -810,6 +879,9 @@
     },
     "flare_program_active": {
       "message": "{name} es el programa activo: activa primero otro programa."
+    },
+    "not_smart_roller": {
+      "message": "Este dispositivo no es un Smart Roller."
     }
   }
 }

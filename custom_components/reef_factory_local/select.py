@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -10,6 +11,7 @@ from . import ReefConfigEntry
 from . import protocol as pr
 from .entity import ReefEntity
 from .platform_setup import setup_entities
+from .roller import async_send_roller
 
 
 async def async_setup_entry(
@@ -23,6 +25,8 @@ async def async_setup_entry(
             return [ReefFlareMode(c), ReefFlareProgram(c)]  # manual presets: not confirmed on hardware yet
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederMode(c)]
+        if kind == pr.DEVICE_SMART_ROLLER:
+            return [ReefRollerSetting(c, "sr_shift"), ReefRollerSetting(c, "sr_delay")]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -122,3 +126,36 @@ class ReefFeederMode(ReefEntity, SelectEntity):
             await d.async_send(pr.frame_sf_set_mode(d.serial, option, d.join_id))
         except ConnectionError as err:
             raise HomeAssistantError(f"Smart feeder not connected: {err}") from err
+
+
+class ReefRollerSetting(ReefEntity, SelectEntity):
+    """Smart Roller advance length / start delay. srSet/settings always carries both plus the
+    reminder byte, so the other two values come from the roller's last report."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator, key: str) -> None:
+        super().__init__(coordinator, key)
+        self._key = key
+        self._attr_translation_key = key
+        values = pr.SR_SHIFT_MM if key == "sr_shift" else pr.SR_DELAY_S
+        self._attr_options = [str(v) for v in values]
+
+    @property
+    def _field(self) -> str:
+        return "shift_mm" if self._key == "sr_shift" else "delay_s"
+
+    @property
+    def current_option(self) -> str | None:
+        value = (self.coordinator.data or {}).get(self._field)
+        return str(value) if value is not None and str(value) in self._attr_options else None
+
+    async def async_select_option(self, option: str) -> None:
+        data = self.coordinator.data or {}
+        if data.get("shift_mm") is None or data.get("delay_s") is None:
+            raise HomeAssistantError("No report from the Smart Roller yet - try again in a few seconds")
+        shift = int(option) if self._key == "sr_shift" else data["shift_mm"]
+        delay = int(option) if self._key == "sr_delay" else data["delay_s"]
+        reminder = data.get("reminder_raw", pr.SR_REMINDER_DEFAULT)
+        await async_send_roller(self.coordinator, pr.frame_sr_settings(self.coordinator.serial, shift, delay, reminder),
+                                f"settings advance {shift} mm, delay {delay} s, reminder {reminder}")

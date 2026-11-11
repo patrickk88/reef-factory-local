@@ -228,6 +228,29 @@
           "schedule": "Planning",
           "interval": "Intervalle"
         }
+      },
+      "sr_shift": {
+        "name": "Longueur d'avance",
+        "state": {
+          "30": "3 cm",
+          "40": "4 cm",
+          "50": "5 cm",
+          "60": "6 cm",
+          "80": "8 cm",
+          "100": "10 cm",
+          "150": "15 cm"
+        }
+      },
+      "sr_delay": {
+        "name": "Délai de démarrage",
+        "state": {
+          "0": "Aucun",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "900": "15 min",
+          "1800": "30 min"
+        }
       }
     },
     "binary_sensor": {
@@ -313,6 +336,9 @@
       },
       "bp_feed_speed": {
         "name": "Vitesse du mode nourrissage"
+      },
+      "sr_used_diameter": {
+        "name": "Diamètre du rouleau entamé"
       }
     },
     "switch": {
@@ -342,6 +368,9 @@
       },
       "pump_actions_unlock": {
         "name": "Autoriser les actions de pompe (10 min)"
+      },
+      "sr_auto": {
+        "name": "Avance automatique"
       }
     },
     "button": {
@@ -353,6 +382,18 @@
       },
       "feed_now": {
         "name": "Nourrir maintenant"
+      },
+      "sr_advance": {
+        "name": "Avancer maintenant"
+      },
+      "sr_unblock": {
+        "name": "Débloquer"
+      },
+      "sr_new_roll": {
+        "name": "Nouveau rouleau inséré"
+      },
+      "sr_used_roll": {
+        "name": "Rouleau entamé inséré"
       }
     },
     "event": {
@@ -754,6 +795,34 @@
           "description": "Jusqu'à 32 caractères ; vide supprime le nom."
         }
       }
+    },
+    "smart_roller_advance": {
+      "name": "Smart Roller : avancer maintenant",
+      "description": "Fait avancer le non-tissé de la longueur indiquée immédiatement.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Le Smart Roller."
+        },
+        "length_mm": {
+          "name": "Longueur",
+          "description": "Millimètres : 30, 40, 50, 60, 80, 100 ou 150."
+        }
+      }
+    },
+    "smart_roller_new_roll": {
+      "name": "Smart Roller : rouleau remplacé",
+      "description": "Indique au Smart Roller que le rouleau a été remplacé. Sans diamètre : rouleau neuf. Avec diamètre : rouleau entamé de ce diamètre extérieur (l'appareil calcule la longueur restante).",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Le Smart Roller."
+        },
+        "used_diameter_mm": {
+          "name": "Diamètre extérieur (rouleau entamé)",
+          "description": "45-140 mm ; laisser vide pour un rouleau neuf."
+        }
+      }
     }
   },
   "exceptions": {
@@ -810,6 +879,9 @@
     },
     "flare_program_active": {
       "message": "{name} est le programme actif - activez d'abord un autre programme."
+    },
+    "not_smart_roller": {
+      "message": "Cet appareil n'est pas un Smart Roller."
     }
   }
 }

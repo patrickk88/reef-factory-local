@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 - 2026-11-11
+- Smart Roller: control. Switch *Automatic advance*, selects *Advance length* and *Start delay*, buttons
+  *Advance now*, *Clear jam* (only while the roller reports jammed), *New roll inserted* and *Used roll
+  inserted* with the number *Used roll diameter* (45-140 mm, kept in Home Assistant; the roller works out the
+  length left - as in the app). Actions `smart_roller_advance` and `smart_roller_new_roll`. The frames are
+  byte-identical to Steven Downer's ha-reef-factory-smartroller 1.0.1 (the tests compare them with his
+  `build_message()`), only the values his integration offers are accepted, and every command is logged at
+  info level with its bytes. Tested by Steven Downer on his roller - thank you!
+- All seven languages have the Smart Roller texts.
+
 ## 1.0.0 - 2026-11-07
 - Same code as 0.10.0 - first 1.x version number (0.10.0 was easily read as 0.1).
 

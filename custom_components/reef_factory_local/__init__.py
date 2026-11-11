@@ -26,7 +26,9 @@ PLATFORMS: dict[str, list[Platform]] = {
         Platform.NUMBER, Platform.SWITCH, Platform.BUTTON, Platform.EVENT,
     ],
     pr.DEVICE_THERMO: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH],
-    pr.DEVICE_SMART_ROLLER: [Platform.SENSOR, Platform.BINARY_SENSOR],  # read only until writes are confirmed
+    pr.DEVICE_SMART_ROLLER: [  # frames byte-identical to Steven Downer's integration, tested by him
+        Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.SELECT, Platform.BUTTON, Platform.NUMBER,
+    ],
     pr.DEVICE_FLARE: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT, Platform.NUMBER],
     pr.DEVICE_FEEDER: [
         Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT,

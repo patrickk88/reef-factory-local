@@ -1,12 +1,12 @@
-"""Level keeper max refill time and pause, Thermo control thresholds, Reef Flare intensity."""
+"""Level keeper max refill time and pause, Thermo control thresholds, Reef Flare intensity, Smart Roller used roll."""
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import math
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode, RestoreNumber
+from homeassistant.const import EntityCategory, UnitOfLength, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -54,6 +54,8 @@ async def async_setup_entry(
             return [ReefFeederNumber(c, key) for key in FEEDER_NUMBERS]
         if kind == pr.DEVICE_BASE_PUMP:
             return [ReefBasePumpNumber(c, key) for key in BASE_PUMP_NUMBERS]
+        if kind == pr.DEVICE_SMART_ROLLER:
+            return [ReefRollerUsedDiameter(c)]
         return []
 
     setup_entities(hass, entry, async_add_entities, factory)
@@ -267,3 +269,41 @@ class ReefBasePumpNumber(ReefEntity, NumberEntity):
             await d.async_send(frame)
         except ConnectionError as err:
             raise HomeAssistantError(f"Base pump not connected: {err}") from err
+
+
+class ReefRollerUsedDiameter(ReefEntity, RestoreNumber):
+    """Smart Roller: outer diameter of a used roll, for the button *Used roll inserted*. The value lives in
+    Home Assistant only (kept over restarts) - nothing is sent until the button is pressed."""
+
+    _attr_translation_key = "sr_used_diameter"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = pr.SR_USED_ROLL_MM[0]
+    _attr_native_max_value = pr.SR_USED_ROLL_MM[1]
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = UnitOfLength.MILLIMETERS
+    _attr_mode = NumberMode.BOX
+    _attr_icon = "mdi:tape-measure"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "sr_used_diameter")
+
+    @property
+    def available(self) -> bool:
+        return True  # a local value - can be set while the roller is away
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_number_data()
+        if last is not None and last.native_value is not None:
+            lo, hi = pr.SR_USED_ROLL_MM
+            if lo <= last.native_value <= hi:
+                self.coordinator.sr_used_diameter_mm = int(last.native_value)
+
+    @property
+    def native_value(self) -> int:
+        return self.coordinator.sr_used_diameter_mm
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.sr_used_diameter_mm = int(value)
+        self.async_write_ha_state()
+

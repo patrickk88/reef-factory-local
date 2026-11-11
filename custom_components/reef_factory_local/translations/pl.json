@@ -228,6 +228,29 @@
           "schedule": "Harmonogram",
           "interval": "Interwał"
         }
+      },
+      "sr_shift": {
+        "name": "Długość przesuwu",
+        "state": {
+          "30": "3 cm",
+          "40": "4 cm",
+          "50": "5 cm",
+          "60": "6 cm",
+          "80": "8 cm",
+          "100": "10 cm",
+          "150": "15 cm"
+        }
+      },
+      "sr_delay": {
+        "name": "Opóźnienie startu",
+        "state": {
+          "0": "Brak",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "900": "15 min",
+          "1800": "30 min"
+        }
       }
     },
     "binary_sensor": {
@@ -313,6 +336,9 @@
       },
       "bp_feed_speed": {
         "name": "Prędkość podczas karmienia"
+      },
+      "sr_used_diameter": {
+        "name": "Średnica używanej rolki"
       }
     },
     "switch": {
@@ -342,6 +368,9 @@
       },
       "pump_actions_unlock": {
         "name": "Zezwól na akcje pompy (10 min)"
+      },
+      "sr_auto": {
+        "name": "Automatyczny przesuw"
       }
     },
     "button": {
@@ -353,6 +382,18 @@
       },
       "feed_now": {
         "name": "Nakarm teraz"
+      },
+      "sr_advance": {
+        "name": "Przesuń teraz"
+      },
+      "sr_unblock": {
+        "name": "Usuń zacięcie"
+      },
+      "sr_new_roll": {
+        "name": "Włożono nową rolkę"
+      },
+      "sr_used_roll": {
+        "name": "Włożono używaną rolkę"
       }
     },
     "event": {
@@ -754,6 +795,34 @@
           "description": "Do 32 znaków; puste usuwa nazwę."
         }
       }
+    },
+    "smart_roller_advance": {
+      "name": "Smart Roller: przesuń teraz",
+      "description": "Przesuwa włókninę od razu o podaną długość.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Smart Roller."
+        },
+        "length_mm": {
+          "name": "Długość",
+          "description": "Milimetry: 30, 40, 50, 60, 80, 100 lub 150."
+        }
+      }
+    },
+    "smart_roller_new_roll": {
+      "name": "Smart Roller: wymieniono rolkę",
+      "description": "Informuje Smart Roller, że rolka została wymieniona. Bez średnicy: nowa rolka. Ze średnicą: używana rolka o tej średnicy zewnętrznej (urządzenie samo oblicza pozostałą długość).",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Smart Roller."
+        },
+        "used_diameter_mm": {
+          "name": "Średnica zewnętrzna (używana rolka)",
+          "description": "45-140 mm; zostaw puste dla nowej rolki."
+        }
+      }
     }
   },
   "exceptions": {
@@ -810,6 +879,9 @@
     },
     "flare_program_active": {
       "message": "{name} jest aktywnym programem – najpierw aktywuj inny program."
+    },
+    "not_smart_roller": {
+      "message": "To urządzenie nie jest Smart Rollerem."
     }
   }
 }

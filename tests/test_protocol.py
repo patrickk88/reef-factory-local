@@ -519,6 +519,39 @@ def test_smart_roller_synthetic():
     assert pr.decode(pr.DEVICE_SMART_ROLLER, pr.parse_frame(b"X\x00pong\x00\x00\x00")) is None
 
 
+def test_smart_roller_commands_match_steven_downer():
+    """Smart Roller writes: byte-identical to build_message() of ha-reef-factory-smartroller 1.0.1 (bytes below
+    produced with his function, identifier fixed to 1700000000000)."""
+    import unittest.mock as um
+    s = "RFSR000000000001"
+    expected = {
+        "mode": "52465352303030303030303030303031007372536574006d6f646500313730303030303030303030300001",
+        "settings": "524653523030303030303030303030310073725365740073657474696e67730000001e003c07",
+        "manual": "5246535230303030303030303030303100737245786563757465006d616e75616c00000000001e00",
+        "unblock": "5246535230303030303030303030303100737253657400756e626c6f636b0031373030303030303030303030000000",
+        "newroll": "52465352303030303030303030303031007372536574006e6577526f6c6c003137303030303030303030303000ffffffff00",
+        "used": "52465352303030303030303030303031007372536574006e6577526f6c6c0031373030303030303030303030000000008c00",
+    }
+    with um.patch.object(pr.time, "time", return_value=1700000000.0):
+        got = {
+            "mode": pr.frame_sr_mode(s, True), "settings": pr.frame_sr_settings(s, 30, 60, 7),
+            "manual": pr.frame_sr_manual(s, 30), "unblock": pr.frame_sr_unblock(s),
+            "newroll": pr.frame_sr_new_roll(s), "used": pr.frame_sr_new_roll(s, 140),
+        }
+    for key, frame in got.items():
+        assert frame.hex() == expected[key], (key, frame.hex())
+    assert pr.frame_sr_mode(s, False).endswith(b"\x00\x00") and pr.frame_sr_manual(s, 150)[-2:] == bytes([150, 0])
+    for bad in (lambda: pr.frame_sr_manual(s, 256), lambda: pr.frame_sr_manual(s, 35),
+                lambda: pr.frame_sr_new_roll(s, 44), lambda: pr.frame_sr_new_roll(s, 141)):
+        try:
+            bad()
+        except ValueError:
+            continue
+        raise AssertionError("value outside the offered range accepted")
+    lo, hi = pr.SR_USED_ROLL_MM  # range and start value of the *Used roll diameter* entity, as in his number entity
+    assert (lo, hi, pr.SR_USED_ROLL_DEFAULT_MM) == (45, 140, 140)
+    assert pr.frame_sr_new_roll(s, lo)[-5:] == bytes([0, 0, 0, 45, 0])
+
 def test_probe_types_and_override():
     serial = "RFZZ999999999999"  # unknown prefix
     assert pr.device_type(serial) is None

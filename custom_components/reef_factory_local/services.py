@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from . import protocol as pr
+from .roller import async_send_roller
 from .const import CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, DOMAIN, MAX_MANUAL_REFILL_ML
 
 ATTR_DEVICE_ID = "device_id"
@@ -28,7 +29,8 @@ FLARE_BASE = vol.Schema({vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [
 
 
 _WRONG_DEVICE = {pr.DEVICE_LEVEL_KEEPER: "not_level_keeper", pr.DEVICE_FLARE: "not_flare",
-                 pr.DEVICE_FEEDER: "not_feeder", pr.DEVICE_DOSING_PUMP: "not_dosing_pump"}
+                 pr.DEVICE_FEEDER: "not_feeder", pr.DEVICE_DOSING_PUMP: "not_dosing_pump",
+                 pr.DEVICE_SMART_ROLLER: "not_smart_roller"}
 
 
 def _coordinator(hass: HomeAssistant, call: ServiceCall, pump: bool = False,
@@ -504,6 +506,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         c = _coordinator(hass, call, kind=pr.DEVICE_DOSING_PUMP)
         await _send(c, pr.frame_dp_set_name(c.serial, call.data["channel"], call.data["name"], c.device.join_id))
 
+    # --- Smart Roller (frames byte-identical to Steven Downer's integration, tested by him on his roller) ---
+    async def smart_roller_advance(call: ServiceCall) -> None:
+        c = _coordinator(hass, call, kind=pr.DEVICE_SMART_ROLLER)
+        length = call.data["length_mm"]
+        await async_send_roller(c, pr.frame_sr_manual(c.serial, length), f"advance {length} mm now")
+
+    async def smart_roller_new_roll(call: ServiceCall) -> None:
+        c = _coordinator(hass, call, kind=pr.DEVICE_SMART_ROLLER)
+        used = call.data.get("used_diameter_mm")
+        await async_send_roller(c, pr.frame_sr_new_roll(c.serial, used),
+                                "new roll" if used is None else f"used roll, outer diameter {used} mm")
+
     reg = hass.services.async_register
     channel = vol.All(vol.Coerce(int), vol.Range(min=1, max=pr.DOSING_CHANNELS))
     reg(DOMAIN, "dosing_pump_dose", dosing_pump_dose, BASE.extend({
@@ -560,6 +574,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     }))
     reg(DOMAIN, "flare_acclimation_stop", flare_acclimation_stop, FLARE_BASE)
 
+    reg(DOMAIN, "smart_roller_advance", smart_roller_advance, BASE.extend(
+        {vol.Required("length_mm"): vol.All(vol.Coerce(int), vol.In(pr.SR_MANUAL_MM))}))
+    reg(DOMAIN, "smart_roller_new_roll", smart_roller_new_roll, BASE.extend(
+        {vol.Optional("used_diameter_mm"): vol.All(vol.Coerce(int), vol.Range(min=pr.SR_USED_ROLL_MM[0], max=pr.SR_USED_ROLL_MM[1]))}))
     reg(DOMAIN, "manual_refill", manual_refill, BASE.extend(
         {vol.Required("amount_ml"): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_MANUAL_REFILL_ML))}))
     reg(DOMAIN, "manual_refill_stop", manual_refill_stop, BASE)

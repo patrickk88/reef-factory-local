@@ -1193,6 +1193,58 @@ def frame_dp_calibration(serial: str, channel: int, start: bool, seconds: int = 
     return frame_json(serial, "dpCalibration", "set", obj, joinid)
 
 
+# --- Smart Roller commands (tested by Steven Downer on his roller with 1.1.0b1, 2026-11) ------------
+# Byte-identical to ha-reef-factory-smartroller 1.0.1 by Steven Downer (MIT, github.com/downerhouse),
+# which he runs on his own roller: the four header fields NUL-terminated, the payload WITHOUT a final
+# NUL (unlike build_frame); identifier = time in ms for mode / unblock / newRoll, empty for settings
+# and manual. The values offered are exactly the ones his integration offers.
+SR_SHIFT_MM = (30, 40, 50, 60, 80, 100, 150)
+SR_DELAY_S = (0, 30, 60, 300, 900, 1800)
+SR_MANUAL_MM = (30, 40, 50, 60, 80, 100, 150)  # sent as u16 little-endian - never offer more than 255
+SR_USED_ROLL_MM = (45, 140)  # outer diameter of a used roll
+SR_USED_ROLL_DEFAULT_MM = 140  # start value of the diameter entity, as in Steven Downer's integration
+SR_REMINDER_DEFAULT = 7
+
+
+def _sr_frame(serial: str, topic: str, subtopic: str, payload: bytes, with_ms: bool) -> bytes:
+    ident = str(int(time.time() * 1000)) if with_ms else ""
+    return b"".join(f.encode("ascii") + b"\x00" for f in (serial, topic, subtopic, ident)) + payload
+
+
+def frame_sr_mode(serial: str, auto: bool) -> bytes:
+    """Automatic advance on / off: srSet/mode 01 / 00."""
+    return _sr_frame(serial, "srSet", "mode", bytes([1 if auto else 0]), True)
+
+
+def frame_sr_settings(serial: str, shift_mm: int, delay_s: int, reminder: int = SR_REMINDER_DEFAULT) -> bytes:
+    """Advance length, start delay and reminder, always together: srSet/settings <u16 BE><u16 BE><u8>."""
+    if not (0 <= int(shift_mm) <= 0xFFFF and 0 <= int(delay_s) <= 0xFFFF):
+        raise ValueError(f"advance length {shift_mm} mm / start delay {delay_s} s out of range")
+    return _sr_frame(serial, "srSet", "settings", struct.pack(">HHB", shift_mm, delay_s, reminder & 0xFF), False)
+
+
+def frame_sr_manual(serial: str, length_mm: int) -> bytes:
+    """Advance the fleece now: srExecute/manual 000000 + length as u16 little-endian."""
+    if length_mm not in SR_MANUAL_MM:
+        raise ValueError(f"manual advance {length_mm} mm not offered")
+    return _sr_frame(serial, "srExecute", "manual", b"\x00\x00\x00" + int(length_mm).to_bytes(2, "little"), False)
+
+
+def frame_sr_unblock(serial: str) -> bytes:
+    """Clear a jam ("Restart Roller", only while the roller reports jammed): srSet/unblock 0000."""
+    return _sr_frame(serial, "srSet", "unblock", b"\x00\x00", True)
+
+
+def frame_sr_new_roll(serial: str, used_diameter_mm: int | None = None) -> bytes:
+    """Roll replaced: new roll ffffffff00, used roll outer diameter (45-140 mm) as u32 BE + 00."""
+    if used_diameter_mm is None:
+        return _sr_frame(serial, "srSet", "newRoll", b"\xff\xff\xff\xff\x00", True)
+    lo, hi = SR_USED_ROLL_MM
+    if not lo <= int(used_diameter_mm) <= hi:
+        raise ValueError(f"used roll diameter {used_diameter_mm} mm outside {lo}-{hi}")
+    return _sr_frame(serial, "srSet", "newRoll", int(used_diameter_mm).to_bytes(4, "big") + b"\x00", True)
+
+
 def decode_smart_roller(frame: Frame) -> dict | None:
     """srReport/all, binary, big-endian. Read only.
 
