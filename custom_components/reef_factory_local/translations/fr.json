@@ -197,6 +197,9 @@
       },
       "last_seen": {
         "name": "Dernier rapport"
+      },
+      "calibration_remaining": {
+        "name": "Temps restant d'étalonnage"
       }
     },
     "select": {
@@ -250,6 +253,15 @@
           "300": "5 min",
           "900": "15 min",
           "1800": "30 min"
+        }
+      },
+      "calibration_reminder": {
+        "name": "Rappel d'étalonnage",
+        "state": {
+          "1_week": "1 semaine",
+          "2_weeks": "2 semaines",
+          "1_month": "1 mois",
+          "3_months": "3 mois"
         }
       }
     },
@@ -339,6 +351,12 @@
       },
       "sr_used_diameter": {
         "name": "Diamètre du rouleau entamé"
+      },
+      "calibration_run_time": {
+        "name": "Durée du cycle d'étalonnage"
+      },
+      "calibration_measured": {
+        "name": "Quantité mesurée"
       }
     },
     "switch": {
@@ -394,6 +412,12 @@
       },
       "sr_used_roll": {
         "name": "Rouleau entamé inséré"
+      },
+      "calibration_start": {
+        "name": "Lancer le cycle d'étalonnage"
+      },
+      "calibration_save": {
+        "name": "Terminer l'étalonnage"
       }
     },
     "event": {
@@ -882,6 +906,12 @@
     },
     "not_smart_roller": {
       "message": "Cet appareil n'est pas un Smart Roller."
+    },
+    "calibration_no_value": {
+      "message": "Saisissez d'abord la quantité mesurée."
+    },
+    "calibration_running": {
+      "message": "Le cycle d'étalonnage est encore en cours."
     }
   }
 }

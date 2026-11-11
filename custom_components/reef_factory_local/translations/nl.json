@@ -197,6 +197,9 @@
       },
       "last_seen": {
         "name": "Laatste melding"
+      },
+      "calibration_remaining": {
+        "name": "Resterende kalibratietijd"
       }
     },
     "select": {
@@ -250,6 +253,15 @@
           "300": "5 min",
           "900": "15 min",
           "1800": "30 min"
+        }
+      },
+      "calibration_reminder": {
+        "name": "Kalibratieherinnering",
+        "state": {
+          "1_week": "1 week",
+          "2_weeks": "2 weken",
+          "1_month": "1 maand",
+          "3_months": "3 maanden"
         }
       }
     },
@@ -339,6 +351,12 @@
       },
       "sr_used_diameter": {
         "name": "Diameter gebruikte rol"
+      },
+      "calibration_run_time": {
+        "name": "Duur van de kalibratierun"
+      },
+      "calibration_measured": {
+        "name": "Gemeten hoeveelheid"
       }
     },
     "switch": {
@@ -394,6 +412,12 @@
       },
       "sr_used_roll": {
         "name": "Gebruikte rol geplaatst"
+      },
+      "calibration_start": {
+        "name": "Kalibratierun starten"
+      },
+      "calibration_save": {
+        "name": "Kalibratie afronden"
       }
     },
     "event": {
@@ -882,6 +906,12 @@
     },
     "not_smart_roller": {
       "message": "Dit apparaat is geen Smart Roller."
+    },
+    "calibration_no_value": {
+      "message": "Vul eerst de gemeten hoeveelheid in."
+    },
+    "calibration_running": {
+      "message": "De kalibratierun loopt nog."
     }
   }
 }

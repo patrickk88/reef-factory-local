@@ -51,8 +51,14 @@ def test_level_keeper_settings_full():
         "calibration_needed": True, "refilled_today_ml": 90, "calibration_date": (2019, 1, 1),
         "calibration_remaining_s": 0, "circuit_remaining_s": 0,
         "manual_refill_done_ml": 0, "manual_refill_target_ml": 0,
-        "max_refill_time_s": 0, "temporary_off_s": 0, "light": True,
+        "max_refill_time_s": 0, "temporary_off_s": 0, "light": True, "calibration_raw": 10,
     }, d
+    # guided calibration: the buttons send the same frames as the actions
+    s = fr.serial
+    assert _payload(pr.frame_lk_calibration_time(s, pr.LK_CALIBRATION_DEFAULT_S)) == ("lkCalibration", "time", bytes([10]))
+    assert _payload(pr.frame_lk_calibration_value(s, 200)) == ("lkCalibration", "value", (200).to_bytes(4, "big"))
+    assert _payload(pr.frame_lk_calibration_reminder(s, "3_months")) == ("lkCalibration", "notification", bytes([3]))
+    assert pr.LK_CALIBRATION_S == (10, 255) and pr.LK_CALIBRATION_WAITING == 255
 
 def test_level_keeper_status_alert():
     d = pr.decode(pr.DEVICE_LEVEL_KEEPER, pr.parse_frame(LK_STATUS))

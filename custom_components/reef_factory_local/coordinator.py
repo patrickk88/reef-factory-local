@@ -39,6 +39,10 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
         self.configuration_url: str | None = f"http://{entry.data.get('host')}" if entry.data.get("host") else None
         self.firmware: str | None = None
         self.sr_used_diameter_mm: int = pr.SR_USED_ROLL_DEFAULT_MM  # Smart Roller: kept in HA, sent with the button
+        # Level keeper guided calibration: kept in HA, sent with the two buttons
+        self.lk_calibration_s: int = pr.LK_CALIBRATION_DEFAULT_S
+        self.lk_measured_ml: int | None = None
+        self.lk_reminder: str | None = None
         # Reef Flare: the light reports its manual presets (timed programs of the app) only in manual mode;
         # the last known list is kept so it can be shown after a restart. Writes always read it fresh.
         self._preset_store: Store | None = (

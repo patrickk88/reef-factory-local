@@ -10,11 +10,11 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v1.1)
+## Supported devices (v1.2)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
-| Level keeper (`RFLK…`) | refilled today, state (ok / refilling / water high / water low / paused / calibrating / filling hose / manual refill), current refill time, calibration date, calibration due, cloud connected | refill cycle, max refill time (safety limit), pause refill, display light, set clock; **opt-in pump actions:** manual refill (max 1000 mL), calibration run, fill hose, plus stop | 1.0.0 |
+| Level keeper (`RFLK…`) | refilled today, state (ok / refilling / water high / water low / paused / calibrating / filling hose / manual refill), current refill time, calibration date, calibration due, cloud connected | refill cycle, max refill time (safety limit), pause refill, display light, set clock; **opt-in pump actions:** manual refill (max 1000 mL), calibration (as actions or guided with buttons), fill hose, plus stop | 1.0.0 |
 | Thermo control (`RFTC…`) | temperature, heating/cooling, all four thresholds, beeper, display light, cloud connected | thresholds (alarm below / target range low / target range high / alarm above, always sent together, order checked), beeper, display light (°C units only so far) | 1.0.0 |
 | Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, current output (computed), acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, create or delete a program, timed manual mode (also with a stored manual preset), save a manual preset, acclimation start / stop (one or more lights) | 1.0.0 |
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
@@ -150,6 +150,20 @@ Instead of leaving the option on, every Level keeper and the Dosing pump Pro X4 
 actions (10 min)*: it unlocks the actions of that entry for ten minutes and then turns itself off (it is
 not stored - after a restart it is off). A dashboard script can turn it on, call the action and turn it
 off again. Nothing is sent to the device by the switch itself.
+
+### Guided calibration (Level keeper)
+
+The calibration is also available step by step on the Level keeper's device page, under *Configuration*:
+
+1. Hold the hose into a measuring cup, set *Calibration run time* (10 s is fine) and press *Start calibration
+   run*. It runs the pump, so it needs *Allow pump actions* (the option or the 10-minute switch). *Calibration
+   run time left* counts down; *Stop pump action* stops the run.
+2. Enter what the cup shows in *Measured amount*, choose a *Calibration reminder* if you want to change it,
+   and press *Finish calibration*.
+
+Run time, amount and reminder are only kept in Home Assistant and are sent with the two buttons - the same
+frames as the actions `calibration_start` and `calibration_value`. *Measured amount* is emptied by a new run
+and after saving, and *Finish calibration* refuses to send while it is empty or the run is still going.
 
 ## Cloud replacement (devices without a local port)
 

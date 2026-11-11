@@ -1,4 +1,5 @@
-"""Level keeper max refill time and pause, Thermo control thresholds, Reef Flare intensity, Smart Roller used roll."""
+"""Level keeper max refill time and pause, Thermo control thresholds, Reef Flare intensity, Smart Roller used roll,
+Level keeper guided calibration (run time, measured amount)."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,7 +7,7 @@ from dataclasses import dataclass
 import math
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode, RestoreNumber
-from homeassistant.const import EntityCategory, UnitOfLength, UnitOfTemperature, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfLength, UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,7 +46,7 @@ async def async_setup_entry(
     def factory(c):
         kind = pr.device_type(c.serial)
         if kind == pr.DEVICE_LEVEL_KEEPER:
-            return [ReefNumber(c, d) for d in NUMBERS]
+            return [*(ReefNumber(c, d) for d in NUMBERS), ReefCalibrationRunTime(c), ReefCalibrationMeasured(c)]
         if kind == pr.DEVICE_THERMO:
             return [ReefThermoThreshold(c, key) for key in THERMO_KEYS]
         if kind == pr.DEVICE_FLARE:
@@ -305,5 +306,72 @@ class ReefRollerUsedDiameter(ReefEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         self.coordinator.sr_used_diameter_mm = int(value)
+        self.async_write_ha_state()
+
+
+class ReefCalibrationRunTime(ReefEntity, RestoreNumber):
+    """Level keeper guided calibration, step 1: how long the pump runs. Kept in Home Assistant (over restarts);
+    sent together with the button *Start calibration run*."""
+
+    _attr_translation_key = "calibration_run_time"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = pr.LK_CALIBRATION_S[0]
+    _attr_native_max_value = pr.LK_CALIBRATION_S[1]
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_mode = NumberMode.BOX
+    _attr_icon = "mdi:timer-cog-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "calibration_run_time")
+
+    @property
+    def available(self) -> bool:
+        return True  # a local value
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_number_data()
+        if last is not None and last.native_value is not None:
+            lo, hi = pr.LK_CALIBRATION_S
+            if lo <= last.native_value <= hi:
+                self.coordinator.lk_calibration_s = int(last.native_value)
+
+    @property
+    def native_value(self) -> int:
+        return self.coordinator.lk_calibration_s
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.lk_calibration_s = int(value)
+        self.async_write_ha_state()
+
+
+class ReefCalibrationMeasured(ReefEntity, NumberEntity):
+    """Level keeper guided calibration, step 2: what the measuring cup shows. Empty until entered and emptied
+    again by a new run and by saving, so an old value is never saved by accident. Sent with *Finish
+    calibration*."""
+
+    _attr_translation_key = "calibration_measured"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = pr.LK_MEASURED_ML[0]
+    _attr_native_max_value = pr.LK_MEASURED_ML[1]
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
+    _attr_mode = NumberMode.BOX
+    _attr_icon = "mdi:cup-water"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "calibration_measured")
+
+    @property
+    def available(self) -> bool:
+        return True  # a local value
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.lk_measured_ml
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.lk_measured_ml = int(value)
         self.async_write_ha_state()
 

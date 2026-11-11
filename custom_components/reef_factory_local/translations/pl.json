@@ -197,6 +197,9 @@
       },
       "last_seen": {
         "name": "Ostatni raport"
+      },
+      "calibration_remaining": {
+        "name": "Pozostały czas kalibracji"
       }
     },
     "select": {
@@ -250,6 +253,15 @@
           "300": "5 min",
           "900": "15 min",
           "1800": "30 min"
+        }
+      },
+      "calibration_reminder": {
+        "name": "Przypomnienie o kalibracji",
+        "state": {
+          "1_week": "1 tydzień",
+          "2_weeks": "2 tygodnie",
+          "1_month": "1 miesiąc",
+          "3_months": "3 miesiące"
         }
       }
     },
@@ -339,6 +351,12 @@
       },
       "sr_used_diameter": {
         "name": "Średnica używanej rolki"
+      },
+      "calibration_run_time": {
+        "name": "Czas przebiegu kalibracyjnego"
+      },
+      "calibration_measured": {
+        "name": "Zmierzona ilość"
       }
     },
     "switch": {
@@ -394,6 +412,12 @@
       },
       "sr_used_roll": {
         "name": "Włożono używaną rolkę"
+      },
+      "calibration_start": {
+        "name": "Rozpocznij przebieg kalibracyjny"
+      },
+      "calibration_save": {
+        "name": "Zakończ kalibrację"
       }
     },
     "event": {
@@ -882,6 +906,12 @@
     },
     "not_smart_roller": {
       "message": "To urządzenie nie jest Smart Rollerem."
+    },
+    "calibration_no_value": {
+      "message": "Najpierw wpisz zmierzoną ilość."
+    },
+    "calibration_running": {
+      "message": "Przebieg kalibracyjny jeszcze trwa."
     }
   }
 }

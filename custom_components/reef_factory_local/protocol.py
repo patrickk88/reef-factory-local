@@ -122,6 +122,10 @@ LK_LEVEL_OPTIONS = [*LK_LEVEL.values(), "unknown"]
 # calibration reminder period (lkCalibration/notification)
 LK_REMINDER = {"1_week": 0, "2_weeks": 1, "1_month": 2, "3_months": 3}
 LK_MAX_MINUTES = 60  # limit used by the device UI for max refill time and pause
+LK_CALIBRATION_S = (10, 255)  # calibration run time (lkCalibration/time is one byte); 10 s confirmed 2026-11-03
+LK_CALIBRATION_DEFAULT_S = 10
+LK_CALIBRATION_WAITING = 255  # calibration_remaining_s after the run: the device waits for the measured amount
+LK_MEASURED_ML = (1, 10000)
 # Reef Flare: subtopic of rfRefresh = current mode
 FLARE_MODES: dict[str, str] = {
     "preciseData": "program",
@@ -928,6 +932,7 @@ def decode_level_keeper(frame: Frame) -> dict | None:
             "level_raw": blob[1],
             "calibration_needed": blob[10] != 0,
             "refilled_today_ml": _be(blob, 11, 4),
+            "calibration_raw": _be(blob, 2, 4),  # bytes 2-5, meaning not confirmed yet (shown as attribute only)
         }
         year = _be(blob, 8, 2)
         if year:

@@ -4,15 +4,17 @@ from __future__ import annotations
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import ReefConfigEntry
 from . import protocol as pr
+from .const import DOMAIN
 from .entity import ReefEntity
 from .platform_setup import setup_entities
 from .roller import async_send_roller
+from .services import pump_actions_allowed
 
 
 async def async_setup_entry(
@@ -21,7 +23,7 @@ async def async_setup_entry(
     def factory(c):
         kind = pr.device_type(c.serial)
         if kind == pr.DEVICE_LEVEL_KEEPER:
-            return [ReefSyncTime(c), ReefStopPump(c)]
+            return [ReefSyncTime(c), ReefStopPump(c), ReefCalibrationStart(c), ReefCalibrationSave(c)]
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeedNow(c)]
         if kind == pr.DEVICE_SMART_ROLLER:
@@ -137,3 +139,51 @@ class ReefRollerUsedRoll(ReefEntity, ButtonEntity):
         diameter = self.coordinator.sr_used_diameter_mm
         await async_send_roller(self.coordinator, pr.frame_sr_new_roll(self.coordinator.serial, diameter),
                                 f"used roll, outer diameter {diameter} mm")
+
+
+class ReefCalibrationStart(_ReefButton):
+    """Level keeper guided calibration, step 1: run the pump for *Calibration run time* into a measuring cup.
+    Runs the pump, so it needs "Allow pump actions" like the action calibration_start (same two frames)."""
+
+    _attr_translation_key = "calibration_start"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:timer-play-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "calibration_start")
+
+    async def async_press(self) -> None:
+        c = self.coordinator
+        if not pump_actions_allowed(self.hass, c.config_entry):
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="pump_actions_disabled")
+        c.lk_measured_ml = None  # a value from an earlier run must not be saved for this one
+        c.async_update_listeners()
+        await self._send(pr.frame_lk_calibration_time(c.serial, c.lk_calibration_s), pr.frame_lk_calibration_start(c.serial))
+
+
+class ReefCalibrationSave(_ReefButton):
+    """Level keeper guided calibration, step 2: send the measured amount (and the reminder period, if one is
+    chosen) - the frames of the action calibration_value. Refused while the run is still going and while no
+    amount was entered."""
+
+    _attr_translation_key = "calibration_save"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:content-save-check-outline"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "calibration_save")
+
+    async def async_press(self) -> None:
+        c = self.coordinator
+        left = (c.data or {}).get("calibration_remaining_s") or 0
+        if 0 < left < pr.LK_CALIBRATION_WAITING:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="calibration_running")
+        if c.lk_measured_ml is None:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="calibration_no_value")
+        frames = [pr.frame_lk_calibration_value(c.serial, c.lk_measured_ml)]
+        if c.lk_reminder:
+            frames.append(pr.frame_lk_calibration_reminder(c.serial, c.lk_reminder))
+        await self._send(*frames)
+        c.lk_measured_ml = None
+        c.async_update_listeners()
+

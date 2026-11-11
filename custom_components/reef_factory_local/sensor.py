@@ -153,7 +153,7 @@ def _dosing_sensors(ch: int) -> tuple[ReefSensorDescription, ...]:
 
 def _lk_attrs(d: dict) -> dict:
     keys = ("manual_refill_done_ml", "manual_refill_target_ml", "calibration_remaining_s",
-            "circuit_remaining_s", "alert_code", "level_raw")
+            "circuit_remaining_s", "alert_code", "level_raw", "calibration_raw")
     return {k: d[k] for k in keys if d.get(k) is not None}
 
 
@@ -179,6 +179,14 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
             key="calibration_date", translation_key="calibration_date",
             device_class=SensorDeviceClass.DATE, entity_category=EntityCategory.DIAGNOSTIC,
             value_fn=_cal_date,
+        ),
+        ReefSensorDescription(  # counts down during the run; 255 afterwards = waiting for the measured amount
+            key="calibration_remaining", translation_key="calibration_remaining",
+            device_class=SensorDeviceClass.DURATION, native_unit_of_measurement=UnitOfTime.SECONDS,
+            entity_category=EntityCategory.DIAGNOSTIC, icon="mdi:timer-sand",
+            value_fn=lambda d: None if d.get("calibration_remaining_s") is None
+            else (0 if d["calibration_remaining_s"] >= pr.LK_CALIBRATION_WAITING else d["calibration_remaining_s"]),
+            attrs_fn=lambda d: {"waiting_for_measured_amount": d.get("calibration_remaining_s") == pr.LK_CALIBRATION_WAITING},
         ),
     ),
     pr.DEVICE_THERMO: (

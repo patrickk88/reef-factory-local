@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 - unreleased
+- Level keeper: guided calibration on the device page (*Configuration*): number *Calibration run time*, button
+  *Start calibration run* (needs *Allow pump actions*), number *Measured amount*, select *Calibration
+  reminder*, button *Finish calibration*, sensor *Calibration run time left*. The buttons send the same
+  frames as the actions `calibration_start` / `calibration_value`; the values are kept in Home Assistant.
+  Suggested by Steven Downer.
+
 ## 1.1.0 - 2026-11-11
 - Smart Roller: control. Switch *Automatic advance*, selects *Advance length* and *Start delay*, buttons
   *Advance now*, *Clear jam* (only while the roller reports jammed), *New roll inserted* and *Used roll

@@ -197,6 +197,9 @@
       },
       "last_seen": {
         "name": "Last report"
+      },
+      "calibration_remaining": {
+        "name": "Calibration run time left"
       }
     },
     "select": {
@@ -250,6 +253,15 @@
           "300": "5 min",
           "900": "15 min",
           "1800": "30 min"
+        }
+      },
+      "calibration_reminder": {
+        "name": "Calibration reminder",
+        "state": {
+          "1_week": "1 week",
+          "2_weeks": "2 weeks",
+          "1_month": "1 month",
+          "3_months": "3 months"
         }
       }
     },
@@ -339,6 +351,12 @@
       },
       "sr_used_diameter": {
         "name": "Used roll diameter"
+      },
+      "calibration_run_time": {
+        "name": "Calibration run time"
+      },
+      "calibration_measured": {
+        "name": "Measured amount"
       }
     },
     "switch": {
@@ -394,6 +412,12 @@
       },
       "sr_used_roll": {
         "name": "Used roll inserted"
+      },
+      "calibration_start": {
+        "name": "Start calibration run"
+      },
+      "calibration_save": {
+        "name": "Finish calibration"
       }
     },
     "event": {
@@ -882,6 +906,12 @@
     },
     "not_smart_roller": {
       "message": "This device is not a Smart Roller."
+    },
+    "calibration_no_value": {
+      "message": "Enter the measured amount first."
+    },
+    "calibration_running": {
+      "message": "The calibration run is still running."
     }
   }
 }

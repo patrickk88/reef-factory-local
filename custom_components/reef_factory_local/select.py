@@ -1,4 +1,4 @@
-"""Level keeper refill cycle; Reef Flare mode, program and manual preset."""
+"""Level keeper refill cycle and calibration reminder; Reef Flare mode and program; feeder mode; Smart Roller."""
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
@@ -6,6 +6,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ReefConfigEntry
 from . import protocol as pr
@@ -20,7 +21,7 @@ async def async_setup_entry(
     def factory(c):
         kind = pr.device_type(c.serial)
         if kind == pr.DEVICE_LEVEL_KEEPER:
-            return [ReefRefillCycle(c)]
+            return [ReefRefillCycle(c), ReefCalibrationReminder(c)]
         if kind == pr.DEVICE_FLARE:
             return [ReefFlareMode(c), ReefFlareProgram(c)]  # manual presets: not confirmed on hardware yet
         if kind == pr.DEVICE_FEEDER:
@@ -159,3 +160,36 @@ class ReefRollerSetting(ReefEntity, SelectEntity):
         reminder = data.get("reminder_raw", pr.SR_REMINDER_DEFAULT)
         await async_send_roller(self.coordinator, pr.frame_sr_settings(self.coordinator.serial, shift, delay, reminder),
                                 f"settings advance {shift} mm, delay {delay} s, reminder {reminder}")
+
+
+class ReefCalibrationReminder(ReefEntity, SelectEntity, RestoreEntity):
+    """Level keeper guided calibration: when the device should ask for the next calibration. The device does
+    not report the period, so the choice is kept in Home Assistant and sent with *Finish calibration*; while
+    nothing is chosen, the reminder is left as it is."""
+
+    _attr_translation_key = "calibration_reminder"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_options = list(pr.LK_REMINDER)
+    _attr_icon = "mdi:calendar-clock"
+
+    def __init__(self, coordinator) -> None:
+        super().__init__(coordinator, "calibration_reminder")
+
+    @property
+    def available(self) -> bool:
+        return True  # a local value
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None and last.state in pr.LK_REMINDER:
+            self.coordinator.lk_reminder = last.state
+
+    @property
+    def current_option(self) -> str | None:
+        return self.coordinator.lk_reminder
+
+    async def async_select_option(self, option: str) -> None:
+        self.coordinator.lk_reminder = option
+        self.async_write_ha_state()
+
