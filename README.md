@@ -43,8 +43,8 @@ refused with a message; no zero or default is sent in its place.
 | Level keeper (1.0.0) | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
 | Level keeper (1.0.0) | guided calibration with the buttons on the device page: *Calibration 2: Start run* (10 s run, the countdown, then waiting for the amount) and *Calibration 5: Finish* (225 mL sent, the device stores it; reminder left unchanged) | 2026-11-12 |
 | Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
-| Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
-| Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program or as new program, timed program); delete a program (reset to the light's empty program) | 2026-11-07 |
+| Reef Flare S (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
+| Reef Flare S (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program or as new program, timed program); delete a program (reset to the light's empty program) | 2026-11-07 |
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
@@ -58,6 +58,9 @@ already in manual mode, which `flare_manual` takes care of), a new program in an
 (0.9.0), manual presets with name, levels and intensity, running a stored one, and resetting a program
 (0.10.0). They are actions; there is no select or number entity for manual presets and no action that
 renames an existing program (create a copy under the new name, then reset the old one).
+
+The **Reef Flare** rows are from two Reef Flare S. The M and L models are recognised by their serial number
+and treated the same way, but nobody has confirmed that on one of them yet - if you own one, please report.
 
 The **Smart Roller** commands are byte for byte the ones Steven Downer's integration sends (the unit tests
 compare them with his `build_message()`), and only the values his integration offers are accepted.
