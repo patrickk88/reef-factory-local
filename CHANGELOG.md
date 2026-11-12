@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 - unreleased
+## 1.2.0 - 2026-11-12
 - Level keeper: guided calibration on the device page (*Configuration*), numbered so the page lists the steps
   in order: *Calibration 1: Run time*, *2: Start run* (needs *Allow pump actions*), *3: Measured amount*,
   *4: Reminder* (default *Leave unchanged*), *5: Finish*; sensor *Calibration run time left*. The buttons send

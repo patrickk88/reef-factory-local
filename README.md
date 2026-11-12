@@ -34,6 +34,7 @@ Steven Downer on his device (last row).
 |---|---|---|
 | Level keeper (1.0.0) | display light, max refill time, set clock, pause refill, fill hose + stop, calibration run, calibration value and reminder | 2026-11-03 |
 | Level keeper (1.0.0) | refill cycle, manual refill + stop, calibration run + stop, *Stop pump action* button | 2026-11-05 |
+| Level keeper (1.0.0) | guided calibration with the buttons on the device page: *Calibration 2: Start run* (10 s run, the countdown, then waiting for the amount) and *Calibration 5: Finish* (225 mL sent, the device stores it; reminder left unchanged) | 2026-11-12 |
 | Thermo control (1.0.0) | beeper, display light, thresholds (all four are one frame) | 2026-11-05 |
 | Reef Flare M (1.0.0) | mode program / manual / off, active program, intensity in program mode, write the active program, acclimation start / stop, timed manual mode (levels of the active manual preset and duration; the light goes back to its program by itself), create a program (copy into a free slot), two lights in one action | 2026-11-05 |
 | Reef Flare M (1.0.0) | save a manual preset (the app's timed programs: new one in a free slot or overwrite one - name, levels, intensity), delete one (as the app does), timed manual mode with a stored preset (it becomes the active one), on two lights in one action; import of the app's export files (program into the active program or as new program, timed program); delete a program (reset to the light's empty program) | 2026-11-07 |
