@@ -141,7 +141,8 @@ Use a password for Smart Reef that you use nowhere else.
 
 Level keeper: manual refill, calibration run and filling the hose run the refill pump. Dosing pump Pro X4:
 dosing now and replacing a channel's schedule put additives into the tank. These are only available as
-actions (no dashboard button) and only after enabling *Allow pump actions* - for each Level keeper in its
+actions (plus the *Start run* button of the guided calibration) and only after enabling *Allow pump actions*
+- for each Level keeper in its
 own entry's options, for the Dosing pump in the options of the *cloud replacement* entry
 (*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
 works (button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
@@ -159,7 +160,8 @@ The five entities carry their step number, so the device page lists them in the 
 
 1. *Calibration 1: Run time* - 10 s is fine.
 2. *Calibration 2: Start run* - hold the hose into a measuring cup first. It runs the pump, so it needs
-   *Allow pump actions* (the option or the 10-minute switch). *Calibration run time left* counts down;
+   *Allow pump actions* (the option in the entry's *Configure* dialog for good, or the 10-minute switch on
+   the device page - see above). *Calibration run time left* counts down;
    *Stop pump action* stops the run.
 3. *Calibration 3: Measured amount* - what the cup shows, in mL.
 4. *Calibration 4: Reminder* - when the device should ask for the next calibration. *Leave unchanged* (the
