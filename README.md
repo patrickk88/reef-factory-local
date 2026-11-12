@@ -65,7 +65,9 @@ updating, and do not let automations dose or refill without a limit you have che
 not liable for any damage to equipment, livestock or property.
 
 The protocol was reverse engineered from the devices' own web pages and from what the devices send on
-the network (no firmware was decompiled, no keys or manufacturer files are included). Using it may void
+the network; the flash of two of the author's own devices (a Reef Flare and the Smart feeder) was read out
+and searched for readable text such as the cloud host name. No firmware was decompiled or changed, and no
+keys or manufacturer files are included. Using it may void
 your warranty; check your contract with the manufacturer or dealer if that matters to you.
 
 ## Important
@@ -415,5 +417,6 @@ buy me a coffee - it goes into test hardware (a spare Reef Flare board, dosing p
 
 MIT - see `LICENSE`. This repository contains only original code: no firmware, app files, certificates
 or keys from the manufacturer. Protocol knowledge comes from the devices' own web pages (served by the
-devices themselves) and from network captures of the author's own devices; the Smart Roller report layout
+devices themselves), from network captures of the author's own devices and from readable text in the flash
+of two of them (read only, nothing decompiled); the Smart Roller report layout
 and commands come from Steven Downer's MIT-licensed integration (see *Credits*).
