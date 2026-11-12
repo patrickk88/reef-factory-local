@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.2 - 2026-11-12
+Changes asked for in the HACS review.
+- Writes that carry several values in one frame are refused while one of those values has not been reported
+  yet, instead of sending 0 or a default in its place: Smart feeder container values, interval, LED backlight
+  and feeding button; Base pump speed, feed-mode duration and speed, display, backlight; Smart Roller advance
+  length and start delay; Reef Flare program actions (index, time, intensity) and manual presets (intensity
+  of every preset). The entities are unavailable until their group of values is known. Before, a change right
+  after connecting - when only the Wi-Fi report had arrived - could overwrite the other values.
+- Smart feeder: *LED backlight* and *Feeding button* are unknown, not "off", until the feeder reports them.
+- Cloud replacement: a connection that claims the serial number of a device that is connected right now is
+  refused when it comes from another address (TCP reset, one warning in the log). A device that really got a
+  new address is accepted once its old connection has been silent for a minute. README: the ports must stay
+  inside your network.
+
 ## 1.2.1 - 2026-11-12
 - Smart Roller: recognised by its serial number (`RFSR…`; seen: `RFSRL…`, firmware 1.1.1 - thanks to Steven
   Downer) instead of by a probe during setup. The probe stays for devices with an unknown serial; entries

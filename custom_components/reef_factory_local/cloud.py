@@ -40,6 +40,7 @@ PUBLIC_DNS = ("1.1.1.1", "9.9.9.9", "8.8.8.8")
 RESOLVE_TTL = 600
 UPSTREAM_TIMEOUT = 8
 STOP_TIMEOUT = 10  # per listener when stopping; open connections are reset first
+SESSION_LIVE_SECONDS = 60  # a device connection that sent anything within this time is alive (they ping every 20 s)
 UPSTREAM_RETRY_SECONDS = 120  # served locally because the real cloud was away: look again this often
 LOCAL_POLL_SECONDS = 300
 NO_DEVICE_HINT_SECONDS = 600
@@ -223,6 +224,7 @@ class CloudDevice:
         self.join_id = pr.cloud_join_id()
         self._ws: web.WebSocketResponse | None = None
         self._transport = None
+        self.peer: str | None = None          # source address of the current connection
         self.listeners: list[Callable[[CloudDevice], None]] = []
 
     def notify(self) -> None:
@@ -279,6 +281,7 @@ class ReefCloudServer:
         self._resolved: tuple[float, list[str]] = (0.0, [])
         self.devices: dict[str, CloudDevice] = {}
         self._on_new_device = on_new_device
+        self._refused: set[tuple[str, str | None]] = set()  # refused takeovers already logged
         self._ports = ports
         self._runners: list[web.AppRunner] = []
         self._hint_task: asyncio.Task | None = None
@@ -523,7 +526,17 @@ class ReefCloudServer:
                     if frame is None or not frame.serial:
                         _LOGGER.debug("cloud: first frame from %s not parseable", peer)
                         break
-                    device = self._device(frame.serial, ws, request.transport)
+                    if (holder := self._live_elsewhere(frame.serial, peer)) is not None:
+                        # a device is whoever sends its serial number - so a connection that is alive is never
+                        # handed to another host. (Reset, not close: should it be the device itself with a new
+                        # address, it keeps trying and gets in once the old connection has gone silent.)
+                        if (frame.serial, peer) not in self._refused:
+                            self._refused.add((frame.serial, peer))
+                            _LOGGER.warning("Cloud replacement: connection for %s from %s refused - that device "
+                                            "is connected from %s", frame.serial, peer, holder)
+                        reset_transport(transport)
+                        break
+                    device = self._device(frame.serial, ws, request.transport, peer)
                     device.mode = MODE_LOCAL
                     if self.mode == MODE_PASSTHROUGH:
                         try:
@@ -565,7 +578,18 @@ class ReefCloudServer:
             _LOGGER.debug("cloud: %s disconnected", device.serial if device else peer)
         return ws
 
-    def _device(self, serial: str, ws: web.WebSocketResponse, transport=None) -> CloudDevice:
+    def _live_elsewhere(self, serial: str, peer: str | None) -> str | None:
+        """Source address of the connection that serial is alive on, if that is another address than peer."""
+        device = self.devices.get(serial)
+        if device is None or not device.connected or device._ws is None or device._ws.closed:
+            return None
+        if device.peer is None or device.peer == peer:
+            return None
+        if time.monotonic() - device.last_seen > SESSION_LIVE_SECONDS:
+            return None
+        return device.peer
+
+    def _device(self, serial: str, ws: web.WebSocketResponse, transport=None, peer: str | None = None) -> CloudDevice:
         device = self.devices.get(serial)
         new = device is None
         if new:
@@ -573,6 +597,7 @@ class ReefCloudServer:
             self.devices[serial] = device
         device._ws = ws
         device._transport = transport
+        device.peer = peer
         device.connected = True
         device.last_seen = time.monotonic()
         if new and self._on_new_device:

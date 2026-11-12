@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "Il ciclo di calibrazione è ancora in corso."
+    },
+    "value_unknown": {
+      "message": "Il dispositivo non ha ancora comunicato {values} - non è stato inviato nulla. Riprova tra un momento."
     }
   }
 }

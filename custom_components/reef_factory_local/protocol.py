@@ -46,6 +46,29 @@ CLOUD_PING_INTERVAL = 20  # seconds, what the real cloud answers in geReport/log
 # devices whose values arrive over the cloud channel only
 CLOUD_ONLY = {DEVICE_FEEDER, DEVICE_BASE_PUMP, DEVICE_DOSING_PUMP}
 
+
+class UnknownValue(ValueError):
+    """A write needs a value that the device has not reported yet."""
+
+
+def known(data: dict | None, *keys: str) -> list:
+    """Values of `keys` from the last report. Several settings travel in one frame, so a write has to repeat
+    the values it does not change - a missing one is never replaced by a guess, the write is refused."""
+    data = data or {}
+    missing = [key for key in keys if data.get(key) is None]
+    if missing:
+        raise UnknownValue(", ".join(missing))
+    return [data[key] for key in keys]
+
+
+# values that are sent together in one frame
+FEEDER_CONTAINER_KEYS = ("container_g", "container_size_g", "single_dose_g")  # sfSet/container
+FEEDER_INTERVAL_KEYS = ("interval_minutes", "interval_rotations")              # sfSet/settings sequence
+FEEDER_FLAG_KEYS = ("led", "feeding_button")                                   # sfSet/settings flags
+BASE_PUMP_KEYS = ("speed", "feed_mode_time", "feed_speed", "display", "backlight")  # bpSet/settings
+SR_SETTING_KEYS = ("shift_mm", "delay_s", "reminder_raw")                      # srSet/settings
+FLARE_PROGRAM_KEYS = ("program_index", "program_time_raw", "intensity", "points")  # rfPrecise/update
+
 # longest prefix first
 _PREFIXES = (
     ("RFRFS", DEVICE_FLARE),
@@ -312,11 +335,13 @@ def frame_rf_precise_update(serial: str, index: int, time_raw: int, points: list
 
 def frame_rf_manual_update(serial: str, presets: list[dict]) -> bytes:
     """Whole manual preset list: count, per preset name (UTF-16BE, 0000), active, 7 levels; then intensities."""
+    if any(p.get("intensity") is None for p in presets):  # the frame carries every preset's intensity
+        raise UnknownValue("manual preset intensity")
     body = bytes([len(presets)])
     for preset in presets:
         body += preset["name"][:16].encode("utf-16-be") + b"\x00\x00" + bytes([1 if preset["active"] else 0])
         body += bytes(_pct(v) for v in preset["levels"][:FLARE_CHANNELS])
-    body += bytes(_pct(p.get("intensity", 100)) for p in presets)
+    body += bytes(_pct(p["intensity"]) for p in presets)
     return build_frame("rfManual", "update", body, serial, join_id())
 
 
@@ -833,8 +858,8 @@ def decode_feeder(frame: "Frame") -> dict | None:
             "last_feeding_g": _grams(last.get("doseValue")),
             "history": hist[:10],
             "daily_dose_g": _grams(obj.get("dailyDose")),
-            "led": obj.get("ledStatus") == "enabled",
-            "feeding_button": obj.get("feedingButton") == "enabled",
+            "led": _on_off(obj.get("ledStatus")),              # None while not reported, never "off"
+            "feeding_button": _on_off(obj.get("feedingButton")),
         }
     if frame.topic == "sfLog":
         obj = parse_json(frame) or {}

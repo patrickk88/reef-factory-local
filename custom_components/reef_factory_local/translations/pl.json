@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "Przebieg kalibracyjny jeszcze trwa."
+    },
+    "value_unknown": {
+      "message": "Urządzenie nie zgłosiło jeszcze {values} - nic nie wysłano. Spróbuj ponownie za chwilę."
     }
   }
 }

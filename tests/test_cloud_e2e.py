@@ -153,6 +153,46 @@ async def main():
     assert time.monotonic() - t0 < 5 and not srv._transports and not srv._runners
     task.cancel(); await quiet_ws.close(); await silent.close()
     print("ok  stop: all connections reset, listeners closed in %.1f s" % (time.monotonic() - t0))
+
+    # --- round 6: a live device session is never handed to another source address (HACS review 2026-11-12)
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(21442, 21444))
+    await srv.async_start()
+    received, q = [], asyncio.Queue()
+    task = asyncio.create_task(fake_feeder(21444, True, received, q))
+    await asyncio.sleep(1.5)
+    dev = srv.devices[SERIAL]
+    first_ws = dev._ws
+    assert dev.connected and dev.peer == "127.0.0.1" and dev.firmware == "1.1.6", (dev.peer, dev.firmware)
+    opened = []
+
+    async def claim(local):
+        """Someone else logs in with the feeder's serial number; True if the server answered the login."""
+        session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(local_addr=(local, 0)))
+        opened.append(session)
+        ws = await session.ws_connect("ws://127.0.0.1:21442/hardware", autoping=False)
+        await ws.send_bytes(pr.build_frame("geConnect", "login", json.dumps(
+            {"key": "x", "token": "x", "email": "x", "version": "9.9.9"}).encode(), SERIAL))
+        try:
+            msg = await ws.receive(timeout=2)
+        except (asyncio.TimeoutError, TimeoutError):
+            return False
+        return msg.type is aiohttp.WSMsgType.BINARY
+
+    assert await claim("127.0.0.2") is False                       # other address while the feeder is alive
+    assert dev._ws is first_ws and dev.peer == "127.0.0.1" and dev.firmware == "1.1.6", (dev.peer, dev.firmware)
+    await dev.async_send(pr.frame_sf_set_mode(SERIAL, "interval", dev.join_id))   # commands still reach the feeder
+    await asyncio.sleep(0.5)
+    assert dev.data["mode"] == "interval" and any(f.topic == "sfSet" for f in received), dev.data["mode"]
+    assert await claim("127.0.0.1") is True                        # same address: the device reconnecting
+    assert dev._ws is not first_ws and dev.peer == "127.0.0.1"
+    dev.last_seen -= cloud.SESSION_LIVE_SECONDS + 1                # the old connection went silent ...
+    assert await claim("127.0.0.2") is True                        # ... so a device with a new address gets in
+    assert dev.peer == "127.0.0.2"
+    await q.put(None); task.cancel()
+    await srv.async_stop()
+    for session in opened:
+        await session.close()
+    print("ok  takeover: live session kept against another address, same address and silent session accepted")
     print("cloud e2e passed")
 
 def test_lan_addresses():

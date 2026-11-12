@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from . import protocol as pr
+from .entity import known_or_refuse
 from .roller import async_send_roller
 from .const import CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, DOMAIN, MAX_MANUAL_REFILL_ML
 
@@ -88,9 +89,18 @@ async def _wait_for(coordinator, predicate, timeout: float = 10.0) -> dict:
     raise HomeAssistantError(translation_domain=DOMAIN, translation_key="no_answer")
 
 
+def _manual_update(serial: str, presets: list) -> bytes:
+    """rfManual/update carries every preset with its intensity - refused when one is not known."""
+    try:
+        return pr.frame_rf_manual_update(serial, presets)
+    except pr.UnknownValue as err:
+        raise HomeAssistantError(translation_domain=DOMAIN, translation_key="value_unknown",
+                                 translation_placeholders={"values": str(err)}) from err
+
+
 def _program_index(data: dict, name: str | None) -> int:
     if name is None:
-        return data.get("program_index", 0)
+        return known_or_refuse(data, "program_index")[0]
     names = data.get("programs") or []
     if name not in names:
         raise _invalid(f"unknown program {name!r}")
@@ -156,11 +166,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_program")
         return data
 
+    def _program_data(c) -> dict:
+        """Program mode, for writing: a program frame repeats index, time, intensity and points. They come
+        from the light's report - when one is missing, the write is refused instead of filling it in."""
+        data = _program_mode(c)
+        known_or_refuse(data, *pr.FLARE_PROGRAM_KEYS)
+        return data
+
     async def flare_program_set(call: ServiceCall) -> None:
         points = _points(call.data["points"])
         jobs = []
         for c in _flares(call):  # check every light before writing to any
-            data = _program_mode(c)
+            data = _program_data(c)
             index = _program_index(data, call.data.get("program"))
             if index != data.get("program_index"):
                 # writing another program would first switch the light to it - only the active program
@@ -168,9 +185,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_not_active_program")
             intensity = call.data.get("intensity")
             if intensity is None:
-                intensity = 100 if data.get("intensity") is None else data["intensity"]
-            jobs.append((c, pr.frame_rf_precise_update(c.serial, index, data.get("program_time_raw") or 0,
-                                                       points, intensity)))
+                intensity = data["intensity"]
+            jobs.append((c, pr.frame_rf_precise_update(c.serial, index, data["program_time_raw"], points, intensity)))
         await _each(jobs, lambda job: _send(*job))
 
     async def _to_manual(c) -> tuple[dict, str | None]:
@@ -231,7 +247,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     idx = _preset_slot(presets, preset) if preset is not None else pr.flare_active_preset(presets)
                     new = pr.flare_presets_edit(presets, idx, levels=levels, activate=True)
                     if new != presets:
-                        await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                        await _send(c, _manual_update(c.serial, new))
                         await _wait_for(c, lambda d: pr.flare_active_preset(d.get("manual_presets") or []) == idx
                                         and pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
             except Exception:
@@ -267,9 +283,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 if idx is None:
                     raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_no_free_preset")
             value = intensity
-            if value is None:
-                value = presets[idx].get("intensity") if old is not None else None
-                value = 100 if value is None else value
+            if value is None:  # an existing preset keeps its intensity; a new one starts at 100 %
+                value = known_or_refuse(presets[idx], "intensity")[0] if old is not None else 100
             return idx, pr.flare_presets_edit(presets, idx, name=name, levels=levels, intensity=value)
 
         for c in coordinators:  # check the known lists before switching any light
@@ -282,7 +297,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 presets = data.get("manual_presets") or []
                 idx, new = plan(presets)
                 if new != presets:
-                    await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                    await _send(c, _manual_update(c.serial, new))
                     await _wait_for(c, lambda d: pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
             except Exception:
                 with contextlib.suppress(HomeAssistantError):
@@ -300,7 +315,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         plans = {}
         coordinators = _flares(call)
         for c in coordinators:  # check every light before writing to any
-            data = _program_mode(c)
+            data = _program_data(c)
             names = data.get("programs") or []
             if name in names:
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_program_exists",
@@ -311,15 +326,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
             points = _points(call.data["points"] if "points" in call.data else data.get("points") or [])
             intensity = call.data.get("intensity")
             if intensity is None:
-                intensity = 100 if data.get("intensity") is None else data["intensity"]
-            plans[id(c)] = (slot, points, intensity, data.get("program_index", 0))
+                intensity = data["intensity"]
+            plans[id(c)] = (slot, points, intensity, data["program_index"])
 
         async def job(c) -> None:
             slot, points, intensity, back = plans[id(c)]
             await _send(c, pr.frame_rf_select_program(c.serial, slot))
             try:
                 data = await _wait_for(c, lambda d: d.get("program_index") == slot, 15)
-                await _send(c, pr.frame_rf_precise_update(c.serial, slot, data.get("program_time_raw") or 0,
+                await _send(c, pr.frame_rf_precise_update(c.serial, slot, known_or_refuse(data, "program_time_raw")[0],
                                                           points, intensity))
                 await _wait_for(c, lambda d: d.get("program_index") == slot and d.get("intensity") == intensity
                                 and pr.flare_same_points(d.get("points"), points), 15)
@@ -353,7 +368,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 presets = data.get("manual_presets") or []
                 idx = _preset_slot(presets, name)
                 new = pr.flare_presets_edit(presets, idx, name="", levels=list(pr.FLARE_PRESET_DELETED_LEVELS))
-                await _send(c, pr.frame_rf_manual_update(c.serial, new))
+                await _send(c, _manual_update(c.serial, new))
                 await _wait_for(c, lambda d: pr.flare_same_preset(_preset_at(d, idx), new[idx]), 15)
             except Exception:
                 with contextlib.suppress(HomeAssistantError):
@@ -435,7 +450,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         plans = {}
         coordinators = _flares(call)
         for c in coordinators:  # check every light before writing to any
-            data = _program_mode(c)
+            data = _program_data(c)
             names = data.get("programs") or []
             if name not in names:
                 raise _invalid(f"unknown program {name!r}")
@@ -443,14 +458,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if slot == data.get("program_index"):
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key="flare_program_active",
                                              translation_placeholders={"name": name})
-            plans[id(c)] = (slot, data.get("program_index", 0))
+            plans[id(c)] = (slot, data["program_index"])
 
         async def job(c) -> None:
             slot, back = plans[id(c)]
             await _send(c, pr.frame_rf_select_program(c.serial, slot))
             try:
                 data = await _wait_for(c, lambda d: d.get("program_index") == slot, 15)
-                await _send(c, pr.frame_rf_precise_update(c.serial, slot, data.get("program_time_raw") or 0,
+                await _send(c, pr.frame_rf_precise_update(c.serial, slot, known_or_refuse(data, "program_time_raw")[0],
                                                           empty, pr.FLARE_EMPTY_INTENSITY))
                 await _wait_for(c, lambda d: d.get("program_index") == slot and d.get("intensity") == pr.FLARE_EMPTY_INTENSITY
                                 and pr.flare_same_points(d.get("points"), empty), 15)

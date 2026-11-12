@@ -1,11 +1,25 @@
 """Base entity."""
 from __future__ import annotations
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import protocol as pr
 from .const import DOMAIN, MANUFACTURER
+
+
+def known_or_refuse(data: dict | None, *keys: str) -> list:
+    """The reported values a write has to repeat - or an error for the user; nothing is sent with a guess."""
+    try:
+        return pr.known(data, *keys)
+    except pr.UnknownValue as err:
+        raise HomeAssistantError(translation_domain=DOMAIN, translation_key="value_unknown",
+                                 translation_placeholders={"values": str(err)}) from err
+
+
+def all_known(data: dict | None, keys) -> bool:
+    return all((data or {}).get(key) is not None for key in keys)
 
 
 class ReefEntity(CoordinatorEntity):

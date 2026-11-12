@@ -30,6 +30,13 @@ value was put back. Anything that could not be confirmed this way is not offered
 only until someone confirms it on hardware. The author owns no Smart Roller: its writes were tested by
 Steven Downer on his device (last row).
 
+**Nothing is filled in.** Several devices take a group of settings in one frame (Smart feeder container
+values, interval and the two flags; all five Base pump settings; Smart Roller advance length and start
+delay; a Reef Flare program or the list of manual presets). To change one value the integration repeats the
+others exactly as the device last reported them. While one of them has not been reported yet - right after
+connecting the first frame is often only the Wi-Fi signal - the entities are unavailable and the write is
+refused with a message; no zero or default is sent in its place.
+
 | Device (firmware) | Confirmed writes | Date |
 |---|---|---|
 | Level keeper (1.0.0) | display light, max refill time, set clock, pause refill, fill hose + stop, calibration run, calibration value and reminder | 2026-11-03 |
@@ -224,6 +231,15 @@ cloud), so the app works at home as well; from outside your network nothing chan
 The devices send their account token and e-mail to whatever answers as `api.reeffactory.com` - the
 cloud replacement never logs or stores them, but anyone who controls your DNS could read them. That
 is a property of the devices, not of this integration.
+
+The other direction: the cloud replacement cannot check who connects. A device is whoever opens port 442
+or 444 and sends a serial number - the integration does not know the devices' keys, so it cannot verify
+them. **Keep these ports inside your network; never forward them from the internet.** Anyone who can
+reach them can make a device with an invented serial number appear. What the integration does prevent: a
+connection that claims the serial number of a device that is connected right now is refused when it comes
+from another address (logged as a warning), so it can neither feed values into that device's entities nor
+receive its commands. If a device really got a new address, it is accepted as soon as its old connection
+has been silent for a minute.
 
 ### Advanced: no DNS at all (firmware patch)
 

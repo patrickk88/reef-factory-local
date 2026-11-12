@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "Der Kalibrierlauf läuft noch."
+    },
+    "value_unknown": {
+      "message": "Das Gerät hat {values} noch nicht gemeldet – es wurde nichts gesendet. Gleich noch einmal versuchen."
     }
   }
 }

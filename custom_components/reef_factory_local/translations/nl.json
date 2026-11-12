@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "De kalibratierun loopt nog."
+    },
+    "value_unknown": {
+      "message": "Het apparaat heeft {values} nog niet gemeld - er is niets verzonden. Probeer het zo opnieuw."
     }
   }
 }

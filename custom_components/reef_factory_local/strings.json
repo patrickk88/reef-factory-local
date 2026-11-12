@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "The calibration run is still running."
+    },
+    "value_unknown": {
+      "message": "The device has not reported {values} yet - nothing was sent. Try again in a moment."
     }
   }
 }

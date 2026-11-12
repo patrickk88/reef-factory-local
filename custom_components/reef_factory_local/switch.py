@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ReefConfigEntry
 from . import protocol as pr
 from .const import CONF_ALLOW_PUMP_ACTIONS, DOMAIN, PUMP_UNLOCK_SECONDS
-from .entity import ReefEntity
+from .entity import ReefEntity, all_known, known_or_refuse
 from .platform_setup import setup_entities
 from .roller import async_send_roller
 
@@ -108,14 +108,19 @@ class ReefFeederFlag(ReefEntity, SwitchEntity):
         self._attr_translation_key = f"feeder_{key}"
 
     @property
+    def available(self) -> bool:
+        return super().available and all_known(self.coordinator.data, pr.FEEDER_FLAG_KEYS)
+
+    @property
     def is_on(self) -> bool | None:
         return (self.coordinator.data or {}).get(self._key)
 
     async def _set(self, on: bool) -> None:
         d = self.coordinator.device
-        data = self.coordinator.data or {}
-        led = on if self._key == "led" else bool(data.get("led", True))
-        button = on if self._key == "feeding_button" else bool(data.get("feeding_button", True))
+        data = dict(self.coordinator.data or {})
+        known_or_refuse(data, *pr.FEEDER_FLAG_KEYS)  # both flags are one frame - the other one is never guessed
+        data[self._key] = on
+        led, button = known_or_refuse(data, *pr.FEEDER_FLAG_KEYS)
         try:
             await d.async_send(pr.frame_sf_set_flags(d.serial, led, button, d.join_id))
         except ConnectionError as err:
@@ -140,7 +145,7 @@ class ReefBasePumpFlag(ReefEntity, SwitchEntity):
 
     @property
     def available(self) -> bool:
-        return super().available and (self.coordinator.data or {}).get("speed") is not None
+        return super().available and all_known(self.coordinator.data, pr.BASE_PUMP_KEYS)
 
     @property
     def is_on(self) -> bool | None:
@@ -149,10 +154,9 @@ class ReefBasePumpFlag(ReefEntity, SwitchEntity):
     async def _set(self, on: bool) -> None:
         d = self.coordinator.device
         data = dict(self.coordinator.data or {})
+        known_or_refuse(data, *pr.BASE_PUMP_KEYS)  # all five settings are one frame - none of them is guessed
         data[self._key] = on
-        frame = pr.frame_bp_set_settings(d.serial, data.get("speed") or 0, data.get("feed_mode_time") or 15,
-                                         data.get("feed_speed") or 20, bool(data.get("display", True)),
-                                         bool(data.get("backlight", True)), d.join_id)
+        frame = pr.frame_bp_set_settings(d.serial, *known_or_refuse(data, *pr.BASE_PUMP_KEYS), d.join_id)
         try:
             await d.async_send(frame)
         except ConnectionError as err:

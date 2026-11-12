@@ -913,6 +913,9 @@
     },
     "calibration_running": {
       "message": "Le cycle d'étalonnage est encore en cours."
+    },
+    "value_unknown": {
+      "message": "L'appareil n'a pas encore communiqué {values} - rien n'a été envoyé. Réessayez dans un instant."
     }
   }
 }

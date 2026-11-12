@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ReefConfigEntry
 from . import protocol as pr
-from .entity import ReefEntity
+from .entity import ReefEntity, all_known, known_or_refuse
 from .platform_setup import setup_entities
 
 
@@ -153,8 +153,8 @@ class ReefFlareIntensity(ReefEntity, NumberEntity):
     def _frame(self, value: int) -> bytes | None:
         d = self.coordinator.data or {}
         s = self.coordinator.serial
-        if d.get("mode") == "program" and d.get("points") and d.get("program_time_raw") is not None:
-            return pr.frame_rf_precise_update(s, d.get("program_index", 0), d["program_time_raw"], d["points"], value)
+        if d.get("mode") == "program" and all_known(d, pr.FLARE_PROGRAM_KEYS):
+            return pr.frame_rf_precise_update(s, d["program_index"], d["program_time_raw"], d["points"], value)
         return None
 
     @property
@@ -205,20 +205,34 @@ class ReefFeederNumber(ReefEntity, NumberEntity):
             self._attr_icon = "mdi:cup"
 
     @property
+    def _group(self) -> tuple[str, ...]:
+        """The values that travel in the same frame as this one."""
+        if self._data_key in pr.FEEDER_CONTAINER_KEYS:
+            return pr.FEEDER_CONTAINER_KEYS
+        if self._data_key in pr.FEEDER_INTERVAL_KEYS:
+            return pr.FEEDER_INTERVAL_KEYS
+        return (self._data_key,)
+
+    @property
+    def available(self) -> bool:
+        # not before the feeder has reported every value of the frame (the first frame is often only Wi-Fi)
+        return super().available and all_known(self.coordinator.data, self._group)
+
+    @property
     def native_value(self) -> float | None:
         return (self.coordinator.data or {}).get(self._data_key)
 
     async def async_set_native_value(self, value: float) -> None:
         d = self.coordinator.device
         data = dict(self.coordinator.data or {})
+        known_or_refuse(data, *self._group)  # refuse instead of sending 0 or a default for an unknown value
         data[self._data_key] = value
         s = d.serial
-        if self._key in ("container", "container_size", "single_dose"):
-            frame = pr.frame_sf_set_container(s, data.get("container_g") or 0, data.get("container_size_g") or 0,
-                                              data.get("single_dose_g") or 0, d.join_id)
-        elif self._key.startswith("interval"):
-            frame = pr.frame_sf_set_interval(s, int(data.get("interval_minutes") or 60),
-                                             int(data.get("interval_rotations") or 1), d.join_id)
+        if self._group is pr.FEEDER_CONTAINER_KEYS:
+            frame = pr.frame_sf_set_container(s, *known_or_refuse(data, *pr.FEEDER_CONTAINER_KEYS), d.join_id)
+        elif self._group is pr.FEEDER_INTERVAL_KEYS:
+            minutes, rotations = known_or_refuse(data, *pr.FEEDER_INTERVAL_KEYS)
+            frame = pr.frame_sf_set_interval(s, int(minutes), int(rotations), d.join_id)
         else:
             frame = pr.frame_sf_set_reminder(s, int(value), d.join_id)
         try:
@@ -257,15 +271,16 @@ class ReefBasePumpNumber(ReefEntity, NumberEntity):
     def native_value(self) -> float | None:
         return (self.coordinator.data or {}).get(self._data_key)
 
+    @property
+    def available(self) -> bool:
+        return super().available and all_known(self.coordinator.data, pr.BASE_PUMP_KEYS)
+
     async def async_set_native_value(self, value: float) -> None:
         d = self.coordinator.device
         data = dict(self.coordinator.data or {})
-        if data.get("speed") is None:
-            raise HomeAssistantError("Base pump has not reported its settings yet")
+        known_or_refuse(data, *pr.BASE_PUMP_KEYS)  # all five settings are one frame - none of them is guessed
         data[self._data_key] = int(value)
-        frame = pr.frame_bp_set_settings(d.serial, data["speed"], data.get("feed_mode_time") or 15,
-                                         data.get("feed_speed") or 20, bool(data.get("display", True)),
-                                         bool(data.get("backlight", True)), d.join_id)
+        frame = pr.frame_bp_set_settings(d.serial, *known_or_refuse(data, *pr.BASE_PUMP_KEYS), d.join_id)
         try:
             await d.async_send(frame)
         except ConnectionError as err:

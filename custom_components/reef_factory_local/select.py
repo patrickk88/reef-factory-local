@@ -10,7 +10,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ReefConfigEntry
 from . import protocol as pr
-from .entity import ReefEntity
+from .entity import ReefEntity, known_or_refuse
 from .platform_setup import setup_entities
 from .roller import async_send_roller
 
@@ -152,12 +152,11 @@ class ReefRollerSetting(ReefEntity, SelectEntity):
         return str(value) if value is not None and str(value) in self._attr_options else None
 
     async def async_select_option(self, option: str) -> None:
-        data = self.coordinator.data or {}
-        if data.get("shift_mm") is None or data.get("delay_s") is None:
-            raise HomeAssistantError("No report from the Smart Roller yet - try again in a few seconds")
-        shift = int(option) if self._key == "sr_shift" else data["shift_mm"]
-        delay = int(option) if self._key == "sr_delay" else data["delay_s"]
-        reminder = data.get("reminder_raw", pr.SR_REMINDER_DEFAULT)
+        shift, delay, reminder = known_or_refuse(self.coordinator.data, *pr.SR_SETTING_KEYS)  # one frame
+        if self._key == "sr_shift":
+            shift = int(option)
+        else:
+            delay = int(option)
         await async_send_roller(self.coordinator, pr.frame_sr_settings(self.coordinator.serial, shift, delay, reminder),
                                 f"settings advance {shift} mm, delay {delay} s, reminder {reminder}")
 

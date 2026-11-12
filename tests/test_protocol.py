@@ -1,6 +1,6 @@
 """Offline tests for protocol.py using real frames captured on 29.10.2026
 (device -> poller on the LAN, and device -> cloud for the Flare dashboard frame)."""
-import importlib.util, pathlib, sys
+import importlib.util, json, pathlib, sys
 
 P = pathlib.Path(__file__).resolve().parents[1] / "custom_components" / "reef_factory_local" / "protocol.py"
 spec = importlib.util.spec_from_file_location("protocol", P)
@@ -570,6 +570,56 @@ def test_probe_types_and_override():
     assert pr.parse_frame(pr.frame_subscribe(serial)).topic == "srConnect"
     assert pr.MODEL_NAME[pr.DEVICE_SMART_ROLLER] == "Smart Roller"
     assert set(pr.PROBE_TYPES) <= set(pr.CONNECT_TOPIC)
+
+
+def test_writes_never_fill_in_unknown_values():
+    """HACS review 2026-11-12: several settings travel in one frame - a value that was not reported yet is
+    never replaced by 0 or a default, pr.known() refuses instead."""
+    # right after connecting the first frame is often only the Wi-Fi report
+    wifi = pr.decode(pr.DEVICE_BASE_PUMP, pr.parse_frame(
+        b"RFBP052309210012\x00geReport\x00wifiStrength\x001793701213648\x00" + b'{"value":-61}\x00'))
+    assert wifi == {"wifi_rssi": -61}, wifi
+    for keys in (pr.BASE_PUMP_KEYS, pr.FEEDER_CONTAINER_KEYS, pr.FEEDER_INTERVAL_KEYS, pr.FEEDER_FLAG_KEYS,
+                 pr.SR_SETTING_KEYS, pr.FLARE_PROGRAM_KEYS):
+        try:
+            pr.known(wifi, *keys)
+        except pr.UnknownValue as err:
+            assert str(err) == ", ".join(keys), err
+        else:
+            raise AssertionError(f"{keys} accepted without a report")
+    assert pr.known(None) == [] and pr.known({"a": 0, "b": False}, "b", "a") == [False, 0]  # 0 / False are values
+    # full reports: everything known, the frame repeats exactly what the device said
+    bp = pr.decode(pr.DEVICE_BASE_PUMP, pr.parse_frame(BP_REPORT))
+    speed, minutes, feed_speed, display, backlight = pr.known(bp, *pr.BASE_PUMP_KEYS)
+    sent = json.loads(pr.frame_bp_set_settings("RFBP052309210012", speed, minutes, feed_speed, display, backlight)
+                      .split(b"\x00", 4)[4].rstrip(b"\x00"))
+    assert sent == {"speed": bp["speed"], "feedModeTime": bp["feed_mode_time"], "feedSpeed": bp["feed_speed"],
+                    "display": "on" if bp["display"] else "off", "backlight": "on" if bp["backlight"] else "off"}, sent
+    # a report without a field: unknown, not "off" / 0
+    partial = pr.decode(pr.DEVICE_BASE_PUMP, pr.parse_frame(
+        b"RFBP052309210012\x00bpReport\x00all\x001793701213648\x00" + b'{"mode":"auto","speed":60}\x00'))
+    assert partial["display"] is None and partial["backlight"] is None and partial["feed_mode_time"] is None, partial
+    try:
+        pr.known(partial, *pr.BASE_PUMP_KEYS)
+    except pr.UnknownValue as err:
+        assert str(err) == "feed_mode_time, feed_speed, display, backlight", err
+    else:
+        raise AssertionError("partial base pump report accepted")
+    sf = pr.decode(pr.DEVICE_FEEDER, pr.parse_frame(SF_REPORT))
+    assert pr.known(sf, *pr.FEEDER_CONTAINER_KEYS) == [50.0, 0.0, 1.0] and pr.known(sf, *pr.FEEDER_FLAG_KEYS) == [True, True]
+    bare = pr.decode(pr.DEVICE_FEEDER, pr.parse_frame(
+        b"RFSF012309180013\x00sfReport\x00all\x001793701213648\x00" + b'{"mode":"period","periods":[]}\x00'))
+    assert bare["led"] is None and bare["feeding_button"] is None and bare["container_g"] is None, bare
+    # Reef Flare manual presets: the frame carries every preset's intensity
+    presets = [{"name": "A", "active": True, "levels": [1] * 7, "intensity": 50}, {"name": "", "active": False, "levels": [0] * 7}]
+    try:
+        pr.frame_rf_manual_update("RFRFS62403220038", presets)
+    except pr.UnknownValue:
+        pass
+    else:
+        raise AssertionError("manual preset without intensity accepted")
+    presets[1]["intensity"] = 0
+    assert pr.frame_rf_manual_update("RFRFS62403220038", presets).endswith(bytes([50, 0]) + b"\x00")
 
 
 if __name__ == "__main__":
