@@ -121,6 +121,8 @@ LK_LEVEL: dict[int, str] = {
 LK_LEVEL_OPTIONS = [*LK_LEVEL.values(), "unknown"]
 # calibration reminder period (lkCalibration/notification)
 LK_REMINDER = {"1_week": 0, "2_weeks": 1, "1_month": 2, "3_months": 3}
+# the device page offers these four periods only - no "off"; the guided calibration can leave the period alone
+LK_REMINDER_UNCHANGED = "unchanged"
 LK_MAX_MINUTES = 60  # limit used by the device UI for max refill time and pause
 LK_CALIBRATION_S = (10, 255)  # calibration run time (lkCalibration/time is one byte); 10 s confirmed 2026-11-03
 LK_CALIBRATION_DEFAULT_S = 10

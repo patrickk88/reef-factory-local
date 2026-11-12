@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Rappel d'étalonnage",
+        "name": "Étalonnage 4 : Rappel",
         "state": {
+          "unchanged": "Ne pas modifier",
           "1_week": "1 semaine",
           "2_weeks": "2 semaines",
           "1_month": "1 mois",
@@ -353,10 +354,10 @@
         "name": "Diamètre du rouleau entamé"
       },
       "calibration_run_time": {
-        "name": "Durée du cycle d'étalonnage"
+        "name": "Étalonnage 1 : Durée"
       },
       "calibration_measured": {
-        "name": "Quantité mesurée"
+        "name": "Étalonnage 3 : Quantité mesurée"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Rouleau entamé inséré"
       },
       "calibration_start": {
-        "name": "Lancer le cycle d'étalonnage"
+        "name": "Étalonnage 2 : Lancer le cycle"
       },
       "calibration_save": {
-        "name": "Terminer l'étalonnage"
+        "name": "Étalonnage 5 : Terminer"
       }
     },
     "event": {

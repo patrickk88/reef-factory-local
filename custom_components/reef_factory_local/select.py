@@ -164,12 +164,12 @@ class ReefRollerSetting(ReefEntity, SelectEntity):
 
 class ReefCalibrationReminder(ReefEntity, SelectEntity, RestoreEntity):
     """Level keeper guided calibration: when the device should ask for the next calibration. The device does
-    not report the period, so the choice is kept in Home Assistant and sent with *Finish calibration*; while
-    nothing is chosen, the reminder is left as it is."""
+    not report the period, so the choice is kept in Home Assistant and sent with step 5 (finish). *Leave
+    unchanged* (the default) sends nothing; the device has no way to turn the reminder off."""
 
     _attr_translation_key = "calibration_reminder"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = list(pr.LK_REMINDER)
+    _attr_options = [pr.LK_REMINDER_UNCHANGED, *pr.LK_REMINDER]
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator) -> None:
@@ -187,9 +187,9 @@ class ReefCalibrationReminder(ReefEntity, SelectEntity, RestoreEntity):
 
     @property
     def current_option(self) -> str | None:
-        return self.coordinator.lk_reminder
+        return self.coordinator.lk_reminder or pr.LK_REMINDER_UNCHANGED
 
     async def async_select_option(self, option: str) -> None:
-        self.coordinator.lk_reminder = option
+        self.coordinator.lk_reminder = option if option in pr.LK_REMINDER else None
         self.async_write_ha_state()
 

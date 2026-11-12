@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Przypomnienie o kalibracji",
+        "name": "Kalibracja 4: Przypomnienie",
         "state": {
+          "unchanged": "Bez zmian",
           "1_week": "1 tydzień",
           "2_weeks": "2 tygodnie",
           "1_month": "1 miesiąc",
@@ -353,10 +354,10 @@
         "name": "Średnica używanej rolki"
       },
       "calibration_run_time": {
-        "name": "Czas przebiegu kalibracyjnego"
+        "name": "Kalibracja 1: Czas przebiegu"
       },
       "calibration_measured": {
-        "name": "Zmierzona ilość"
+        "name": "Kalibracja 3: Zmierzona ilość"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Włożono używaną rolkę"
       },
       "calibration_start": {
-        "name": "Rozpocznij przebieg kalibracyjny"
+        "name": "Kalibracja 2: Rozpocznij przebieg"
       },
       "calibration_save": {
-        "name": "Zakończ kalibrację"
+        "name": "Kalibracja 5: Zakończ"
       }
     },
     "event": {

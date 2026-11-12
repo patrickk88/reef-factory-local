@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Kalibratieherinnering",
+        "name": "Kalibratie 4: Herinnering",
         "state": {
+          "unchanged": "Niet wijzigen",
           "1_week": "1 week",
           "2_weeks": "2 weken",
           "1_month": "1 maand",
@@ -353,10 +354,10 @@
         "name": "Diameter gebruikte rol"
       },
       "calibration_run_time": {
-        "name": "Duur van de kalibratierun"
+        "name": "Kalibratie 1: Duur"
       },
       "calibration_measured": {
-        "name": "Gemeten hoeveelheid"
+        "name": "Kalibratie 3: Gemeten hoeveelheid"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Gebruikte rol geplaatst"
       },
       "calibration_start": {
-        "name": "Kalibratierun starten"
+        "name": "Kalibratie 2: Run starten"
       },
       "calibration_save": {
-        "name": "Kalibratie afronden"
+        "name": "Kalibratie 5: Afronden"
       }
     },
     "event": {

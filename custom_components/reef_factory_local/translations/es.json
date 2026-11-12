@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Recordatorio de calibración",
+        "name": "Calibración 4: Recordatorio",
         "state": {
+          "unchanged": "No cambiar",
           "1_week": "1 semana",
           "2_weeks": "2 semanas",
           "1_month": "1 mes",
@@ -353,10 +354,10 @@
         "name": "Diámetro del rollo usado"
       },
       "calibration_run_time": {
-        "name": "Duración del ciclo de calibración"
+        "name": "Calibración 1: Duración"
       },
       "calibration_measured": {
-        "name": "Cantidad medida"
+        "name": "Calibración 3: Cantidad medida"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Rollo usado colocado"
       },
       "calibration_start": {
-        "name": "Iniciar ciclo de calibración"
+        "name": "Calibración 2: Iniciar ciclo"
       },
       "calibration_save": {
-        "name": "Finalizar calibración"
+        "name": "Calibración 5: Finalizar"
       }
     },
     "event": {

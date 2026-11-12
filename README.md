@@ -155,15 +155,21 @@ off again. Nothing is sent to the device by the switch itself.
 
 The calibration is also available step by step on the Level keeper's device page, under *Configuration*:
 
-1. Hold the hose into a measuring cup, set *Calibration run time* (10 s is fine) and press *Start calibration
-   run*. It runs the pump, so it needs *Allow pump actions* (the option or the 10-minute switch). *Calibration
-   run time left* counts down; *Stop pump action* stops the run.
-2. Enter what the cup shows in *Measured amount*, choose a *Calibration reminder* if you want to change it,
-   and press *Finish calibration*.
+The five entities carry their step number, so the device page lists them in the order they are used:
+
+1. *Calibration 1: Run time* - 10 s is fine.
+2. *Calibration 2: Start run* - hold the hose into a measuring cup first. It runs the pump, so it needs
+   *Allow pump actions* (the option or the 10-minute switch). *Calibration run time left* counts down;
+   *Stop pump action* stops the run.
+3. *Calibration 3: Measured amount* - what the cup shows, in mL.
+4. *Calibration 4: Reminder* - when the device should ask for the next calibration. *Leave unchanged* (the
+   default) keeps the period the device has. The device offers 1 week to 3 months and no way to turn the
+   reminder off.
+5. *Calibration 5: Finish* - sends the amount (and the reminder period, if one is chosen).
 
 Run time, amount and reminder are only kept in Home Assistant and are sent with the two buttons - the same
-frames as the actions `calibration_start` and `calibration_value`. *Measured amount* is emptied by a new run
-and after saving, and *Finish calibration* refuses to send while it is empty or the run is still going.
+frames as the actions `calibration_start` and `calibration_value`. The measured amount is emptied by a new run
+and after saving, and *Finish* refuses to send while it is empty or the run is still going.
 
 ## Cloud replacement (devices without a local port)
 

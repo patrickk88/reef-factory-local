@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Promemoria calibrazione",
+        "name": "Calibrazione 4: Promemoria",
         "state": {
+          "unchanged": "Non modificare",
           "1_week": "1 settimana",
           "2_weeks": "2 settimane",
           "1_month": "1 mese",
@@ -353,10 +354,10 @@
         "name": "Diametro del rotolo usato"
       },
       "calibration_run_time": {
-        "name": "Durata del ciclo di calibrazione"
+        "name": "Calibrazione 1: Durata"
       },
       "calibration_measured": {
-        "name": "Quantità misurata"
+        "name": "Calibrazione 3: Quantità misurata"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Rotolo usato inserito"
       },
       "calibration_start": {
-        "name": "Avvia ciclo di calibrazione"
+        "name": "Calibrazione 2: Avvia ciclo"
       },
       "calibration_save": {
-        "name": "Completa calibrazione"
+        "name": "Calibrazione 5: Completa"
       }
     },
     "event": {

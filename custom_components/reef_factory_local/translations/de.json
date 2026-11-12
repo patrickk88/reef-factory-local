@@ -256,8 +256,9 @@
         }
       },
       "calibration_reminder": {
-        "name": "Kalibrier-Erinnerung",
+        "name": "Kalibrieren 4: Erinnerung",
         "state": {
+          "unchanged": "Nicht ändern",
           "1_week": "1 Woche",
           "2_weeks": "2 Wochen",
           "1_month": "1 Monat",
@@ -353,10 +354,10 @@
         "name": "Durchmesser gebrauchte Rolle"
       },
       "calibration_run_time": {
-        "name": "Kalibrierlaufzeit"
+        "name": "Kalibrieren 1: Laufzeit"
       },
       "calibration_measured": {
-        "name": "Gemessene Menge"
+        "name": "Kalibrieren 3: Gemessene Menge"
       }
     },
     "switch": {
@@ -414,10 +415,10 @@
         "name": "Gebrauchte Rolle eingelegt"
       },
       "calibration_start": {
-        "name": "Kalibrierlauf starten"
+        "name": "Kalibrieren 2: Lauf starten"
       },
       "calibration_save": {
-        "name": "Kalibrierung abschließen"
+        "name": "Kalibrieren 5: Abschließen"
       }
     },
     "event": {
