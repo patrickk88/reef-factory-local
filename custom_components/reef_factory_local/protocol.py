@@ -34,7 +34,7 @@ DEVICE_FLARE = "reef_flare"
 DEVICE_FEEDER = "smart_feeder"  # cloud-only device (no local port), served by the cloud replacement
 DEVICE_BASE_PUMP = "base_pump"      # cloud-only, Reef Base pump (return pump)
 DEVICE_DOSING_PUMP = "dosing_pump"  # cloud-only, Dosing pump Pro X4
-DEVICE_SMART_ROLLER = "smart_roller"  # local; serial prefix not known yet, found by PROBE_TYPES
+DEVICE_SMART_ROLLER = "smart_roller"  # local; RFSR (seen: RFSRL1..., firmware 1.1.1), else found by PROBE_TYPES
 
 # Cloud channel (what the devices expect from api.reeffactory.com)
 CLOUD_HOST = "api.reeffactory.com"
@@ -54,6 +54,7 @@ _PREFIXES = (
     ("RFLK", DEVICE_LEVEL_KEEPER),
     ("RFTC", DEVICE_THERMO),
     ("RFSF", DEVICE_FEEDER),
+    ("RFSR", DEVICE_SMART_ROLLER),
     ("RFBP", DEVICE_BASE_PUMP),
     ("RFDQ", DEVICE_DOSING_PUMP),
 )

@@ -20,7 +20,7 @@ The devices below already speak a local WebSocket protocol, which this integrati
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions); rename a channel (action, not a pump action) | 1.2.3 |
-| Smart Roller (serial prefix not known yet - recognised during setup) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | automatic advance (switch), advance length, start delay, advance now, clear a jam, new roll, used roll by its outer diameter | not on the author's bench - tested by Steven Downer on his roller; layout and commands from his [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) |
+| Smart Roller (`RFSR…`) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | automatic advance (switch), advance length, start delay, advance now, clear a jam, new roll, used roll by its outer diameter | 1.1.1 - not on the author's bench, tested by Steven Downer on his roller (`RFSRL…`); layout and commands from his [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) |
 
 ## Only confirmed writes are sent
 
@@ -41,7 +41,7 @@ Steven Downer on his device (last row).
 | Smart feeder (1.1.6) | feed now, feeding mode, interval, rotations, dose per rotation, food in container, capacity, refill reminder, LED backlight, feeding button, schedule | 2026-11-05 |
 | Base pump (1.4.1) | feed pause on / off, speed, feed-mode duration and speed, display, backlight | 2026-11-05 |
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
-| Smart Roller (Steven Downer's device, firmware not noted) | automatic advance on / off, advance length, start delay, advance now, clear a jam, new roll - tested by Steven Downer with the 1.1.0b1 test build. Used roll by outer diameter: the same frame his own integration sends on that roller (the entities for it are new in 1.1.0) | 2026-11-10 |
+| Smart Roller (1.1.1, Steven Downer's device) | automatic advance on / off, advance length, start delay, advance now, clear a jam, new roll - tested by Steven Downer with the 1.1.0b1 test build. Used roll by outer diameter: the same frame his own integration sends on that roller (the entities for it are new in 1.1.0) | 2026-11-10 |
 
 Still not offered because it could not be confirmed: the Reef Flare **program preview** (the light reports
 nothing back) - its frame stays documented in `protocol.py` but is never sent - and finishing a calibration
@@ -375,9 +375,9 @@ See `custom_components/reef_factory_local/protocol.py` and `cloud.py`.
 
 ## Smart Roller
 
-The Smart Roller is recognised during setup: its serial number prefix is not known yet, so when a device
-answers with an unknown serial, the setup sends it the Smart Roller subscription and waits a few seconds
-for its report (nothing is written).
+The Smart Roller is recognised by its serial number (`RFSR…`; seen so far: `RFSRL…` with firmware 1.1.1).
+Should a roller carry another prefix, it is still found: when a device answers with an unknown serial, the
+setup sends it the Smart Roller subscription and waits a few seconds for its report (nothing is written).
 
 - **Controls:** switch *Automatic advance*, buttons *Advance now* (uses the advance length), *Clear jam*
   (only available while the roller reports jammed), *New roll inserted* and *Used roll inserted*.
@@ -389,8 +389,8 @@ for its report (nothing is written).
 - Actions `smart_roller_advance` (any offered length) and `smart_roller_new_roll` (optional
   `used_diameter_mm`) do the same from automations.
 
-If you own one: an issue with the *Download diagnostics* file (it contains the raw report, `report_hex`) and
-the firmware shown on the device page helps - serial prefix and firmware are still missing in the tables above.
+If you own one with another firmware or serial prefix: an issue with the *Download diagnostics* file (it
+contains the raw report, `report_hex`) and the firmware shown on the device page helps.
 
 ## Credits and related projects
 

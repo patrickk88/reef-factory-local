@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 - 2026-11-12
+- Smart Roller: recognised by its serial number (`RFSR…`; seen: `RFSRL…`, firmware 1.1.1 - thanks to Steven
+  Downer) instead of by a probe during setup. The probe stays for devices with an unknown serial; entries
+  that were set up before keep working unchanged.
+
 ## 1.2.0 - 2026-11-12
 - Level keeper: guided calibration on the device page (*Configuration*), numbered so the page lists the steps
   in order: *Calibration 1: Run time*, *2: Start run* (needs *Allow pump actions*), *3: Measured amount*,

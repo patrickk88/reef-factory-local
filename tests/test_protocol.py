@@ -30,6 +30,8 @@ def test_device_type():
     assert pr.device_type("RFLK012304200017") == pr.DEVICE_LEVEL_KEEPER
     assert pr.device_type("RFTC012310240015") == pr.DEVICE_THERMO
     assert pr.device_type("RFRFS62310180008") == pr.DEVICE_FLARE
+    assert pr.device_type("RFSRL12310160024") == pr.DEVICE_SMART_ROLLER  # Steven Downer's roller, firmware 1.1.1
+    assert pr.parse_frame(pr.frame_subscribe("RFSRL12310160024")).topic == "srConnect"
     assert pr.device_type("RFXX052309210012") is None  # unknown prefix
 
 def test_build_frames():
