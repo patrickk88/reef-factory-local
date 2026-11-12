@@ -934,7 +934,7 @@ def decode_level_keeper(frame: Frame) -> dict | None:
             "level_raw": blob[1],
             "calibration_needed": blob[10] != 0,
             "refilled_today_ml": _be(blob, 11, 4),
-            "calibration_raw": _be(blob, 2, 4),  # bytes 2-5, meaning not confirmed yet (shown as attribute only)
+            "calibration_raw": _be(blob, 2, 4),  # bytes 2-5: amount of the last calibration in mL (2026-11-12: 200 -> 225)
         }
         year = _be(blob, 8, 2)
         if year:
@@ -1253,10 +1253,10 @@ def frame_sr_new_roll(serial: str, used_diameter_mm: int | None = None) -> bytes
 
 
 def decode_smart_roller(frame: Frame) -> dict | None:
-    """srReport/all, binary, big-endian. Read only.
+    """srReport/all, binary, big-endian.
 
-    Offsets taken from ha-reef-factory-smartroller by Steven Downer (MIT); not yet confirmed on a device
-    by us - the raw report is kept (diagnostics) so testers can check them.
+    Offsets taken from ha-reef-factory-smartroller by Steven Downer (MIT), who tested this integration on his
+    roller; the author owns none - the raw report is kept (diagnostics) so testers can check them.
     """
     if frame.topic != "srReport" or frame.subtopic != "all" or len(frame.blob) < 30:
         return None

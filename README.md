@@ -42,11 +42,14 @@ Steven Downer on his device (last row).
 | Dosing pump Pro X4 (1.2.3) | dose now (1 mL asked, 0.9994 mL reported), set and clear a channel's schedule, rename a channel (also with umlauts) | 2026-11-05 |
 | Smart Roller (Steven Downer's device, firmware not noted) | automatic advance on / off, advance length, start delay, advance now, clear a jam, new roll - tested by Steven Downer with the 1.1.0b1 test build. Used roll by outer diameter: the same frame his own integration sends on that roller (the entities for it are new in 1.1.0) | 2026-11-10 |
 
-Removed in 0.7.1 because they could not be confirmed: Reef Flare manual-preset select, the intensity in
-manual mode, renaming a program (the light switched to the renamed program), program preview (the light
-reports nothing back), and writing a program other than the active one. Manual mode with a timer and the
-levels of the active manual preset are back since 0.9.0 (confirmed: the duration is only taken while the
-light is already in manual mode, which `flare_manual` takes care of). Their frames stay documented in `protocol.py` but are never sent.
+Still not offered because it could not be confirmed: the Reef Flare **program preview** (the light reports
+nothing back) - its frame stays documented in `protocol.py` but is never sent - and finishing a calibration
+of the Dosing pump Pro X4. The other Reef Flare writes that 0.7.1 removed for the same reason are back, each
+confirmed on hardware (rows above): timed manual mode (0.9.0; the duration is only taken while the light is
+already in manual mode, which `flare_manual` takes care of), a new program in another slot with its name
+(0.9.0), manual presets with name, levels and intensity, running a stored one, and resetting a program
+(0.10.0). They are actions; there is no select or number entity for manual presets and no action that
+renames an existing program (create a copy under the new name, then reset the old one).
 
 The **Smart Roller** commands are byte for byte the ones Steven Downer's integration sends (the unit tests
 compare them with his `build_message()`), and only the values his integration offers are accepted.
@@ -115,8 +118,9 @@ Use a password for Smart Reef that you use nowhere else.
   against what the device sends (see *Only confirmed writes are sent* for what is offered).
 - Reef Flare stores programs in its flash. Do not change intensity or programs every few minutes from
   an automation.
-- Reef Flare: the device only reports the points of the *active* program, so only the active program
-  can be written. To change another one, select it first (*Program* select), then write it.
+- Reef Flare: the device only reports the points of the *active* program, so `flare_program_set` only
+  writes the active program. To change another one, select it first (*Program* select), then write it.
+  `flare_program_create` and `flare_program_delete` select the other slot for a moment themselves.
 - *Next calibration* is the date the device reminds you to calibrate again (calibration time + chosen
   reminder period), not the date of the last calibration. Logging the device into a Smart Reef account
   sets it to "today / not due" without any calibration. Without calibration the mL values are estimates.
@@ -175,7 +179,7 @@ and after saving, and *Finish* refuses to send while it is empty or the run is s
 
 ## Cloud replacement (devices without a local port)
 
-The Smart feeder (and probably the pumps) have no local interface at all: they only talk to
+The Smart feeder, the Base pump and the Dosing pump Pro X4 have no local interface at all: they only talk to
 `api.reeffactory.com` (TLS on port 444, ESP8266 devices plain text on 442). They do **not** check the
 server certificate, so Home Assistant can take the cloud's place. Add the integration a second time
 and choose **Cloud replacement** - no IP, no serial number; every device that connects shows up by
@@ -184,7 +188,7 @@ itself with all its entities.
 Two modes:
 - **Passthrough** (default): everything is forwarded to the real cloud and read along. The official
   app keeps working, Home Assistant can still send commands. When the real cloud cannot be reached,
-  the device is served locally instead - automatically.
+  the device is served locally instead - automatically - and the cloud is tried again every two minutes.
 - **Local**: Home Assistant answers alone; the app does not see the device any more.
 
 ### The one thing you have to do yourself: DNS
@@ -203,13 +207,13 @@ Then restart the devices once (power off/on) - they keep their old connection to
 otherwise. After that they follow Home Assistant on their own: a restart or reload drops them with a
 TCP reset and they reconnect about 15 s later (checked with the Smart feeder, firmware 1.1.6).
 
-Home Assistant must be able to open ports 442, 444 and (for the app passthrough) 80 and 443. That is
+Home Assistant must be able to open ports 442, 444 and (for the app passthrough) 80, 443, 445 and 446. That is
 the case on Home Assistant OS and in Docker with host networking. If a port is taken (a reverse proxy
 on 80/443, say), the log says so; the devices still work, only the official app will not work from
 inside your network.
 
 Everyone in your network who looks up `api.reeffactory.com` now gets Home Assistant - including the
-phone with the official app. Ports 80/443 are passed through untouched (end-to-end TLS with the real
+phone with the official app. Ports 80, 443, 445 and 446 are passed through untouched (end-to-end TLS with the real
 cloud), so the app works at home as well; from outside your network nothing changes.
 
 ### Security note

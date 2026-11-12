@@ -23,7 +23,7 @@ async def async_setup_entry(
         if kind == pr.DEVICE_LEVEL_KEEPER:
             return [ReefRefillCycle(c), ReefCalibrationReminder(c)]
         if kind == pr.DEVICE_FLARE:
-            return [ReefFlareMode(c), ReefFlareProgram(c)]  # manual presets: not confirmed on hardware yet
+            return [ReefFlareMode(c), ReefFlareProgram(c)]  # manual presets are actions (flare_manual, flare_preset_save)
         if kind == pr.DEVICE_FEEDER:
             return [ReefFeederMode(c)]
         if kind == pr.DEVICE_SMART_ROLLER:

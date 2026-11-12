@@ -136,8 +136,8 @@ class ReefFlareIntensity(ReefEntity, NumberEntity):
     """Intensity of the active program (program mode only).
 
     Rewrites the active program unchanged except for the intensity byte (the device stores
-    it - avoid changing it every few minutes from automations). Changing the intensity of a
-    manual preset is not offered: it was not confirmed on hardware.
+    it - avoid changing it every few minutes from automations). The intensity of a manual
+    preset is set with the action flare_preset_save.
     """
 
     _attr_translation_key = "flare_intensity"
