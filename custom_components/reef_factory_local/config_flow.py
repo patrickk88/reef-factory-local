@@ -89,7 +89,7 @@ class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
             if host == entry.data.get(CONF_HOST):
-                # same address: just reconnect (probing would fail - the device takes one connection)
+                # same address: just reconnect, no probe needed
                 return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
             try:
                 info = await async_probe(async_get_clientsession(self.hass), host)

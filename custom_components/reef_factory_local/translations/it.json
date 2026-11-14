@@ -917,5 +917,15 @@
     "value_unknown": {
       "message": "Il dispositivo non ha ancora comunicato {values} - non è stato inviato nulla. Riprova tra un momento."
     }
+  },
+  "issues": {
+    "device_busy_restarting": {
+      "title": "{name}: server web bloccato – riavvio in corso",
+      "description": "{name} ({host}) risponde alle nuove richieste solo con HTTP 429. Il server web del dispositivo resta così bloccato finché il dispositivo non si riavvia; una connessione aperta può continuare a funzionare, ma Home Assistant non riesce a riconnettersi. Il sostituto del cloud ora non risponde al dispositivo per alcuni minuti: il dispositivo si riavvia da solo. Non serve fare nulla; questo avviso scompare quando accetta di nuovo le richieste."
+    },
+    "device_busy": {
+      "title": "{name}: server web bloccato – togli l'alimentazione",
+      "description": "{name} ({host}) risponde alle nuove richieste solo con HTTP 429. Il server web del dispositivo resta così bloccato finché il dispositivo non si riavvia. Scollega il dispositivo dalla corrente per 10 secondi. Nel frattempo continua a eseguire il suo programma.\n\nSuggerimento: se la connessione cloud del dispositivo passa per il sostituto del cloud di questa integrazione, l'integrazione riavvia da sola un dispositivo bloccato (vedi il README)."
+    }
   }
 }

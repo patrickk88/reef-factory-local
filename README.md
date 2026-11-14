@@ -10,7 +10,7 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
 The devices below already speak a local WebSocket protocol, which this integration uses.
 
-## Supported devices (v1.2)
+## Supported devices (v1.3)
 
 | Device | Read | Control | Tested firmware |
 |---|---|---|---|
@@ -84,8 +84,9 @@ your warranty; check your contract with the manufacturer or dealer if that matte
 
 ## Important
 
-- **One connection per device.** While Home Assistant is connected, the Smart Reef app and other
-  local tools cannot connect to that device locally (the cloud keeps working).
+- **Keep local connections few.** The devices accept more than one local connection at a time, but
+  their web server can get stuck (see *Stuck web server (HTTP 429)*); several app instances or device
+  pages left open at the same time have coincided with that.
 - Setup needs only the IP address; serial number and type are read from the device.
   Give the device a fixed IP in your router.
 
@@ -94,7 +95,7 @@ your warranty; check your contract with the manufacturer or dealer if that matte
 - **Devices always use DHCP.** There is no static IP setting on the devices. Give every device a
   DHCP reservation ("always assign the same IP") in your router, otherwise its address can change.
 - **2.4 GHz only.**
-- **One local connection per device** (see above).
+- **Few local connections at a time** (see above).
 - Devices use the DNS and NTP server they get via DHCP (usually your router). The clock keeps
   running without the cloud; the *Set clock* button is only a fallback.
 
@@ -110,7 +111,7 @@ configuration and calibration.
   the device answers on `10.32.54.1`).
 
 The device's own setup page is at `http://10.32.54.1` in the hotspot and at `http://<device-ip>`
-in your network. Because of the one-connection limit, disable the integration entry while you use it.
+in your network. Close it when you are done - pages left open have coincided with a stuck web server.
 
 ## Cloud and Smart Reef account
 
@@ -142,6 +143,27 @@ Use a password for Smart Reef that you use nowhere else.
 - Calibration (tested 03.11.2026): put the refill hose into a measuring cup, *fill hose* until water comes,
   stop, empty the cup, run the calibration (default 10 s, as on the device page), enter the measured mL.
   Both work while refilling is paused - pause first so the device does not refill into the cup.
+
+## Stuck web server (HTTP 429)
+
+The web server of the Reef Flare, Level keeper and Thermo control (firmware 1.0.0) can get stuck: it then
+answers every new request with HTTP 429 until the device restarts. An open connection may keep working for a
+while, but once it drops, Home Assistant cannot connect again and the device's entities become unavailable.
+The device itself keeps running its program, refill or heating.
+
+The integration checks this every ten minutes and whenever a connection attempt is refused, and then:
+
+- **Device connected through the cloud replacement:** the cloud replacement stops answering that device for
+  about two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on
+  stuck Reef Flare S, Level keeper and Thermo control; a device that is not stuck just waits), and Home
+  Assistant reconnects. A repair message
+  says that this is happening and disappears when the device takes requests again. If the device is still
+  stuck after five minutes, the message asks for a power cycle.
+- **Without the cloud replacement:** a repair message asks you to unplug the device for 10 seconds.
+
+**Recommended for all devices: let their cloud connection run through the integration's cloud replacement**
+(see below), also for the devices with a local port. Then a stuck device is fixed without anyone having to
+pull a plug, and the official app keeps working in passthrough mode.
 
 ## Container warnings, new address, diagnostics
 
@@ -199,6 +221,11 @@ The Smart feeder, the Base pump and the Dosing pump Pro X4 have no local interfa
 server certificate, so Home Assistant can take the cloud's place. Add the integration a second time
 and choose **Cloud replacement** - no IP, no serial number; every device that connects shows up by
 itself with all its entities.
+
+The Level keeper, Thermo control and Reef Flare connect to the cloud the same way. They are read and
+controlled through their local port as before, but when their cloud connection also runs through the cloud
+replacement, the integration can restart them when their web server is stuck (*Stuck web server (HTTP 429)*).
+The DNS entry below covers all devices at once.
 
 Two modes:
 - **Passthrough** (default): everything is forwarded to the real cloud and read along. The official

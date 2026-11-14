@@ -7,6 +7,8 @@ PUMP_UNLOCK_SECONDS = 600  # switch "allow pump actions (10 min)": temporary, no
 MANUFACTURER = "Reef Factory"
 # entities go unavailable when no data arrived for this long
 STALE_SECONDS = 120
+RECOVER_SILENCE_SECONDS = 150  # cloud replacement stays silent this long to make a stuck device restart
+RECOVER_WAIT_SECONDS = 300     # after that much time still stuck: ask for a power cycle
 # upper limit for one manual refill started from Home Assistant
 MAX_MANUAL_REFILL_ML = 1000
 # cloud replacement entry

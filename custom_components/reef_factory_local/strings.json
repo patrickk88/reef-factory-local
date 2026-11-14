@@ -917,5 +917,15 @@
     "value_unknown": {
       "message": "The device has not reported {values} yet - nothing was sent. Try again in a moment."
     }
+  },
+  "issues": {
+    "device_busy_restarting": {
+      "title": "{name}: web server stuck - restarting it",
+      "description": "{name} ({host}) answers new requests only with HTTP 429. The device's web server gets stuck like that until the device restarts; an open connection may keep working, but Home Assistant cannot reconnect. The cloud replacement now stops answering the device for a few minutes - the device then restarts by itself. Nothing to do; this message disappears when it takes requests again."
+    },
+    "device_busy": {
+      "title": "{name}: web server stuck - power cycle it",
+      "description": "{name} ({host}) answers new requests only with HTTP 429. The device's web server gets stuck like that until the device restarts. Unplug the device for 10 seconds. The device keeps running its program in the meantime.\n\nTip: if the device's cloud connection runs through this integration's cloud replacement, the integration restarts a stuck device by itself (see the README)."
+    }
   }
 }

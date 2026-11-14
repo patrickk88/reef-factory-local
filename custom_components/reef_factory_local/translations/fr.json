@@ -917,5 +917,15 @@
     "value_unknown": {
       "message": "L'appareil n'a pas encore communiqué {values} - rien n'a été envoyé. Réessayez dans un instant."
     }
+  },
+  "issues": {
+    "device_busy_restarting": {
+      "title": "{name} : serveur web bloqué – redémarrage en cours",
+      "description": "{name} ({host}) ne répond plus aux nouvelles requêtes que par HTTP 429. Le serveur web de l'appareil reste ainsi bloqué jusqu'à son redémarrage ; une connexion ouverte peut continuer à fonctionner, mais Home Assistant ne peut pas se reconnecter. Le remplaçant du cloud cesse maintenant de répondre à l'appareil pendant quelques minutes – l'appareil redémarre alors de lui-même. Rien à faire ; ce message disparaît dès qu'il accepte de nouveau les requêtes."
+    },
+    "device_busy": {
+      "title": "{name} : serveur web bloqué – coupez l'alimentation",
+      "description": "{name} ({host}) ne répond plus aux nouvelles requêtes que par HTTP 429. Le serveur web de l'appareil reste ainsi bloqué jusqu'à son redémarrage. Débranchez l'appareil pendant 10 secondes. Il continue d'exécuter son programme en attendant.\n\nAstuce : si la connexion cloud de l'appareil passe par le remplaçant du cloud de cette intégration, l'intégration redémarre elle-même un appareil bloqué (voir le README)."
+    }
   }
 }

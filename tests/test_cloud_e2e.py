@@ -212,6 +212,43 @@ async def main():
     await srv.async_stop()
     await ws.close(); await session.close()
     print("ok  idle: silent connection dropped after IDLE_SECONDS")
+
+    # --- round 8: silence() - the cloud replacement pretends to be gone for a while (2026-11-14)
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(23442, 23444))
+    await srv.async_start()
+    assert srv.silence(SERIAL, 5) is False                          # unknown / not connected
+    session = aiohttp.ClientSession()
+    ws = await session.ws_connect("ws://127.0.0.1:23442/hardware", autoping=False)
+    login = pr.build_frame("geConnect", "login", json.dumps({"key": "x", "token": "x", "email": "x", "version": "1.1.6"}).encode(), SERIAL)
+    await ws.send_bytes(login)
+    first = await ws.receive(timeout=2)
+    assert first.type is aiohttp.WSMsgType.BINARY and pr.parse_frame(first.data).topic == "geReport"
+    while True:                                                    # drain time / subscribe / get
+        try:
+            await ws.receive(timeout=1.5)
+        except (asyncio.TimeoutError, TimeoutError):
+            break
+    assert srv.silence(SERIAL, 2) is True and srv.devices[SERIAL].silenced
+    await ws.ping(b"x")
+    await ws.send_bytes(login)
+    try:
+        msg = await ws.receive(timeout=1.5)
+        raise AssertionError(f"answered while silenced: {msg.type}")
+    except (asyncio.TimeoutError, TimeoutError):
+        pass
+    ws2 = await session.ws_connect("ws://127.0.0.1:23442/hardware", autoping=False)  # new connection: dropped after login
+    await ws2.send_bytes(login)
+    msg = await ws2.receive(timeout=2)
+    assert msg.type is not aiohttp.WSMsgType.BINARY, "new connection answered while silenced"
+    assert srv.devices[SERIAL]._ws is not None and not srv.devices[SERIAL]._ws.closed  # old one kept, unanswered
+    await asyncio.sleep(1.0)                                       # silence over
+    assert not srv.devices[SERIAL].silenced
+    await ws.send_bytes(login)
+    back = await ws.receive(timeout=2)
+    assert back.type is aiohttp.WSMsgType.BINARY and pr.parse_frame(back.data).topic == "geReport", back.type
+    await srv.async_stop()
+    await ws.close(); await ws2.close(); await session.close()
+    print("ok  silence: no pong, no answer, new connections reset after login, normal again afterwards")
     print("cloud e2e passed")
 
 def test_lan_addresses():

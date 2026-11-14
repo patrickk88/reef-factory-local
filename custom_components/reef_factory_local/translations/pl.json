@@ -917,5 +917,15 @@
     "value_unknown": {
       "message": "Urządzenie nie zgłosiło jeszcze {values} - nic nie wysłano. Spróbuj ponownie za chwilę."
     }
+  },
+  "issues": {
+    "device_busy_restarting": {
+      "title": "{name}: serwer WWW zawieszony – trwa ponowne uruchamianie",
+      "description": "{name} ({host}) odpowiada na nowe żądania już tylko kodem HTTP 429. Serwer WWW urządzenia pozostaje tak zawieszony aż do ponownego uruchomienia; otwarte połączenie może dalej działać, ale Home Assistant nie może połączyć się ponownie. Zastępca chmury przez kilka minut nie odpowiada teraz urządzeniu – urządzenie samo uruchomi się ponownie. Nic nie trzeba robić; ten komunikat zniknie, gdy znów zacznie przyjmować żądania."
+    },
+    "device_busy": {
+      "title": "{name}: serwer WWW zawieszony – odłącz zasilanie",
+      "description": "{name} ({host}) odpowiada na nowe żądania już tylko kodem HTTP 429. Serwer WWW urządzenia pozostaje tak zawieszony aż do ponownego uruchomienia. Odłącz urządzenie od zasilania na 10 sekund. W tym czasie nadal wykonuje swój program.\n\nWskazówka: jeśli połączenie urządzenia z chmurą przechodzi przez zastępcę chmury tej integracji, integracja sama uruchamia ponownie zawieszone urządzenie (zob. README)."
+    }
   }
 }

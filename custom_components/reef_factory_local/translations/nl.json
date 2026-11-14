@@ -917,5 +917,15 @@
     "value_unknown": {
       "message": "Het apparaat heeft {values} nog niet gemeld - er is niets verzonden. Probeer het zo opnieuw."
     }
+  },
+  "issues": {
+    "device_busy_restarting": {
+      "title": "{name}: webserver hangt – wordt herstart",
+      "description": "{name} ({host}) beantwoordt nieuwe verzoeken alleen nog met HTTP 429. Zo blijft de webserver van het apparaat hangen tot het herstart; een open verbinding kan blijven werken, maar Home Assistant kan niet opnieuw verbinden. De cloudvervanger antwoordt het apparaat nu enkele minuten niet – het apparaat herstart dan vanzelf. Niets te doen; deze melding verdwijnt zodra het weer verzoeken aanneemt."
+    },
+    "device_busy": {
+      "title": "{name}: webserver hangt – haal de stroom eraf",
+      "description": "{name} ({host}) beantwoordt nieuwe verzoeken alleen nog met HTTP 429. Zo blijft de webserver van het apparaat hangen tot het herstart. Haal het apparaat 10 seconden van de stroom. Het programma blijft intussen draaien.\n\nTip: loopt de cloudverbinding van het apparaat via de cloudvervanger van deze integratie, dan herstart de integratie een hangend apparaat zelf (zie de README)."
+    }
   }
 }

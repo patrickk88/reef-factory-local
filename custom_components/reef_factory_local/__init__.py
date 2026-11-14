@@ -76,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> bool
         on_data=coordinator.handle_data,
         on_connection=coordinator.handle_connection,
         on_config=coordinator.handle_config,
+        on_busy=coordinator.handle_busy,
     )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS[pr.device_type(serial)])

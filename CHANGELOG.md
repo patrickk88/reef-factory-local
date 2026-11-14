@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 - unreleased
+- Stuck web server (HTTP 429) on Reef Flare, Level keeper and Thermo control: detected when a connection
+  attempt is refused and by a small check every ten minutes. With the cloud replacement the device is
+  restarted automatically (the cloud replacement stops answering it for 150 s; the devices restart when
+  their cloud is gone), otherwise a repair message asks for a power cycle. README: running the cloud of all
+  devices through the cloud replacement is recommended.
+- Cloud replacement: a device connection that stays silent for 90 s is closed (devices send something at
+  least every ~20 s), instead of waiting up to two hours for the operating system to notice.
+- README: "one connection per device" was too strict - the devices accept several local connections; keep
+  them few.
+
 ## 1.2.3 - 2026-11-14
 - Cloud replacement, debug log: account and Wi-Fi frames (`user/...`, `wifi/...`) are no longer written to the log.
   The Reef Flare, Level keeper and Thermo control send their Smart Reef login as a binary `user/login` frame,

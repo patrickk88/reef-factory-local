@@ -232,7 +232,12 @@ class CloudDevice:
         self._ws: web.WebSocketResponse | None = None
         self._transport = None
         self.peer: str | None = None          # source address of the current connection
+        self.silent_until = 0.0               # cloud replacement does not answer this device until then
         self.listeners: list[Callable[[CloudDevice], None]] = []
+
+    @property
+    def silenced(self) -> bool:
+        return time.monotonic() < self.silent_until
 
     def notify(self) -> None:
         for cb in list(self.listeners):
@@ -524,6 +529,10 @@ class ReefCloudServer:
                     _LOGGER.debug("cloud: %s silent for %s s - dropped", device.serial if device else peer, IDLE_SECONDS)
                     reset_transport(transport)
                     break
+                if device is not None and device.silenced and msg.type in (
+                        aiohttp.WSMsgType.PING, aiohttp.WSMsgType.BINARY, aiohttp.WSMsgType.TEXT):
+                    device.last_seen = time.monotonic()
+                    continue  # pretend to be gone: no pong, nothing forwarded, nothing answered
                 if msg.type is aiohttp.WSMsgType.PING:
                     await ws.pong(msg.data)
                     if device:
@@ -540,6 +549,11 @@ class ReefCloudServer:
                 if device is None:
                     if frame is None or not frame.serial:
                         _LOGGER.debug("cloud: first frame from %s not parseable", peer)
+                        break
+                    if self._silenced(frame.serial):
+                        # still silenced: a new connection is dropped after its login - the sequence that made two
+                        # stuck Reef Flares restart on 2026-11-14 (old connection unanswered, new ones reset)
+                        reset_transport(transport)
                         break
                     if (holder := self._live_elsewhere(frame.serial, peer)) is not None:
                         # a device is whoever sends its serial number - so a connection that is alive is never
@@ -593,6 +607,23 @@ class ReefCloudServer:
             _LOGGER.debug("cloud: %s disconnected", device.serial if device else peer)
         return ws
 
+    def silence(self, serial: str, seconds: float) -> bool:
+        """Make a device believe its cloud is gone: its open connection gets no answer at all (pings
+        included, nothing forwarded) and new connections are reset after their login. Stuck devices (web
+        server answering HTTP 429) restart after about a minute without their cloud - seen 2026-11-14 on two
+        Reef Flare S, Level keeper and Thermo control; healthy devices just wait. A restart is the only cure
+        for the stuck web server. False if the device is not connected to the cloud replacement."""
+        device = self.devices.get(serial)
+        if device is None or not device.connected:
+            return False
+        device.silent_until = time.monotonic() + seconds
+        _LOGGER.warning("Cloud replacement: not answering %s for %d s so that it restarts", serial, seconds)
+        return True
+
+    def _silenced(self, serial: str) -> bool:
+        device = self.devices.get(serial)
+        return device is not None and device.silenced
+
     def _live_elsewhere(self, serial: str, peer: str | None) -> str | None:
         """Source address of the connection that serial is alive on, if that is another address than peer."""
         device = self.devices.get(serial)
@@ -645,6 +676,8 @@ class ReefCloudServer:
                     raw = msg.data if isinstance(msg.data, bytes) else msg.data.encode()
                     if ws.closed:
                         break
+                    if device.silenced:
+                        continue
                     await ws.send_bytes(raw)
                     frame = pr.parse_frame(raw)
                     if frame and _LOGGER.isEnabledFor(logging.DEBUG):
@@ -665,7 +698,8 @@ class ReefCloudServer:
         await asyncio.sleep(1.0)
         while True:
             try:
-                await device.async_refresh()
+                if not device.silenced:
+                    await device.async_refresh()
             except ConnectionError:
                 return
             await asyncio.sleep(LOCAL_POLL_SECONDS)
