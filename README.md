@@ -160,6 +160,10 @@ The integration checks this every ten minutes and whenever a connection attempt 
   requests again. If the device is still stuck after five minutes, the message asks for a power cycle.
 - **Without the cloud replacement:** a repair message asks you to unplug the device for 10 seconds.
 
+The automatic restart can be switched off in the options of the cloud replacement entry (*Restart stuck
+devices automatically*, on by default); then only the repair message is shown. Like every repair message,
+it can be ignored in Home Assistant.
+
 **Recommended for all devices: let their cloud connection run through the integration's cloud replacement**
 (see below), also for the devices with a local port. Then a stuck device is fixed without anyone having to
 pull a plug, and the official app keeps working in passthrough mode.

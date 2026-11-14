@@ -57,12 +57,14 @@
           "cloud_mode": "Modus",
           "upstream_ips": "Adressen van de echte cloud (optioneel, kommagescheiden)",
           "allow_pump_actions": "Pompacties toestaan",
-          "low_container_days": "Waarschuwen als een reservoir nog zoveel dagen meegaat"
+          "low_container_days": "Waarschuwen als een reservoir nog zoveel dagen meegaat",
+          "restart_stuck_devices": "Hangende apparaten automatisch herstarten"
         },
         "data_description": {
           "upstream_ips": "Laat leeg om api.reeffactory.com via een openbare DNS-server op te zoeken.",
           "allow_pump_actions": "Handmatige doseringen en schemawijzigingen van de doseerpomp laten de pomp draaien en veranderen wat er in het aquarium komt. Uitlezen is altijd toegestaan.",
-          "low_container_days": "Geldt voor de kanalen van de Dosing pump Pro X4 en de Smart feeder: de binaire sensor \"reservoir bijna leeg\" gaat aan bij dit aantal dagen of minder."
+          "low_container_days": "Geldt voor de kanalen van de Dosing pump Pro X4 en de Smart feeder: de binaire sensor \"reservoir bijna leeg\" gaat aan bij dit aantal dagen of minder.",
+          "restart_stuck_devices": "Hangt de webserver van een Reef Flare, Level keeper of Thermo control (HTTP 429) en loopt de cloudverbinding ervan hierlangs, dan antwoordt de cloudvervanger het 150 s niet zodat het herstart. Uit: alleen een reparatiemelding vraagt om de stroom eraf te halen."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: webserver hangt – haal de stroom eraf",
-      "description": "{name} ({host}) beantwoordt nieuwe verzoeken alleen nog met HTTP 429. Zo blijft de webserver van het apparaat hangen tot het herstart. Haal het apparaat 10 seconden van de stroom. Het programma blijft intussen draaien.\n\nTip: loopt de cloudverbinding van het apparaat via de cloudvervanger van deze integratie, dan herstart de integratie een hangend apparaat zelf (zie de README)."
+      "description": "{name} ({host}) beantwoordt nieuwe verzoeken alleen nog met HTTP 429. Zo blijft de webserver van het apparaat hangen tot het herstart. Haal het apparaat 10 seconden van de stroom. Het programma blijft intussen draaien.\n\nTip: loopt de cloudverbinding van het apparaat via de cloudvervanger van deze integratie (optie ‘Hangende apparaten automatisch herstarten’ aan), dan herstart de integratie een hangend apparaat zelf (zie de README)."
     }
   }
 }

@@ -57,12 +57,14 @@
           "cloud_mode": "Mode",
           "upstream_ips": "Adresses du vrai cloud (facultatif, séparées par des virgules)",
           "allow_pump_actions": "Autoriser les actions de pompe",
-          "low_container_days": "Avertir quand un réservoir n'a plus que ce nombre de jours d'autonomie"
+          "low_container_days": "Avertir quand un réservoir n'a plus que ce nombre de jours d'autonomie",
+          "restart_stuck_devices": "Redémarrer automatiquement les appareils bloqués"
         },
         "data_description": {
           "upstream_ips": "Laissez vide pour résoudre api.reeffactory.com via un serveur DNS public.",
           "allow_pump_actions": "Les doses manuelles et les modifications du planning de la pompe doseuse font tourner la pompe et changent ce qui est ajouté au bac. La lecture est toujours autorisée.",
-          "low_container_days": "S'applique aux canaux de la Dosing pump Pro X4 et au Smart feeder : le capteur binaire « réservoir bas » s'active quand il reste ce nombre de jours ou moins."
+          "low_container_days": "S'applique aux canaux de la Dosing pump Pro X4 et au Smart feeder : le capteur binaire « réservoir bas » s'active quand il reste ce nombre de jours ou moins.",
+          "restart_stuck_devices": "Si le serveur web d'un Reef Flare, Level keeper ou Thermo control est bloqué (HTTP 429) et que sa connexion cloud passe par ici, le remplaçant du cloud cesse de lui répondre pendant 150 s pour qu'il redémarre. Désactivé : seul un message de réparation demande de couper l'alimentation."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name} : serveur web bloqué – coupez l'alimentation",
-      "description": "{name} ({host}) ne répond plus aux nouvelles requêtes que par HTTP 429. Le serveur web de l'appareil reste ainsi bloqué jusqu'à son redémarrage. Débranchez l'appareil pendant 10 secondes. Il continue d'exécuter son programme en attendant.\n\nAstuce : si la connexion cloud de l'appareil passe par le remplaçant du cloud de cette intégration, l'intégration redémarre elle-même un appareil bloqué (voir le README)."
+      "description": "{name} ({host}) ne répond plus aux nouvelles requêtes que par HTTP 429. Le serveur web de l'appareil reste ainsi bloqué jusqu'à son redémarrage. Débranchez l'appareil pendant 10 secondes. Il continue d'exécuter son programme en attendant.\n\nAstuce : si la connexion cloud de l'appareil passe par le remplaçant du cloud de cette intégration (option « Redémarrer automatiquement les appareils bloqués » activée), l'intégration redémarre elle-même un appareil bloqué (voir le README)."
     }
   }
 }

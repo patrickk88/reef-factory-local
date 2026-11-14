@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import protocol as pr
 from .client import ReefClient
 from .cloud import CloudDevice
-from .const import CONF_CLOUD, CONF_SERIAL, DOMAIN, RECOVER_SILENCE_SECONDS, RECOVER_WAIT_SECONDS, STALE_SECONDS
+from .const import CONF_AUTO_RESTART, CONF_CLOUD, CONF_SERIAL, DOMAIN, RECOVER_SILENCE_SECONDS, RECOVER_WAIT_SECONDS, STALE_SECONDS
 
 PRESET_STORE_VERSION = 1
 
@@ -58,9 +58,10 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
         return f"busy_{self.serial}"
 
     def _cloud_server(self):
+        """The running cloud replacement, if its option *Restart stuck devices automatically* is on."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data.get(CONF_CLOUD) and entry.state is ConfigEntryState.LOADED:
-                return entry.runtime_data.server
+                return entry.runtime_data.server if entry.options.get(CONF_AUTO_RESTART, True) else None
         return None
 
     def _issue(self, key: str) -> None:

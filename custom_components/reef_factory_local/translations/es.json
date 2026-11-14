@@ -57,12 +57,14 @@
           "cloud_mode": "Modo",
           "upstream_ips": "Direcciones de la nube real (opcional, separadas por comas)",
           "allow_pump_actions": "Permitir acciones de bomba",
-          "low_container_days": "Avisar cuando a un recipiente le queden estos días"
+          "low_container_days": "Avisar cuando a un recipiente le queden estos días",
+          "restart_stuck_devices": "Reiniciar automáticamente los dispositivos bloqueados"
         },
         "data_description": {
           "upstream_ips": "Déjalo vacío para resolver api.reeffactory.com mediante un servidor DNS público.",
           "allow_pump_actions": "Las dosis manuales y los cambios de horario de la bomba dosificadora ponen en marcha la bomba y cambian lo que entra en el acuario. La lectura siempre está permitida.",
-          "low_container_days": "Se aplica a los canales de la Dosing pump Pro X4 y al Smart feeder: el sensor binario \"recipiente bajo\" se activa con este número de días o menos."
+          "low_container_days": "Se aplica a los canales de la Dosing pump Pro X4 y al Smart feeder: el sensor binario \"recipiente bajo\" se activa con este número de días o menos.",
+          "restart_stuck_devices": "Si el servidor web de un Reef Flare, Level keeper o Thermo control se bloquea (HTTP 429) y su conexión a la nube pasa por aquí, el sustituto de la nube deja de responderle durante 150 s para que se reinicie. Desactivado: solo un aviso de reparación pide desconectarlo."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: servidor web bloqueado – desconéctalo",
-      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429. El servidor web del dispositivo queda así bloqueado hasta que se reinicia. Desconecta el dispositivo de la corriente durante 10 segundos. Mientras tanto sigue ejecutando su programa.\n\nConsejo: si la conexión a la nube del dispositivo pasa por el sustituto de la nube de esta integración, la integración reinicia sola un dispositivo bloqueado (ver el README)."
+      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429. El servidor web del dispositivo queda así bloqueado hasta que se reinicia. Desconecta el dispositivo de la corriente durante 10 segundos. Mientras tanto sigue ejecutando su programa.\n\nConsejo: si la conexión a la nube del dispositivo pasa por el sustituto de la nube de esta integración (opción «Reiniciar automáticamente los dispositivos bloqueados» activada), la integración reinicia sola un dispositivo bloqueado (ver el README)."
     }
   }
 }

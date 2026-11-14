@@ -19,4 +19,6 @@ CLOUD_UNIQUE_ID = "cloud_replacement"
 SIGNAL_NEW_CLOUD_DEVICE = "reef_factory_local_new_cloud_device"
 # "container low" warning (X4 channels, Smart feeder): days left at or below this (cloud entry option)
 CONF_LOW_DAYS = "low_container_days"
+# cloud entry option: restart a device whose web server is stuck (HTTP 429) by silencing its cloud; default on
+CONF_AUTO_RESTART = "restart_stuck_devices"
 DEFAULT_LOW_DAYS = 14

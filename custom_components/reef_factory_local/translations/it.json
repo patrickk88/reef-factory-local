@@ -57,12 +57,14 @@
           "cloud_mode": "Modalità",
           "upstream_ips": "Indirizzi del cloud reale (opzionale, separati da virgola)",
           "allow_pump_actions": "Consenti azioni pompa",
-          "low_container_days": "Avvisa quando a un contenitore restano questi giorni di autonomia"
+          "low_container_days": "Avvisa quando a un contenitore restano questi giorni di autonomia",
+          "restart_stuck_devices": "Riavvia automaticamente i dispositivi bloccati"
         },
         "data_description": {
           "upstream_ips": "Lascia vuoto per risolvere api.reeffactory.com tramite un server DNS pubblico.",
           "allow_pump_actions": "Le dosi manuali e le modifiche alla programmazione della pompa dosometrica azionano la pompa e cambiano ciò che finisce in vasca. La lettura è sempre consentita.",
-          "low_container_days": "Vale per i canali della Dosing pump Pro X4 e per lo Smart feeder: il sensore binario \"contenitore quasi vuoto\" si attiva quando restano questi giorni o meno."
+          "low_container_days": "Vale per i canali della Dosing pump Pro X4 e per lo Smart feeder: il sensore binario \"contenitore quasi vuoto\" si attiva quando restano questi giorni o meno.",
+          "restart_stuck_devices": "Se il server web di un Reef Flare, Level keeper o Thermo control è bloccato (HTTP 429) e la sua connessione cloud passa da qui, il sostituto del cloud non gli risponde per 150 s così che si riavvii. Disattivato: solo un avviso di riparazione chiede di togliere l'alimentazione."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: server web bloccato – togli l'alimentazione",
-      "description": "{name} ({host}) risponde alle nuove richieste solo con HTTP 429. Il server web del dispositivo resta così bloccato finché il dispositivo non si riavvia. Scollega il dispositivo dalla corrente per 10 secondi. Nel frattempo continua a eseguire il suo programma.\n\nSuggerimento: se la connessione cloud del dispositivo passa per il sostituto del cloud di questa integrazione, l'integrazione riavvia da sola un dispositivo bloccato (vedi il README)."
+      "description": "{name} ({host}) risponde alle nuove richieste solo con HTTP 429. Il server web del dispositivo resta così bloccato finché il dispositivo non si riavvia. Scollega il dispositivo dalla corrente per 10 secondi. Nel frattempo continua a eseguire il suo programma.\n\nSuggerimento: se la connessione cloud del dispositivo passa per il sostituto del cloud di questa integrazione (opzione «Riavvia automaticamente i dispositivi bloccati» attiva), l'integrazione riavvia da sola un dispositivo bloccato (vedi il README)."
     }
   }
 }

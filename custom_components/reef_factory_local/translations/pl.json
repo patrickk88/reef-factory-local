@@ -57,12 +57,14 @@
           "cloud_mode": "Tryb",
           "upstream_ips": "Adresy prawdziwej chmury (opcjonalnie, oddzielone przecinkami)",
           "allow_pump_actions": "Zezwalaj na akcje pompy",
-          "low_container_days": "Ostrzegaj, gdy pojemnik wystarczy już tylko na tyle dni"
+          "low_container_days": "Ostrzegaj, gdy pojemnik wystarczy już tylko na tyle dni",
+          "restart_stuck_devices": "Automatycznie uruchamiaj ponownie zawieszone urządzenia"
         },
         "data_description": {
           "upstream_ips": "Pozostaw puste, aby nazwa api.reeffactory.com była rozwiązywana przez publiczny serwer DNS.",
           "allow_pump_actions": "Ręczne dawki i zmiany harmonogramu pompy dozującej uruchamiają pompę i zmieniają to, co trafia do akwarium. Odczyt jest zawsze dozwolony.",
-          "low_container_days": "Dotyczy kanałów pompy Dosing pump Pro X4 i karmnika Smart feeder: czujnik binarny „pojemnik prawie pusty” włącza się, gdy pozostanie tyle dni lub mniej."
+          "low_container_days": "Dotyczy kanałów pompy Dosing pump Pro X4 i karmnika Smart feeder: czujnik binarny „pojemnik prawie pusty” włącza się, gdy pozostanie tyle dni lub mniej.",
+          "restart_stuck_devices": "Gdy serwer WWW Reef Flare, Level keepera lub Thermo control jest zawieszony (HTTP 429), a jego połączenie z chmurą przechodzi tędy, zastępca chmury przez 150 s mu nie odpowiada, aby urządzenie uruchomiło się ponownie. Wyłączone: tylko komunikat naprawy prosi o odłączenie zasilania."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: serwer WWW zawieszony – odłącz zasilanie",
-      "description": "{name} ({host}) odpowiada na nowe żądania już tylko kodem HTTP 429. Serwer WWW urządzenia pozostaje tak zawieszony aż do ponownego uruchomienia. Odłącz urządzenie od zasilania na 10 sekund. W tym czasie nadal wykonuje swój program.\n\nWskazówka: jeśli połączenie urządzenia z chmurą przechodzi przez zastępcę chmury tej integracji, integracja sama uruchamia ponownie zawieszone urządzenie (zob. README)."
+      "description": "{name} ({host}) odpowiada na nowe żądania już tylko kodem HTTP 429. Serwer WWW urządzenia pozostaje tak zawieszony aż do ponownego uruchomienia. Odłącz urządzenie od zasilania na 10 sekund. W tym czasie nadal wykonuje swój program.\n\nWskazówka: jeśli połączenie urządzenia z chmurą przechodzi przez zastępcę chmury tej integracji (opcja „Automatycznie uruchamiaj ponownie zawieszone urządzenia” włączona), integracja sama uruchamia ponownie zawieszone urządzenie (zob. README)."
     }
   }
 }

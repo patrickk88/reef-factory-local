@@ -4,8 +4,9 @@
 - Stuck web server (HTTP 429) on Reef Flare, Level keeper and Thermo control: detected when a connection
   attempt is refused and by a small check every ten minutes. With the cloud replacement the device is
   restarted automatically (the cloud replacement stops answering it for 150 s; the devices restart when
-  their cloud is gone), otherwise a repair message asks for a power cycle. README: running the cloud of all
-  devices through the cloud replacement is recommended.
+  their cloud is gone), otherwise a repair message asks for a power cycle. The automatic restart can be
+  switched off (cloud replacement option *Restart stuck devices automatically*). README: running the cloud
+  of all devices through the cloud replacement is recommended.
 - Cloud replacement: a device connection that stays silent for 90 s is closed (devices send something at
   least every ~20 s), instead of waiting up to two hours for the operating system to notice.
 - README: "one connection per device" was too strict - the devices accept several local connections; keep

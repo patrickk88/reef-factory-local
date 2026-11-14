@@ -57,12 +57,14 @@
           "cloud_mode": "Mode",
           "upstream_ips": "Addresses of the real cloud (optional, comma separated)",
           "allow_pump_actions": "Allow pump actions",
-          "low_container_days": "Warn when a container has this many days left"
+          "low_container_days": "Warn when a container has this many days left",
+          "restart_stuck_devices": "Restart stuck devices automatically"
         },
         "data_description": {
           "upstream_ips": "Leave empty to resolve api.reeffactory.com through a public DNS server.",
           "allow_pump_actions": "Manual doses and schedule changes of the Dosing pump run the pump and change what goes into the tank. Reading is always allowed.",
-          "low_container_days": "Applies to the Dosing pump Pro X4 channels and the Smart feeder: the binary sensor \"container low\" turns on at or below this number of days."
+          "low_container_days": "Applies to the Dosing pump Pro X4 channels and the Smart feeder: the binary sensor \"container low\" turns on at or below this number of days.",
+          "restart_stuck_devices": "When the web server of a Reef Flare, Level keeper or Thermo control is stuck (HTTP 429) and the device's cloud connection runs through here, the cloud replacement stops answering it for 150 s so that it restarts. Off: only a repair message asks for a power cycle."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: web server stuck - power cycle it",
-      "description": "{name} ({host}) answers new requests only with HTTP 429. The device's web server gets stuck like that until the device restarts. Unplug the device for 10 seconds. The device keeps running its program in the meantime.\n\nTip: if the device's cloud connection runs through this integration's cloud replacement, the integration restarts a stuck device by itself (see the README)."
+      "description": "{name} ({host}) answers new requests only with HTTP 429. The device's web server gets stuck like that until the device restarts. Unplug the device for 10 seconds. The device keeps running its program in the meantime.\n\nTip: if the device's cloud connection runs through this integration's cloud replacement (option *Restart stuck devices automatically* on), the integration restarts a stuck device by itself (see the README)."
     }
   }
 }

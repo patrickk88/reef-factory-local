@@ -16,7 +16,7 @@ from . import protocol as pr
 from .client import async_probe
 from .cloud import MODE_LOCAL, MODE_PASSTHROUGH
 from .const import (
-    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_CLOUD, CONF_CLOUD_MODE, CONF_DEVICE_TYPE, CONF_LOW_DAYS, CONF_SERIAL,
+    CLOUD_UNIQUE_ID, CONF_ALLOW_PUMP_ACTIONS, CONF_AUTO_RESTART, CONF_CLOUD, CONF_CLOUD_MODE, CONF_DEVICE_TYPE, CONF_LOW_DAYS, CONF_SERIAL,
     CONF_UPSTREAM_IPS,
     DEFAULT_LOW_DAYS, DOMAIN,
 )
@@ -136,5 +136,6 @@ class ReefOptionsFlow(OptionsFlow):
                 vol.Required(CONF_LOW_DAYS, default=opts.get(CONF_LOW_DAYS, DEFAULT_LOW_DAYS)): NumberSelector(
                     NumberSelectorConfig(min=1, max=90, step=1, mode=NumberSelectorMode.BOX, unit_of_measurement="d")
                 ),
+                vol.Required(CONF_AUTO_RESTART, default=opts.get(CONF_AUTO_RESTART, True)): bool,
             }),
         )

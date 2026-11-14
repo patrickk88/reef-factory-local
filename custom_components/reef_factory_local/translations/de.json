@@ -57,12 +57,14 @@
           "cloud_mode": "Betriebsart",
           "upstream_ips": "Adressen der echten Cloud (optional, kommagetrennt)",
           "allow_pump_actions": "Pumpenaktionen erlauben",
-          "low_container_days": "Warnen, wenn ein Behälter nur noch so viele Tage reicht"
+          "low_container_days": "Warnen, wenn ein Behälter nur noch so viele Tage reicht",
+          "restart_stuck_devices": "Hängende Geräte automatisch neu starten"
         },
         "data_description": {
           "upstream_ips": "Leer lassen, dann wird api.reeffactory.com über einen öffentlichen DNS-Server aufgelöst.",
           "allow_pump_actions": "Manuelle Dosen und Zeitplanänderungen der Dosierpumpe lassen die Pumpe laufen und ändern, was ins Becken kommt. Lesen geht immer.",
-          "low_container_days": "Gilt für die Kanäle der Dosing pump Pro X4 und den Smart feeder: Der Binärsensor „Behälter knapp“ geht bei dieser Zahl von Tagen oder weniger an."
+          "low_container_days": "Gilt für die Kanäle der Dosing pump Pro X4 und den Smart feeder: Der Binärsensor „Behälter knapp“ geht bei dieser Zahl von Tagen oder weniger an.",
+          "restart_stuck_devices": "Hängt der Webserver einer Reef Flare, eines Level keepers oder Thermo control (HTTP 429) und läuft seine Cloud-Verbindung hierüber, antwortet der Cloud-Ersatz ihm 150 s lang nicht, damit es neu startet. Aus: nur eine Reparatur-Meldung bittet ums Stromlosmachen."
         }
       }
     }
@@ -925,7 +927,7 @@
     },
     "device_busy": {
       "title": "{name}: Webserver hängt – kurz stromlos machen",
-      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429. So hängt der Webserver des Geräts, bis es neu startet. Das Gerät 10 Sekunden vom Strom trennen. Sein Programm läuft bis dahin weiter.\n\nTipp: Läuft die Cloud-Verbindung des Geräts über den Cloud-Ersatz dieser Integration, startet die Integration ein hängendes Gerät selbst neu (siehe README)."
+      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429. So hängt der Webserver des Geräts, bis es neu startet. Das Gerät 10 Sekunden vom Strom trennen. Sein Programm läuft bis dahin weiter.\n\nTipp: Läuft die Cloud-Verbindung des Geräts über den Cloud-Ersatz dieser Integration (Option „Hängende Geräte automatisch neu starten“ an), startet die Integration ein hängendes Gerät selbst neu (siehe README)."
     }
   }
 }
