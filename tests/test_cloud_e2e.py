@@ -193,6 +193,25 @@ async def main():
     for session in opened:
         await session.close()
     print("ok  takeover: live session kept against another address, same address and silent session accepted")
+
+    # --- round 7: a connection that goes silent is dropped after IDLE_SECONDS (2026-11-14)
+    idle_before = cloud.IDLE_SECONDS
+    cloud.IDLE_SECONDS = 1.5
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(22442, 22444))
+    await srv.async_start()
+    session = aiohttp.ClientSession()
+    ws = await session.ws_connect("ws://127.0.0.1:22442/hardware", autoping=False)
+    await ws.send_bytes(pr.build_frame("geConnect", "login", json.dumps(
+        {"key": "x", "token": "x", "email": "x", "version": "1.1.6"}).encode(), SERIAL))
+    await asyncio.sleep(0.5)
+    dev = srv.devices[SERIAL]
+    assert dev.connected and len(srv._transports) == 1
+    await asyncio.sleep(2.5)                                       # says nothing any more
+    assert not dev.connected and not srv._transports, (dev.connected, len(srv._transports))
+    cloud.IDLE_SECONDS = idle_before
+    await srv.async_stop()
+    await ws.close(); await session.close()
+    print("ok  idle: silent connection dropped after IDLE_SECONDS")
     print("cloud e2e passed")
 
 def test_lan_addresses():

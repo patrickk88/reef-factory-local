@@ -40,6 +40,7 @@ PUBLIC_DNS = ("1.1.1.1", "9.9.9.9", "8.8.8.8")
 RESOLVE_TTL = 600
 UPSTREAM_TIMEOUT = 8
 STOP_TIMEOUT = 10  # per listener when stopping; open connections are reset first
+IDLE_SECONDS = 90  # a device connection without any frame or ping for this long is dead and gets dropped
 SESSION_LIVE_SECONDS = 60  # a device connection that sent anything within this time is alive (they ping every 20 s)
 UPSTREAM_RETRY_SECONDS = 120  # served locally because the real cloud was away: look again this often
 LOCAL_POLL_SECONDS = 300
@@ -514,7 +515,15 @@ class ReefCloudServer:
         local_task: asyncio.Task | None = None
         retry_task: asyncio.Task | None = None
         try:
-            async for msg in ws:
+            while True:
+                try:
+                    msg = await ws.receive(timeout=IDLE_SECONDS)
+                except (asyncio.TimeoutError, TimeoutError):
+                    # nothing at all for IDLE_SECONDS (devices send something at least every ~20 s): the
+                    # connection is dead - e.g. the device lost Wi-Fi without closing it. Drop it with a reset.
+                    _LOGGER.debug("cloud: %s silent for %s s - dropped", device.serial if device else peer, IDLE_SECONDS)
+                    reset_transport(transport)
+                    break
                 if msg.type is aiohttp.WSMsgType.PING:
                     await ws.pong(msg.data)
                     if device:
