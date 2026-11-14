@@ -173,6 +173,9 @@ def _redact(obj):
     return obj
 
 
+SECRET_TOPICS = {"user", "wifi"}  # user/login|register|forgot, wifi/... carry account or Wi-Fi secrets
+
+
 def frame_dump(frame: pr.Frame, limit: int = 4000) -> str:
     """Payload of a cloud frame for the debug log - JSON with login secrets masked, else hex.
 
@@ -181,6 +184,9 @@ def frame_dump(frame: pr.Frame, limit: int = 4000) -> str:
     does not decode yet; paste the lines into an issue.
     """
     blob = frame.blob.rstrip(b"\x00")  # the devices terminate JSON with NUL
+    if frame.topic in SECRET_TOPICS:
+        # binary account / Wi-Fi frames (ESP8266 devices send user/login with e-mail and password) are never logged
+        return "<%d B not logged>" % len(blob)
     try:
         obj = json.loads(blob.decode("utf-8"))
     except (UnicodeDecodeError, ValueError):

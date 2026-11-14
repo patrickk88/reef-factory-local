@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3 - unreleased
+- Cloud replacement, debug log: account and Wi-Fi frames (`user/...`, `wifi/...`) are no longer written to the log.
+  The Reef Flare, Level keeper and Thermo control send their Smart Reef login as a binary `user/login` frame,
+  which the debug log printed as hex - e-mail and password were readable in it. If you enabled debug logging
+  for this integration with an earlier version, delete those lines from your log and do not post them.
+
 ## 1.2.2 - 2026-11-12
 Changes asked for in the HACS review.
 - Writes that carry several values in one frame are refused while one of those values has not been reported
