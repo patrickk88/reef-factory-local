@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1 - 2026-11-15
+No change in behaviour.
+- Home Assistant 2025.3 or newer is needed. `hacs.json` said 2025.1.0, but the integration does not load on
+  2025.1 and 2025.2.
+- README checked against the code: installation moved up, cloud-only devices named in the introduction,
+  security notes say which devices send what (Level keeper, Thermo control and Reef Flare send e-mail and
+  password in plain text), a broken list in *Pump actions are off by default*, Reef Flare row completed.
+- CONTRIBUTING: debug logs only from 1.2.3 on; the opt-in rule covers refill and dosing pumps.
+
 ## 1.3.0 - 2026-11-15
 - Stuck web server (HTTP 429) on Reef Flare, Level keeper and Thermo control: detected when a connection
   attempt is refused and by a small check every ten minutes. With the cloud replacement the device is

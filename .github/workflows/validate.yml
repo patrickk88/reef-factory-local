@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: home-assistant/actions/hassfest@master
   hacs:
-    # HACS kann nur oeffentliche Repos pruefen - solange privat, ueberspringen
+    # HACS can only check public repositories
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
     steps:
@@ -30,3 +30,4 @@ jobs:
       - run: pip install aiohttp cryptography
       - run: python tests/test_protocol.py
       - run: python tests/test_cloud_e2e.py
+      - run: python tests/test_client_busy.py

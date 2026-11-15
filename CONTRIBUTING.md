@@ -12,9 +12,11 @@ The integration logs frames of unknown devices at debug level. To help:
 2. Say what the device is (name, firmware from the app) and what you did meanwhile (changed a
    setting, pressed a button) with the time.
 
-Tokens and e-mail addresses are never written to the log; the serial number is.
+Use version 1.2.3 or newer for this: account and Wi-Fi data are never written to the log since then
+(older versions wrote the login of Level keeper, Thermo control and Reef Flare). The serial number is logged.
 
 ## Rules
 
 - Only original code. No firmware, app files, certificates or keys from the manufacturer.
-- Anything that moves water or food (pumps, feeder) must stay opt-in or need a confirmation.
+- Anything that adds water or additives to the tank (refill pump, dosing pump) must stay opt-in.
+  A single feeding, like the button on the feeder itself, is available without it.

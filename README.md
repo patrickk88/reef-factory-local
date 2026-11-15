@@ -4,11 +4,13 @@ Local control of Reef Factory aquarium devices in Home Assistant - no cloud.
 
 > **Unofficial community project. Not affiliated with, endorsed by or supported by Reef Factory.**
 > "Reef Factory", "Smart Reef", "Level keeper", "Thermo control", "Reef Flare", "Smart feeder",
-> "Base pump" and "Dosing pump Pro X4" are the manufacturer's product names and are used only to
+> "Base pump", "Dosing pump Pro X4" and "Smart Roller" are the manufacturer's product names and are used only to
 > describe which devices this integration works with.
 
 Reef Factory went insolvent in 2025; the cloud keeps running for now but may disappear.
-The devices below already speak a local WebSocket protocol, which this integration uses.
+Level keeper, Thermo control, Reef Flare and Smart Roller speak a local WebSocket protocol, which this
+integration uses. Smart feeder, Base pump and Dosing pump Pro X4 only talk to the cloud - for them Home
+Assistant takes the cloud's place (*Cloud replacement*).
 
 ## Supported devices (v1.3)
 
@@ -16,11 +18,32 @@ The devices below already speak a local WebSocket protocol, which this integrati
 |---|---|---|---|
 | Level keeper (`RFLK…`) | refilled today, state (ok / refilling / water high / water low / paused / calibrating / filling hose / manual refill), current refill time, calibration date, calibration due, cloud connected | refill cycle, max refill time (safety limit), pause refill, display light, set clock; **opt-in pump actions:** manual refill (max 1000 mL), calibration (as actions or guided with buttons), fill hose, plus stop | 1.0.0 |
 | Thermo control (`RFTC…`) | temperature, heating/cooling, all four thresholds, beeper, display light, cloud connected | thresholds (alarm below / target range low / target range high / alarm above, always sent together, order checked), beeper, display light (°C units only so far) | 1.0.0 |
-| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, current output (computed), acclimation, manual presets, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, create or delete a program, timed manual mode (also with a stored manual preset), save a manual preset, acclimation start / stop (one or more lights) | 1.0.0 |
+| Reef Flare S/M/L (`RFRFS…`, `RFRFM…`, `RFRFL…`) | housing temperature, mode, active program with its light schedule (points per channel), list of programs, intensity, current output (computed), acclimation, manual presets, end of the timed manual mode, cloud connected | mode (program / manual / off), active program, intensity (program mode); actions: write the active program, create or delete a program, timed manual mode (also with a stored manual preset), save or delete a manual preset, import / export of the app's files, acclimation start / stop (one or more lights) | 1.0.0 |
 | Smart feeder (`RFSF…`) - via the **cloud replacement** | next / last feeding, days until empty, fed today, schedule, container empty, real-cloud status, Wi-Fi signal | feed now, feeding mode (schedule / interval), schedule (action), interval, container values, dose per rotation, LED backlight, feeding button, refill reminder | 1.1.6 |
 | Base pump (`RFBP…`) - via the **cloud replacement** | mode, feed pause remaining, alert, speed, feed-mode duration and speed, display, backlight, real-cloud status, Wi-Fi signal | feed pause (switch), speed, feed-mode duration and speed, display, backlight (settings always sent together, like the app does) | 1.4.1 |
 | Dosing pump Pro X4 (`RFDQ…`) - via the **cloud replacement** | per channel: next dose, last dose, dosed today, container, days until empty, calibration date; schedule, history and calibration details as attributes; real-cloud status, Wi-Fi signal | **opt-in pump actions** (cloud entry options): dose now, replace a channel's schedule (actions); rename a channel (action, not a pump action) | 1.2.3 |
 | Smart Roller (`RFSR…`) | state (automatic advance on / off, jammed), fleece left (m and %), used today, daily average, roll length, advance length, start delay, cloud connected | automatic advance (switch), advance length, start delay, advance now, clear a jam, new roll, used roll by its outer diameter | 1.1.1 - not on the author's bench, tested by Steven Downer on his roller (`RFSRL…`); layout and commands from his [ha-reef-factory-smartroller](https://github.com/downerhouse/ha-reef-factory-smartroller) |
+
+## Installation
+
+[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickk88&repository=reef-factory-local&category=integration)
+
+The button adds this repository to HACS in your own Home Assistant (as a custom repository,
+category *Integration*); then download *Reef Factory Local* in HACS and restart Home Assistant.
+Without the button: HACS -> menu -> *Custom repositories* -> `https://github.com/patrickk88/reef-factory-local`,
+type *Integration*. Or copy `custom_components/reef_factory_local` into your Home Assistant
+`config/custom_components/` and restart.
+Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*, or:
+
+[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=reef_factory_local)
+
+Add the integration once per device with a local port (Level keeper, Thermo control, Reef Flare, Smart Roller)
+by its IP address. Several devices of the same kind are fine - for example two Level keepers on two tanks or
+two Reef Flares over one tank; each one gets its own entry and its own entities. The devices without a local
+port (Smart feeder, Base pump, Dosing pump Pro X4) all come in through one *Cloud replacement* entry (see
+*Cloud replacement* below).
+
+Needs Home Assistant 2025.3 or newer.
 
 ## Only confirmed writes are sent
 
@@ -118,8 +141,9 @@ The integration needs neither the cloud nor an account. After a local Wi-Fi setu
 device offline until the device is logged into your account again: disable the integration entry,
 open `http://<device-ip>`, log in on the device page, enable the entry again.
 
-**Security note:** these devices talk to the cloud unencrypted (WebSocket on port 442; the
-cloud-only pumps use TLS on port 444), and the device sends the Smart Reef login as plain text.
+**Security note:** Level keeper, Thermo control and Reef Flare talk to the cloud unencrypted (WebSocket
+on port 442) and send the Smart Reef login - e-mail and password - as plain text. Smart feeder, Base pump
+and Dosing pump Pro X4 use TLS on port 444, but do not check the server's certificate.
 Use a password for Smart Reef that you use nowhere else.
 
 ## Known quirks
@@ -186,10 +210,9 @@ pull a plug, and the official app keeps working in passthrough mode.
 
 Level keeper: manual refill, calibration run and filling the hose run the refill pump. Dosing pump Pro X4:
 dosing now and replacing a channel's schedule put additives into the tank. These are only available as
-actions (plus the *Start run* button of the guided calibration) and only after enabling *Allow pump actions*
-- for each Level keeper in its
-own entry's options, for the Dosing pump in the options of the *cloud replacement* entry
-(*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
+actions (plus the *Start run* button of the guided calibration) and only after enabling *Allow pump
+actions*: for each Level keeper in its own entry's options, for the Dosing pump in the options of the
+*cloud replacement* entry (*Settings -> Devices & services -> Reef Factory Local -> Configure*). Stopping the Level keeper always
 works (button *Stop pump action* or the stop actions). Factory reset is deliberately not offered.
 
 Instead of leaving the option on, every Level keeper and the Dosing pump Pro X4 have a switch *Allow pump
@@ -199,8 +222,7 @@ off again. Nothing is sent to the device by the switch itself.
 
 ### Guided calibration (Level keeper)
 
-The calibration is also available step by step on the Level keeper's device page, under *Configuration*:
-
+The calibration is also available step by step on the Level keeper's device page, under *Configuration*.
 The five entities carry their step number, so the device page lists them in the order they are used:
 
 1. *Calibration 1: Run time* - 10 s is fine.
@@ -218,7 +240,7 @@ Run time, amount and reminder are only kept in Home Assistant and are sent with 
 frames as the actions `calibration_start` and `calibration_value`. The measured amount is emptied by a new run
 and after saving, and *Finish* refuses to send while it is empty or the run is still going.
 
-## Cloud replacement (devices without a local port)
+## Cloud replacement
 
 The Smart feeder, the Base pump and the Dosing pump Pro X4 have no local interface at all: they only talk to
 `api.reeffactory.com` (TLS on port 444, ESP8266 devices plain text on 442). They do **not** check the
@@ -264,9 +286,11 @@ cloud), so the app works at home as well; from outside your network nothing chan
 
 ### Security note
 
-The devices send their account token and e-mail to whatever answers as `api.reeffactory.com` - the
-cloud replacement never logs or stores them, but anyone who controls your DNS could read them. That
-is a property of the devices, not of this integration.
+The devices send their account data to whatever answers as `api.reeffactory.com`: Smart feeder, Base pump
+and Dosing pump Pro X4 a token and the e-mail, Level keeper, Thermo control and Reef Flare the e-mail and
+the password in plain text. The cloud replacement never stores them and never logs them (the debug log
+included, since 1.2.3), but anyone who controls your DNS could read them. That is a property of the
+devices, not of this integration.
 
 The other direction: the cloud replacement cannot check who connects. A device is whoever opens port 442
 or 444 and sends a serial number - the integration does not know the devices' keys, so it cannot verify
@@ -395,24 +419,6 @@ data:
   device_id: [<Reef Flare 1>, <Reef Flare 2>]
   file: '{"n":"Grün","s":true,"l":[0.1,0.1,0.1,0.54,1,0.1,0.1],"intensity":63}'
 ```
-
-## Installation
-
-[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickk88&repository=reef-factory-local&category=integration)
-
-The button adds this repository to HACS in your own Home Assistant (as a custom repository,
-category *Integration*); then download *Reef Factory Local* in HACS and restart Home Assistant.
-Without the button: HACS -> menu -> *Custom repositories* -> `https://github.com/patrickk88/reef-factory-local`,
-type *Integration*. Or copy `custom_components/reef_factory_local` into your Home Assistant
-`config/custom_components/` and restart.
-Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*, or:
-
-[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=reef_factory_local)
-
-Add the integration once per device with a local port (Level keeper, Thermo control, Reef Flare, Smart Roller)
-by its IP address. Several devices of the same kind are fine - for example two Level keepers on two tanks or
-two Reef Flares over one tank; each one gets its own entry and its own entities. The devices without a local
-port (Smart feeder, Base pump, Dosing pump Pro X4) all come in through one *Cloud replacement* entry (below).
 
 ## Protocol notes
 
