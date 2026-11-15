@@ -11,7 +11,7 @@
       "user": {
         "title": "Que souhaitez-vous ajouter ?",
         "menu_options": {
-          "device": "Un appareil par adresse IP (Level keeper, Thermo control, Reef Flare)",
+          "device": "Un appareil par adresse IP (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Remplacement du cloud pour les appareils uniquement cloud (Smart feeder, pompes)"
         },
         "description": "Projet communautaire non officiel, sans lien avec Reef Factory. Utilisation à vos risques et périls : ces appareils pilotent des pompes, des chauffages, des éclairages et des pompes doseuses - un mauvais réglage peut nuire à votre bac. Les actions de pompe restent désactivées tant que vous ne les autorisez pas dans les options."

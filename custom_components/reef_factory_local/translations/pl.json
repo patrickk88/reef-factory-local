@@ -11,7 +11,7 @@
       "user": {
         "title": "Co chcesz dodać?",
         "menu_options": {
-          "device": "Urządzenie po adresie IP (Level keeper, Thermo control, Reef Flare)",
+          "device": "Urządzenie po adresie IP (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Zamiennik chmury dla urządzeń działających tylko przez chmurę (Smart feeder, pompy)"
         },
         "description": "Nieoficjalny projekt społeczności, niezwiązany z Reef Factory. Używasz na własne ryzyko: te urządzenia sterują pompami, grzałkami, oświetleniem i pompami dozującymi - błędne ustawienie może zaszkodzić akwarium. Akcje pompy pozostają wyłączone, dopóki nie włączysz ich w opcjach."

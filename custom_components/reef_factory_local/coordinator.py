@@ -57,6 +57,13 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
     def _issue_id(self) -> str:
         return f"busy_{self.serial}"
 
+    @callback
+    def clear_busy_issue(self) -> None:
+        ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
+        if self._busy_timer:
+            self._busy_timer()
+            self._busy_timer = None
+
     def _cloud_server(self):
         """The running cloud replacement, if its option *Restart stuck devices automatically* is on."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -75,10 +82,7 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
     def handle_busy(self, busy: bool) -> None:
         if not busy:
             _LOGGER.info("%s takes requests again", self.device_name)
-            ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
-            if self._busy_timer:
-                self._busy_timer()
-                self._busy_timer = None
+            self.clear_busy_issue()
             self.async_update_listeners()
             return
         server = self._cloud_server()

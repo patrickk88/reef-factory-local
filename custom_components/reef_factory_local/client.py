@@ -3,6 +3,16 @@
 The devices' web server can get stuck: it then answers every new request with HTTP 429 (Retry-After 5)
 until the device restarts, while an already open connection may keep working (seen 2026-11 on Reef Flare S,
 Level keeper and Thermo control, firmware 1.0.0). The client reports that state through on_busy.
+
+"Stuck" is only what Home Assistant itself runs into: its own connection attempts refused with 429,
+BUSY_CONFIRM_HITS times in a row over BUSY_CONFIRM_SECONDS (while that goes on, and while waiting for the
+device to restart, it tries every RETRY_BUSY_SECONDS). There is no extra request to look for it - 1.3.0 to 1.3.2 asked for the start
+page, and that gave false alarms: something fills up on the device over its uptime, and before it is really
+stuck it already refuses a request whenever one more connection is open (2026-11-15, Reef Flare S: Home
+Assistant plus one more connection and every further request got 429, for minutes also after a reload; after
+a power cycle the same light took nine more connections). While our own connection works, nothing is wrong
+for Home Assistant, and every extra request only uses up what is left. A refused WebSocket connection is
+another matter: that light took every WebSocket connection even while it refused the start page.
 """
 from __future__ import annotations
 
@@ -18,7 +28,12 @@ from . import protocol as pr
 _LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
 USER_POLL_SECONDS = 300  # get/user: wifi/cloud status
-BUSY_CHECK_SECONDS = 600  # while connected: is the web server still taking new requests? (one small GET)
+RETRY_SECONDS = 5  # first wait after a failed connection attempt ...
+RETRY_MAX_SECONDS = 60  # ... doubling up to this
+RETRY_BUSY_SECONDS = 10  # wait between attempts while they are refused with 429 or the device is restarting ...
+RETRY_BUSY_FOR_SECONDS = 300  # ... for this long after the first refusal; then the usual waits again
+BUSY_CONFIRM_HITS = 3  # stuck = at least this many connection attempts refused with 429 in a row ...
+BUSY_CONFIRM_SECONDS = 30  # ... over at least this long, with nothing else in between
 HTTP_BUSY = 429
 
 
@@ -94,6 +109,8 @@ class ReefClient:
         self._on_config = on_config
         self._on_busy = on_busy
         self.busy = False  # web server answers new requests with 429 (stuck until the device restarts)
+        self._busy_hits = 0  # refusals in a row
+        self._busy_first = 0.0  # when the first of them was seen
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._stop = asyncio.Event()
         self.connected = False
@@ -105,15 +122,19 @@ class ReefClient:
             if self._on_busy:
                 self._on_busy(value)
 
-    async def _check_busy(self) -> None:
-        """One small GET of the start page: 429 = stuck, any other answer = taking requests."""
-        try:
-            async with asyncio.timeout(CONNECT_TIMEOUT):
-                async with self._session.get(f"http://{self.host}/") as resp:
-                    await resp.read()
-                    self._set_busy(resp.status == HTTP_BUSY)
-        except (aiohttp.ClientError, TimeoutError, OSError):
-            pass  # unreachable is not "stuck" - the connection handling covers that
+    def _note_busy(self, refused: bool) -> None:
+        """How a connection attempt ended: refused with 429, or taken. A taken connection ends the state at
+        once; refusals only count when they went on long enough (see the module docstring)."""
+        if not refused:
+            self._busy_hits = 0
+            self._set_busy(False)
+            return
+        now = time.monotonic()
+        if self._busy_hits == 0:
+            self._busy_first = now
+        self._busy_hits += 1
+        if self._busy_hits >= BUSY_CONFIRM_HITS and now - self._busy_first >= BUSY_CONFIRM_SECONDS:
+            self._set_busy(True)
 
     def _set_connected(self, value: bool) -> None:
         if value != self.connected:
@@ -121,29 +142,35 @@ class ReefClient:
             self._on_connection(value)
 
     async def run(self) -> None:
-        backoff = 5
+        backoff = RETRY_SECONDS
         while not self._stop.is_set():
             try:
                 await self._session_once()
-                backoff = 5
+                backoff = RETRY_SECONDS
             except asyncio.CancelledError:
                 raise
             except aiohttp.WSServerHandshakeError as err:
                 if err.status == HTTP_BUSY:
-                    self._set_busy(True)
+                    self._note_busy(True)
+                else:
+                    self._busy_hits = 0
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
             except Exception as err:  # noqa: BLE001 - keep the loop alive whatever happens
+                self._busy_hits = 0  # unreachable is not "refused": the row of refusals starts again
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
             finally:
                 self._ws = None
                 self._set_connected(False)
             if self._stop.is_set():
                 break
+            wait = backoff
+            if (self._busy_hits or self.busy) and time.monotonic() - self._busy_first < RETRY_BUSY_FOR_SECONDS:
+                wait = min(wait, RETRY_BUSY_SECONDS)  # confirm it soon, and be back quickly after the restart
             try:
-                await asyncio.wait_for(self._stop.wait(), backoff)
+                await asyncio.wait_for(self._stop.wait(), wait)
             except TimeoutError:
                 pass
-            backoff = min(backoff * 2, 60)
+            backoff = min(backoff * 2, RETRY_MAX_SECONDS)
 
     async def _session_once(self) -> None:
         async with asyncio.timeout(CONNECT_TIMEOUT):
@@ -151,6 +178,7 @@ class ReefClient:
                 _url(self.host), protocols=(pr.WS_SUBPROTOCOL,), autoping=True
             )
         self._ws = ws
+        self._note_busy(False)  # the device took the connection
         reader = asyncio.create_task(self._reader(ws))
         stopper = asyncio.create_task(self._stop.wait())
         try:
@@ -159,8 +187,6 @@ class ReefClient:
             await ws.send_bytes(pr.frame_subscribe(self.serial))
             await ws.send_bytes(pr.frame_get_user(self.serial))
             last_sub = last_user = self.last_data = time.monotonic()
-            await self._check_busy()
-            last_busy = time.monotonic()
             while True:
                 done, _ = await asyncio.wait({reader, stopper}, timeout=1)
                 if stopper in done:
@@ -177,9 +203,6 @@ class ReefClient:
                 if now - last_user >= USER_POLL_SECONDS:
                     await ws.send_bytes(pr.frame_get_user(self.serial))
                     last_user = now
-                if now - last_busy >= BUSY_CHECK_SECONDS:
-                    await self._check_busy()
-                    last_busy = time.monotonic()
         finally:
             for task in (reader, stopper):
                 task.cancel()

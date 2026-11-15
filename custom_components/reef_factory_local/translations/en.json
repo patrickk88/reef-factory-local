@@ -11,7 +11,7 @@
       "user": {
         "title": "What do you want to add?",
         "menu_options": {
-          "device": "A device by IP address (Level keeper, Thermo control, Reef Flare)",
+          "device": "A device by IP address (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Cloud replacement for cloud-only devices (Smart feeder, pumps)"
         },
         "description": "Unofficial community project, not affiliated with Reef Factory. Use at your own risk: these devices run pumps, heaters, lights and dosing pumps - a wrong setting can harm your tank. Pump actions stay off until you enable them in the options."

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.3 - 2026-11-15
+- Stuck web server (HTTP 429): no more false alarms. 1.3.0 to 1.3.2 asked the device for its start page to
+  see whether it still takes requests. A Reef Flare S that was not stuck refused that request again and
+  again - whenever one more connection was open - and was reported as stuck; with the cloud replacement its
+  cloud connection was cut for 150 s each time. Now the integration sends no extra request at all: a device
+  is stuck when it refuses Home Assistant's own connection attempts with 429 three times in a row over half
+  a minute. As long as Home Assistant is connected, nothing is reported. While a device refuses or
+  restarts, Home Assistant tries again every 10 s, so it is back within seconds of the restart.
+- A repair message left over from before a reload of the entry is removed (it stayed until Home Assistant
+  was restarted).
+- Setup menu: the Smart Roller is named among the devices that are added by their IP address.
+- Troubleshooting page: what is known about the cause of the stuck web server.
+
 ## 1.3.2 - 2026-11-15
 Documentation only, no change in the code.
 - README shortened: badges, screenshots, a compact device table with a fold-out block per device,

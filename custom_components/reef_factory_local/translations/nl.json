@@ -11,7 +11,7 @@
       "user": {
         "title": "Wat wil je toevoegen?",
         "menu_options": {
-          "device": "Een apparaat via IP-adres (Level keeper, Thermo control, Reef Flare)",
+          "device": "Een apparaat via IP-adres (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Cloudvervanger voor apparaten die alleen via de cloud werken (Smart feeder, pompen)"
         },
         "description": "Onofficieel communityproject, niet verbonden aan Reef Factory. Gebruik op eigen risico: deze apparaten sturen pompen, verwarmers, verlichting en doseerpompen aan - een verkeerde instelling kan je aquarium schaden. Pompacties blijven uitgeschakeld totdat je ze in de opties inschakelt."

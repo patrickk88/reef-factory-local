@@ -14,10 +14,12 @@ answers every new request with HTTP 429 until the device restarts. An open conne
 while, but once it drops, Home Assistant cannot connect again and the device's entities become unavailable.
 The device itself keeps running its program, refill or heating.
 
-The integration checks this every ten minutes and whenever a connection attempt is refused, and then:
+The integration notices this through its own connection: when the device refuses Home Assistant's
+connection attempts with 429 three times in a row over half a minute, it is treated as stuck. It sends no
+extra request to find out, and as long as Home Assistant is connected nothing is reported. Then:
 
 - **Device connected through the cloud replacement:** the cloud replacement stops answering that device for
-  about two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on
+  up to two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on
   stuck Reef Flare S, Level keeper and Thermo control; a device that is not stuck just waits), and Home
   Assistant reconnects. Only the device's network part starts over: nothing is noticeable at the tank -
   light, refill and heating keep running, settings and programs are kept (seen on Reef Flare S, Level keeper
@@ -35,6 +37,23 @@ is fixed without anyone having to pull a plug, and the official app keeps workin
 
 **Keep local connections few.** The devices accept more than one local connection at a time, but several
 app instances or device pages left open at the same time have coincided with a stuck web server.
+
+<details>
+<summary>What is known about the cause</summary>
+
+Seen on two Reef Flare S on 2026-11-15:
+
+- Something fills up on the device over its uptime. Before the web server is stuck for good, it already
+  refuses a request whenever one more connection than Home Assistant's is open. After a power cycle the
+  same light answered normally with nine more connections open.
+- What fills it up is not known. Ten reloads of the entry in a row and two rounds of the automatic
+  restart did not.
+- Many connections at once are too much for the device: with nine more connections open, the other
+  Reef Flare S restarted completely - its light went off for a second.
+- Versions 1.3.0 to 1.3.2 asked the device for its start page every ten minutes to look for the stuck
+  state. On a device that was close to its limit this gave false alarms, so 1.3.3 no longer does it.
+
+</details>
 
 ## Device lost its Wi-Fi?
 

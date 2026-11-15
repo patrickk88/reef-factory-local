@@ -11,7 +11,7 @@
       "user": {
         "title": "Cosa vuoi aggiungere?",
         "menu_options": {
-          "device": "Un dispositivo tramite indirizzo IP (Level keeper, Thermo control, Reef Flare)",
+          "device": "Un dispositivo tramite indirizzo IP (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Sostituto del cloud per dispositivi solo cloud (Smart feeder, pompe)"
         },
         "description": "Progetto della community non ufficiale, non affiliato con Reef Factory. Usalo a tuo rischio: questi dispositivi controllano pompe, riscaldatori, luci e pompe dosometriche - un'impostazione sbagliata può danneggiare la vasca. Le azioni pompa restano disattivate finché non le abiliti nelle opzioni."

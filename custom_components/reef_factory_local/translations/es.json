@@ -11,7 +11,7 @@
       "user": {
         "title": "¿Qué quieres añadir?",
         "menu_options": {
-          "device": "Un dispositivo por dirección IP (Level keeper, Thermo control, Reef Flare)",
+          "device": "Un dispositivo por dirección IP (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Reemplazo de la nube para dispositivos que solo funcionan con la nube (Smart feeder, bombas)"
         },
         "description": "Proyecto comunitario no oficial, sin relación con Reef Factory. Úsalo bajo tu propia responsabilidad: estos dispositivos controlan bombas, calentadores, luces y bombas dosificadoras - un ajuste incorrecto puede dañar tu acuario. Las acciones de bomba permanecen desactivadas hasta que las habilites en las opciones."

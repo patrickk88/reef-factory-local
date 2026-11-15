@@ -68,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> bool
     if kind := entry.data.get(CONF_DEVICE_TYPE):
         pr.register_device_type(serial, kind)
     coordinator = ReefCoordinator(hass, entry)
+    coordinator.clear_busy_issue()  # one left over from before a reload would never go away
     await coordinator.async_restore()
     coordinator.client = ReefClient(
         async_get_clientsession(hass),
@@ -116,6 +117,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> boo
         await entry.runtime_data.server.async_stop()
         return await hass.config_entries.async_unload_platforms(entry, CLOUD_PLATFORMS)
     await entry.runtime_data.client.async_stop()
+    entry.runtime_data.clear_busy_issue()
     return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS[pr.device_type(entry.data[CONF_SERIAL])]
     )

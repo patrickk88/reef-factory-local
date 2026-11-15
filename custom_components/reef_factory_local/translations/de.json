@@ -11,7 +11,7 @@
       "user": {
         "title": "Was soll hinzugefügt werden?",
         "menu_options": {
-          "device": "Ein Gerät per IP-Adresse (Level keeper, Thermo control, Reef Flare)",
+          "device": "Ein Gerät per IP-Adresse (Level keeper, Thermo control, Reef Flare, Smart Roller)",
           "cloud": "Cloud-Ersatz für reine Cloud-Geräte (Smart feeder, Pumpen)"
         },
         "description": "Inoffizielles Community-Projekt, nicht mit Reef Factory verbunden. Nutzung auf eigene Gefahr: Die Geräte steuern Pumpen, Heizung, Licht und Dosierpumpen - eine falsche Einstellung kann dem Becken schaden. Pumpenaktionen bleiben aus, bis du sie in den Optionen erlaubst."
