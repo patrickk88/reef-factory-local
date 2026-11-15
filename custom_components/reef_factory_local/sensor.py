@@ -102,6 +102,13 @@ WIFI = ReefSensorDescription(
     value_fn=lambda d: d.get("wifi_rssi"),
 )
 
+WIFI_PCT = ReefSensorDescription(
+    key="wifi_percent", translation_key="wifi_percent", icon="mdi:wifi",
+    native_unit_of_measurement=PERCENTAGE, state_class=SensorStateClass.MEASUREMENT,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda d: None if d.get("wifi_rssi") is None else max(0, min(100, 2 * (d["wifi_rssi"] + 100))),
+)
+
 
 def _dosing_sensors(ch: int) -> tuple[ReefSensorDescription, ...]:
     """Six sensors per channel of the Dosing pump Pro X4; keys ch<n>_*, names with a {channel} placeholder."""
@@ -259,6 +266,7 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
                                            for e in d.get("schedule") or []]},
         ),
         WIFI,
+        WIFI_PCT,
     ),
     pr.DEVICE_BASE_PUMP: (
         ReefSensorDescription(
@@ -271,8 +279,9 @@ SENSORS: dict[str, tuple[ReefSensorDescription, ...]] = {
             value_fn=lambda d: d.get("feed_remaining_s", 0) if d.get("mode") == "feedMode" else 0,
         ),
         WIFI,
+        WIFI_PCT,
     ),
-    pr.DEVICE_DOSING_PUMP: tuple(desc for ch in range(1, pr.DOSING_CHANNELS + 1) for desc in _dosing_sensors(ch)) + (WIFI,),
+    pr.DEVICE_DOSING_PUMP: tuple(desc for ch in range(1, pr.DOSING_CHANNELS + 1) for desc in _dosing_sensors(ch)) + (WIFI, WIFI_PCT),
     pr.DEVICE_SMART_ROLLER: (
         ReefSensorDescription(
             key="sr_state", translation_key="sr_state", icon="mdi:paper-roll",

@@ -33,12 +33,20 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
     }
     rt = entry.runtime_data
     if is_cloud_entry(entry):
+        server = rt.server
+        out["cloud_server"] = {
+            "mode": server.mode,
+            "app_passthrough": server.app_passthrough,
+            "listen_errors": server.listen_errors,
+        }
         out["devices"] = [
             {
                 "serial": c.serial,
                 "kind": c.device.kind,
                 "connected": c.device.connected,
                 "real_cloud_connected": c.device.cloud_connected,
+                "silenced": c.device.silenced,
+                "seconds_since_seen": round(time.monotonic() - c.device.last_seen, 1) if c.device.last_seen else None,
                 "firmware": c.device.firmware,
                 "data": async_redact_data(_clean(c.data or {}), TO_REDACT),
             }
@@ -49,8 +57,11 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
         out["device"] = {
             "serial": rt.serial,
             "connected": client.connected,
+            "busy": client.busy,
             "firmware": rt.firmware,
             "seconds_since_data": round(time.monotonic() - client.last_data, 1) if client.last_data else None,
+            "last_error": client.last_error,
+            "seconds_since_error": round(time.monotonic() - client.last_error_at, 1) if client.last_error_at else None,
             "data": async_redact_data(_clean(rt.data or {}), TO_REDACT),
         }
     return out

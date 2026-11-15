@@ -115,6 +115,9 @@ class ReefClient:
         self._stop = asyncio.Event()
         self.connected = False
         self.last_data = 0.0
+        self._productive = False  # diese Sitzung wurde angenommen -> Wartezeit zuruecksetzen
+        self.last_error: str | None = None  # letzter Verbindungsfehler, fuer die Diagnose
+        self.last_error_at: float | None = None
 
     def _set_busy(self, value: bool) -> None:
         if value != self.busy:
@@ -139,14 +142,17 @@ class ReefClient:
     def _set_connected(self, value: bool) -> None:
         if value != self.connected:
             self.connected = value
+            if value:
+                self._productive = True
+                self.last_error = None
             self._on_connection(value)
 
     async def run(self) -> None:
         backoff = RETRY_SECONDS
         while not self._stop.is_set():
+            self._productive = False
             try:
                 await self._session_once()
-                backoff = RETRY_SECONDS
             except asyncio.CancelledError:
                 raise
             except aiohttp.WSServerHandshakeError as err:
@@ -154,13 +160,19 @@ class ReefClient:
                     self._note_busy(True)
                 else:
                     self._busy_hits = 0
+                self.last_error = f"HTTP {err.status}" if err.status else str(err)
+                self.last_error_at = time.monotonic()
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
             except Exception as err:  # noqa: BLE001 - keep the loop alive whatever happens
                 self._busy_hits = 0  # unreachable is not "refused": the row of refusals starts again
+                self.last_error = f"{type(err).__name__}: {err}"
+                self.last_error_at = time.monotonic()
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
             finally:
                 self._ws = None
                 self._set_connected(False)
+            if self._productive:
+                backoff = RETRY_SECONDS  # eine angenommene Verbindung setzt die Wartezeit zurueck
             if self._stop.is_set():
                 break
             wait = backoff

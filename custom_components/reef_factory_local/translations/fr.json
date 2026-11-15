@@ -140,6 +140,9 @@
       "wifi_rssi": {
         "name": "Signal Wi-Fi"
       },
+      "wifi_percent": {
+        "name": "Signal Wi-Fi %"
+      },
       "bp_mode": {
         "name": "Mode"
       },

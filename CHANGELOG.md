@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.4 - 2026-11-16
+- Faster reconnect: once a connection has been accepted, a later drop is retried within about five seconds
+  again, instead of carrying over the longer wait that builds up from earlier failed attempts.
+- Wi-Fi signal also in percent for the cloud devices (Smart feeder, Base pump, Dosing pump Pro X4), next to
+  the dBm value and matching what the Smart Reef app shows.
+- Diagnostics are more useful: whether a device is treated as stuck (HTTP 429), the last connection error
+  and how long ago it was; for the cloud replacement its mode, any port-listen errors, and per device
+  whether it is currently being silenced.
+
 ## 1.3.3 - 2026-11-15
 - Stuck web server (HTTP 429): no more false alarms. 1.3.0 to 1.3.2 asked the device for its start page to
   see whether it still takes requests. A Reef Flare S that was not stuck refused that request again and
