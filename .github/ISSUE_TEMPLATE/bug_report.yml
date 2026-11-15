@@ -1,0 +1,81 @@
+name: Something does not work
+description: A device is unavailable, a value is wrong, an action fails
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please have a look at the
+        [troubleshooting page](https://github.com/patrickk88/reef-factory-local/blob/main/docs/troubleshooting.md) first -
+        a stuck web server (HTTP 429) and a changed IP address are the most common causes.
+        **Never post passwords, tokens or Wi-Fi keys.** Serial numbers are fine.
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      multiple: true
+      options:
+        - Level keeper
+        - Thermo control
+        - Reef Flare S
+        - Reef Flare M
+        - Reef Flare L
+        - Smart Roller
+        - Smart feeder
+        - Base pump
+        - Dosing pump Pro X4
+        - Cloud replacement itself
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Device firmware
+      description: As shown on the device's own web page or in the Smart Reef app.
+      placeholder: "1.0.0"
+  - type: input
+    id: version
+    attributes:
+      label: Version of the integration
+      description: Settings -> Devices & services -> Reef Factory Local, or HACS.
+      placeholder: "1.3.2"
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version and installation type
+      placeholder: "2026.10.4, Home Assistant OS"
+    validations:
+      required: true
+  - type: dropdown
+    id: cloud
+    attributes:
+      label: Does the device's cloud connection run through the cloud replacement?
+      options:
+        - "Yes, passthrough"
+        - "Yes, local"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: With the time it happened, and what you did just before (changed a setting, pressed a button).
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics file
+      description: >-
+        On the entry: menu -> Download diagnostics. Tokens, keys, e-mail and Wi-Fi data are removed from it.
+        Drag the file in here.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log lines
+      description: Lines from the Home Assistant log that mention reef_factory_local, if there are any.
+      render: text

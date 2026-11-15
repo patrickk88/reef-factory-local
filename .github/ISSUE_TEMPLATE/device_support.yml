@@ -1,0 +1,55 @@
+name: Device, model or firmware that is not supported yet
+description: A Reef Factory device the integration does not know, or another firmware or serial prefix
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The integration logs the frames of unknown devices at debug level - see
+        [CONTRIBUTING](https://github.com/patrickk88/reef-factory-local/blob/main/CONTRIBUTING.md).
+        Please use version 1.2.3 or newer for the log: account and Wi-Fi data are never written to it since then.
+        **Never post passwords, tokens or Wi-Fi keys.** Serial numbers are fine.
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Name and model as the manufacturer calls it.
+      placeholder: "KH keeper Plus"
+    validations:
+      required: true
+  - type: input
+    id: serial
+    attributes:
+      label: First letters of the serial number
+      description: The letters before the digits are enough.
+      placeholder: "RFSR"
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware
+      description: As shown on the device's own web page or in the Smart Reef app.
+    validations:
+      required: true
+  - type: dropdown
+    id: page
+    attributes:
+      label: Does the device show its own web page at http://<device-ip>?
+      options:
+        - "Yes"
+        - "No"
+        - "Not tried"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Debug log or diagnostics file
+      description: >-
+        Settings -> Devices & services -> Reef Factory Local -> Enable debug logging, let the device run for a
+        few minutes, disable it again and drag the downloaded log in here. For a Smart Roller the diagnostics
+        file is enough.
+  - type: textarea
+    id: what
+    attributes:
+      label: What you did meanwhile
+      description: Changed a setting, pressed a button - with the time, so the frames can be matched.

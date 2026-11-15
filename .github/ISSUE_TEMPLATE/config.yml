@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Troubleshooting
+    url: https://github.com/patrickk88/reef-factory-local/blob/main/docs/troubleshooting.md
+    about: Stuck web server (HTTP 429), lost Wi-Fi, new IP address, known quirks
+  - name: Cloud replacement, DNS
+    url: https://github.com/patrickk88/reef-factory-local/blob/main/docs/cloud-replacement.md
+    about: How to point api.reeffactory.com to Home Assistant

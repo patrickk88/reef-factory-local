@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.2 - 2026-11-15
+Documentation only, no change in the code.
+- README shortened: badges, screenshots, a compact device table with a fold-out block per device,
+  installation in three steps, and a table that says where to look when something does not work.
+- The details moved to `docs/`, nothing was dropped: confirmed writes, pump actions and guided calibration,
+  Reef Flare programs and actions, cloud replacement, automations, troubleshooting, protocol notes.
+- Issue forms for problems and for devices that are not supported yet.
+
 ## 1.3.1 - 2026-11-15
 No change in behaviour.
 - Home Assistant 2025.3 or newer is needed. `hacs.json` said 2025.1.0, but the integration does not load on
