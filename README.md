@@ -138,8 +138,8 @@ in your network. Close it when you are done - pages left open have coincided wit
 ## Cloud and Smart Reef account
 
 The integration needs neither the cloud nor an account. After a local Wi-Fi setup the app shows the
-device offline until the device is logged into your account again: disable the integration entry,
-open `http://<device-ip>`, log in on the device page, enable the entry again.
+device offline until the device is logged into your account again: open `http://<device-ip>` and log in
+on the device page. If the page does not load, disable the integration entry for that moment.
 
 **Security note:** Level keeper, Thermo control and Reef Flare talk to the cloud unencrypted (WebSocket
 on port 442) and send the Smart Reef login - e-mail and password - as plain text. Smart feeder, Base pump
@@ -304,8 +304,9 @@ has been silent for a minute.
 ### Advanced: no DNS at all (firmware patch)
 
 The cloud host name is a plain string in the device firmware. With a serial adapter you can read the
-flash, replace the name by the Home Assistant IP and write it back; `tools/` will get a script for
-that. Only for people who are comfortable with soldering and esptool - a mistake can brick the device.
+flash, replace the name by the Home Assistant IP and write it back. There is no ready-made tool for that
+here, and the author has not done it on his own devices. Only for people who are comfortable with
+soldering and esptool - a mistake can brick the device.
 
 ## Events and times
 
