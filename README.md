@@ -155,7 +155,9 @@ The integration checks this every ten minutes and whenever a connection attempt 
 - **Device connected through the cloud replacement:** the cloud replacement stops answering that device for
   about two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on
   stuck Reef Flare S, Level keeper and Thermo control; a device that is not stuck just waits), and Home
-  Assistant reconnects. A repair message says that this is happening and disappears when the device takes
+  Assistant reconnects. Only the device's network part starts over: nothing is noticeable at the tank -
+  light, refill and heating keep running, settings and programs are kept (seen on Reef Flare S, Level keeper
+  and Thermo control). A repair message says that this is happening and disappears when the device takes
   requests again. If the device is still stuck after five minutes, the message asks for a power cycle.
 - **Without the cloud replacement:** a repair message asks you to unplug the device for 10 seconds.
 
