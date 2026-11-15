@@ -61,8 +61,7 @@ renames an existing program (create a copy under the new name, then reset the ol
 
 The **Reef Flare** rows are from two Reef Flare S. The M and L models hold two and three of the same light
 modules, and the manufacturer's own web interface uses one and the same page for all of them (serial numbers
-`RFRFS…`, `RFRFM…`, `RFRFL…`), so the integration treats them the same way. On hardware only the S has been
-tested so far - if you own an M or L, a short report is welcome.
+`RFRFS…`, `RFRFM…`, `RFRFL…`), so the integration treats them the same way.
 
 The **Smart Roller** commands are byte for byte the ones Steven Downer's integration sends (the unit tests
 compare them with his `build_message()`), and only the values his integration offers are accepted.
