@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0 - unreleased
+## 1.3.0 - 2026-11-15
 - Stuck web server (HTTP 429) on Reef Flare, Level keeper and Thermo control: detected when a connection
   attempt is refused and by a small check every ten minutes. With the cloud replacement the device is
   restarted automatically (the cloud replacement stops answering it for 150 s; the devices restart when
