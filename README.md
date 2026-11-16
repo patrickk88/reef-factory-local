@@ -167,7 +167,8 @@ The interface is available in English, German, Dutch, French, Spanish, Italian a
 
 Needs Home Assistant 2025.3 or newer.
 
-**1. Find *Reef Factory Local* in HACS**, download it and restart Home Assistant:
+**1. Find *Reef Factory Local* in HACS** (from Home Assistant 2026.11 on it is called *Marketplace*),
+download it and restart Home Assistant:
 
 [![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickk88&repository=reef-factory-local&category=integration)
 
@@ -179,10 +180,11 @@ Needs Home Assistant 2025.3 or newer.
 *Cloud replacement* and set one DNS entry in your network - see [Cloud replacement](#cloud-replacement).
 
 <details>
-<summary>Without the buttons, or without HACS</summary>
+<summary>Without the buttons, or without HACS / Marketplace</summary>
 
-The first button opens this integration in HACS in your own Home Assistant. Without the button: open
-HACS and search for *Reef Factory Local* (it is in the HACS default list). Or copy
+The first button opens this integration in HACS - or in the Marketplace, as HACS is called from Home
+Assistant 2026.11 on - in your own Home Assistant. Without the button: open HACS or the Marketplace and
+search for *Reef Factory Local* (it is in the default list). Or copy
 `custom_components/reef_factory_local` into your Home Assistant `config/custom_components/` and restart.
 
 Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*.
