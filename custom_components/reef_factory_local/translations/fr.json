@@ -460,6 +460,12 @@
     }
   },
   "selector": {
+    "cloud_mode": {
+      "options": {
+        "passthrough": "Relais - l'application officielle continue de fonctionner",
+        "local": "Local uniquement - Home Assistant répond seul"
+      }
+    },
     "reminder": {
       "options": {
         "1_week": "1 semaine",

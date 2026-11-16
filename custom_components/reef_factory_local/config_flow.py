@@ -10,7 +10,10 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig, NumberSelectorMode
+from homeassistant.helpers.selector import (
+    NumberSelector, NumberSelectorConfig, NumberSelectorMode,
+    SelectSelector, SelectSelectorConfig, SelectSelectorMode,
+)
 
 from . import protocol as pr
 from .client import async_probe
@@ -20,6 +23,10 @@ from .const import (
     CONF_UPSTREAM_IPS,
     DEFAULT_LOW_DAYS, DOMAIN,
 )
+
+
+MODE_SELECTOR = SelectSelector(SelectSelectorConfig(
+    options=[MODE_PASSTHROUGH, MODE_LOCAL], translation_key="cloud_mode", mode=SelectSelectorMode.LIST))
 
 
 class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,8 +52,7 @@ class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud",
             data_schema=vol.Schema({
-                vol.Required(CONF_CLOUD_MODE, default=MODE_PASSTHROUGH): vol.In({
-                    MODE_PASSTHROUGH: "passthrough", MODE_LOCAL: "local"}),
+                vol.Required(CONF_CLOUD_MODE, default=MODE_PASSTHROUGH): MODE_SELECTOR,
             }),
         )
 
@@ -134,8 +140,7 @@ class ReefOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="cloud",
             data_schema=vol.Schema({
-                vol.Required(CONF_CLOUD_MODE, default=opts.get(CONF_CLOUD_MODE, MODE_PASSTHROUGH)): vol.In({
-                    MODE_PASSTHROUGH: "passthrough", MODE_LOCAL: "local"}),
+                vol.Required(CONF_CLOUD_MODE, default=opts.get(CONF_CLOUD_MODE, MODE_PASSTHROUGH)): MODE_SELECTOR,
                 vol.Optional(CONF_UPSTREAM_IPS, default=opts.get(CONF_UPSTREAM_IPS, "")): str,
                 vol.Required(CONF_ALLOW_PUMP_ACTIONS, default=opts.get(CONF_ALLOW_PUMP_ACTIONS, False)): bool,
                 vol.Required(CONF_LOW_DAYS, default=opts.get(CONF_LOW_DAYS, DEFAULT_LOW_DAYS)): NumberSelector(

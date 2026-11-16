@@ -460,6 +460,12 @@
     }
   },
   "selector": {
+    "cloud_mode": {
+      "options": {
+        "passthrough": "Doorgeven - de officiële app blijft werken",
+        "local": "Alleen lokaal - Home Assistant antwoordt zelf"
+      }
+    },
     "reminder": {
       "options": {
         "1_week": "1 week",

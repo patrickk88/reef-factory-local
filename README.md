@@ -1,6 +1,6 @@
-# Reef Factory Local (unofficial)
+<h1><img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/custom_components/reef_factory_local/brand/icon.png" width="48" align="top" alt=""> Reef Factory Local (unofficial)</h1>
 
-[![HACS: custom repository](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
+[![HACS: default repository](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz)
 [![Release](https://img.shields.io/github/v/release/patrickk88/reef-factory-local)](https://github.com/patrickk88/reef-factory-local/releases)
 [![Home Assistant 2025.3 or newer](https://img.shields.io/badge/Home%20Assistant-2025.3%2B-18BCF2.svg)](https://www.home-assistant.io)
 [![Validate](https://github.com/patrickk88/reef-factory-local/actions/workflows/validate.yml/badge.svg)](https://github.com/patrickk88/reef-factory-local/actions/workflows/validate.yml)
@@ -19,17 +19,26 @@ integration uses. Smart feeder, Base pump and Dosing pump Pro X4 only talk to th
 Assistant takes the cloud's place (*Cloud replacement*).
 
 <p align="center">
+  <img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/docs/img/dashboard.png" width="820" alt="An aquarium dashboard in Home Assistant built on this integration: water temperature, auto top-off, dosing, lighting, flow and feeding at a glance">
+</p>
+<p align="center"><sub>My own aquarium dashboard, built on the entities of this integration (the EcoDrift pumps come from <a href="https://github.com/patrickk88/aquamedic-local">AquaMedic Local</a>).</sub></p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/docs/img/how-it-works.png" width="820" alt="How it works: devices with a local port are reached directly, cloud-only devices through the cloud replacement in Home Assistant; the manufacturer's cloud is optional">
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/docs/img/level-keeper.png" width="32%" alt="Level keeper in Home Assistant: controls and sensors">
   <img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/docs/img/level-keeper-calibration.png" width="32%" alt="Level keeper in Home Assistant: guided calibration">
   <img src="https://raw.githubusercontent.com/patrickk88/reef-factory-local/main/docs/img/reef-flare.png" width="32%" alt="Reef Flare S in Home Assistant: controls and sensors">
 </p>
 <p align="center"><sub>Level keeper, its guided calibration and a Reef Flare S in Home Assistant.</sub></p>
 
-**Contents:** [Supported devices](#supported-devices-v13) · [Installation](#installation) ·
-[Safety](#safety) · [Cloud replacement](#cloud-replacement) · [When something does not work](#when-something-does-not-work) ·
-[Documentation](#documentation)
+**Contents:** [Supported devices](#supported-devices) · [Installation](#installation) ·
+[Safety](#safety) · [Cloud replacement](#cloud-replacement) · [Questions](#questions) ·
+[When something does not work](#when-something-does-not-work) · [Documentation](#documentation)
 
-## Supported devices (v1.3)
+## Supported devices
 
 | Device | Serial | Connection | What you get | Tested firmware |
 |---|---|---|---|---|
@@ -158,7 +167,7 @@ The interface is available in English, German, Dutch, French, Spanish, Italian a
 
 Needs Home Assistant 2025.3 or newer.
 
-**1. Add the repository to HACS**, download *Reef Factory Local* there and restart Home Assistant:
+**1. Find *Reef Factory Local* in HACS**, download it and restart Home Assistant:
 
 [![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=patrickk88&repository=reef-factory-local&category=integration)
 
@@ -172,9 +181,8 @@ Needs Home Assistant 2025.3 or newer.
 <details>
 <summary>Without the buttons, or without HACS</summary>
 
-The first button adds this repository to HACS in your own Home Assistant (as a custom repository,
-category *Integration*). Without the button: HACS -> menu -> *Custom repositories* ->
-`https://github.com/patrickk88/reef-factory-local`, type *Integration*. Or copy
+The first button opens this integration in HACS in your own Home Assistant. Without the button: open
+HACS and search for *Reef Factory Local* (it is in the HACS default list). Or copy
 `custom_components/reef_factory_local` into your Home Assistant `config/custom_components/` and restart.
 
 Then *Settings -> Devices & services -> Add integration -> Reef Factory Local (unofficial)*.
@@ -255,6 +263,56 @@ point to the Home Assistant host. Level keeper, Thermo control and Reef Flare ca
 their cloud connection; then the integration can restart them by itself when their web server is stuck.
 
 **[Cloud replacement: DNS, ports, security, options](https://github.com/patrickk88/reef-factory-local/blob/main/docs/cloud-replacement.md)**
+
+## Questions
+
+<details>
+<summary><b>Does the official Smart Reef app keep working?</b></summary>
+
+Yes. For the devices with a local port Home Assistant is just one more client. With the cloud
+replacement in *passthrough* mode (the default) everything is forwarded to the real cloud, so the app
+works as before, at home and on the road. Only in *local* mode the app no longer sees the devices.
+
+</details>
+
+<details>
+<summary><b>Do I still need the cloud or a Smart Reef account?</b></summary>
+
+Not for Level keeper, Thermo control, Reef Flare and Smart Roller - they are read and controlled in your
+own network. Smart feeder, Base pump and Dosing pump Pro X4 cannot talk locally; for them the cloud
+replacement plays the cloud's part, and when the real cloud cannot be reached they are served by Home
+Assistant alone.
+
+</details>
+
+<details>
+<summary><b>What happens when Home Assistant is down?</b></summary>
+
+The devices carry on by themselves: refilling, heating, light programs, feeding and dosing schedules live
+in the devices. What is missing is the control from Home Assistant and your automations. If you use the
+cloud replacement, the cloud-only devices and the app at home also cannot reach the cloud until Home
+Assistant is back - the devices reconnect by themselves.
+
+</details>
+
+<details>
+<summary><b>Can I break something with it?</b></summary>
+
+The integration only sends what was confirmed on a real device, pump actions have to be switched on
+first, and there is no factory reset and no firmware change. But it does control pumps, a heater and
+lights - a wrong automation can harm your tank. See [Safety](#safety).
+
+</details>
+
+<details>
+<summary><b>My Reef Factory device is not on the list</b></summary>
+
+It can be added read only, so that its diagnostics file shows what it sends - that is what is needed to
+support it. See [Contributing](https://github.com/patrickk88/reef-factory-local/blob/main/CONTRIBUTING.md).
+
+</details>
+
+Something else? [Open an issue](https://github.com/patrickk88/reef-factory-local/issues).
 
 ## When something does not work
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0 - unreleased
+## 1.4.0 - 2026-11-17
 - A Reef Factory device of a type that is not supported yet can be added: it answers like the others, but
   its serial prefix is unknown. It is read only - the integration only asks it for its config (serial,
   firmware; at setup also once whether it is a Smart Roller, as before), subscribes to nothing and offers no values or controls, just *Last report*. The point is the
@@ -12,6 +12,11 @@
 - For every kind of message the last ten different contents are kept with their times, so a setting changed
   in the app shows as before and after.
 - Setup: a device that does not answer like a Reef Factory device gets a clearer message.
+- Cloud replacement, setup and options: the two modes are shown as a list in the language of Home
+  Assistant instead of their internal names.
+- README: a diagram of how the local connection and the cloud replacement fit together, a dashboard
+  example, a *Questions* section, new screenshots; the HACS badge and the installation steps now say that
+  the integration is in the HACS default list.
 
 ## 1.3.4 - 2026-11-16
 - Faster reconnect: once a connection has been accepted, a later drop is retried within about five seconds

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="400" viewBox="0 0 980 400" font-family="'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0d3353"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6b7f92"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="980" height="400" rx="14" fill="#f4f8fb"/>
+
+  <!-- column titles -->
+  <text x="150" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#6b7f92" letter-spacing="1">YOUR DEVICES</text>
+  <text x="500" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#6b7f92" letter-spacing="1">YOUR NETWORK</text>
+  <text x="850" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#6b7f92" letter-spacing="1">INTERNET</text>
+
+  <!-- devices with a local port -->
+  <rect x="20" y="58" width="260" height="138" rx="10" fill="#ffffff" stroke="#0d3353" stroke-width="1.5"/>
+  <text x="38" y="86" font-size="16" font-weight="700" fill="#0d3353">With a local port</text>
+  <text x="38" y="112" font-size="14" fill="#22313f">Level keeper</text>
+  <text x="38" y="133" font-size="14" fill="#22313f">Thermo control</text>
+  <text x="38" y="154" font-size="14" fill="#22313f">Reef Flare S / M / L</text>
+  <text x="38" y="175" font-size="14" fill="#22313f">Smart Roller</text>
+
+  <!-- cloud-only devices -->
+  <rect x="20" y="226" width="260" height="118" rx="10" fill="#ffffff" stroke="#0d3353" stroke-width="1.5"/>
+  <text x="38" y="254" font-size="16" font-weight="700" fill="#0d3353">Cloud only</text>
+  <text x="38" y="280" font-size="14" fill="#22313f">Smart feeder</text>
+  <text x="38" y="301" font-size="14" fill="#22313f">Base pump</text>
+  <text x="38" y="322" font-size="14" fill="#22313f">Dosing pump Pro X4</text>
+
+  <!-- Home Assistant -->
+  <rect x="370" y="58" width="260" height="286" rx="12" fill="#0d3353"/>
+  <text x="500" y="88" text-anchor="middle" font-size="17" font-weight="700" fill="#ffffff">Home Assistant</text>
+  <text x="500" y="108" text-anchor="middle" font-size="13" fill="#a9d8f5">Reef Factory Local</text>
+
+  <rect x="388" y="124" width="224" height="72" rx="8" fill="#ffffff"/>
+  <text x="500" y="152" text-anchor="middle" font-size="15" font-weight="700" fill="#0d3353">Local connection</text>
+  <text x="500" y="174" text-anchor="middle" font-size="12.5" fill="#44586b">talks to the device directly</text>
+
+  <rect x="388" y="250" width="224" height="78" rx="8" fill="#ff9838"/>
+  <text x="500" y="278" text-anchor="middle" font-size="15" font-weight="700" fill="#0d3353">Cloud replacement</text>
+  <text x="500" y="299" text-anchor="middle" font-size="12.5" fill="#0d3353">answers in place of</text>
+  <text x="500" y="315" text-anchor="middle" font-size="12.5" fill="#0d3353">api.reeffactory.com</text>
+
+  <!-- real cloud -->
+  <rect x="740" y="226" width="220" height="118" rx="10" fill="#ffffff" stroke="#6b7f92" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="850" y="258" text-anchor="middle" font-size="16" font-weight="700" fill="#44586b">Reef Factory cloud</text>
+  <text x="850" y="282" text-anchor="middle" font-size="14" fill="#44586b">Smart Reef app</text>
+  <text x="850" y="312" text-anchor="middle" font-size="12.5" fill="#6b7f92">optional - works without it</text>
+
+  <!-- arrows -->
+  <line x1="286" y1="160" x2="364" y2="160" stroke="#0d3353" stroke-width="2.2" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text x="325" y="150" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0d3353">local</text>
+
+  <line x1="286" y1="288" x2="364" y2="288" stroke="#0d3353" stroke-width="2.2" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text x="325" y="278" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0d3353">one DNS</text>
+  <text x="325" y="308" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0d3353">entry</text>
+
+  <line x1="636" y1="288" x2="734" y2="288" stroke="#6b7f92" stroke-width="2" stroke-dasharray="6 5" marker-start="url(#b)" marker-end="url(#b)"/>
+  <text x="685" y="278" text-anchor="middle" font-size="12.5" font-weight="600" fill="#44586b">passthrough</text>
+  <text x="685" y="308" text-anchor="middle" font-size="12" fill="#6b7f92">app still works</text>
+
+  <text x="490" y="380" text-anchor="middle" font-size="12.5" fill="#6b7f92">Everything left of the dashed box keeps working when the manufacturer's cloud is gone.</text>
+</svg>

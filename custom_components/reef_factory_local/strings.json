@@ -460,6 +460,12 @@
     }
   },
   "selector": {
+    "cloud_mode": {
+      "options": {
+        "passthrough": "Passthrough - the official app keeps working",
+        "local": "Local only - Home Assistant answers alone"
+      }
+    },
     "reminder": {
       "options": {
         "1_week": "1 week",

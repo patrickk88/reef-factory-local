@@ -460,6 +460,12 @@
     }
   },
   "selector": {
+    "cloud_mode": {
+      "options": {
+        "passthrough": "Przekazywanie - oficjalna aplikacja działa dalej",
+        "local": "Tylko lokalnie - Home Assistant odpowiada sam"
+      }
+    },
     "reminder": {
       "options": {
         "1_week": "1 tydzień",
