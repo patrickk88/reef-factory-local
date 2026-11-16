@@ -939,6 +939,48 @@ class Frame:
     blob: bytes
 
 
+_PRIVATE_WORDS = ("user", "wifi", "login", "pass", "register", "forgot", "mail")
+
+
+def frame_is_private(frame: Frame) -> bool:
+    """Messages that may carry account or Wi-Fi data, judged by their name or an @ in the content."""
+    name = f"{frame.topic}/{frame.subtopic}".lower()
+    return any(word in name for word in _PRIVATE_WORDS) or b"@" in frame.blob
+
+
+class RawLog:
+    """What a device of an unknown type sends (and, on the cloud replacement, is sent), kept for the
+    diagnostics download: for every kind of message the last HISTORY different contents with their times, so
+    that a change made in the app shows as before and after. Private messages are counted, their content is
+    not kept."""
+
+    KINDS_MAX = 80
+    HISTORY = 10
+    HEX_BYTES = 256
+
+    def __init__(self, render=None) -> None:
+        self.kinds: dict[str, dict] = {}
+        self._render = render or (lambda frame: frame.blob[:self.HEX_BYTES].hex())
+
+    def note(self, frame: Frame, direction: str = "") -> None:
+        key = f"{direction} {frame.topic}/{frame.subtopic}".strip()
+        entry = self.kinds.get(key)
+        if entry is None:
+            if len(self.kinds) >= self.KINDS_MAX:
+                return
+            entry = self.kinds[key] = {"count": 0, "history": []}
+        entry["count"] += 1
+        content = None if frame_is_private(frame) else self._render(frame)
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        history = entry["history"]
+        if history and history[-1]["content"] == content and history[-1]["length"] == len(frame.blob):
+            history[-1]["times"] += 1
+            history[-1]["last"] = now
+            return
+        history.append({"first": now, "last": now, "times": 1, "length": len(frame.blob), "content": content})
+        del history[:-self.HISTORY]
+
+
 def parse_frame(raw: bytes) -> Frame | None:
     parts = raw.split(b"\x00", 4)
     if len(parts) < 5:

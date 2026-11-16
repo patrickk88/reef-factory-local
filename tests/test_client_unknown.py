@@ -59,10 +59,14 @@ async def main():
         print("ok  unknown: only get/config is sent (%d times), connection stays up, no values" % len(got))
 
         raw = c.raw_frames
-        assert raw["refresh/config"]["count"] >= 4 and raw["refresh/config"]["hex"].startswith(SERIAL.encode().hex())
-        assert raw["khRefresh/all"] == {"count": 1, "length": 41, "hex": bytes(range(40)).hex() + "00"}, raw["khRefresh/all"]  # with the frame's closing NUL
+        cfg = raw["refresh/config"]                 # the same answer every time: one entry, counted
+        assert cfg["count"] >= 4 and len(cfg["history"]) == 1 and cfg["history"][0]["times"] == cfg["count"], cfg
+        assert cfg["history"][0]["content"].startswith(SERIAL.encode().hex())
+        kh = raw["khRefresh/all"]
+        assert kh["count"] == 1 and kh["history"][0]["length"] == 41, kh       # with the frame's closing NUL
+        assert kh["history"][0]["content"] == bytes(range(40)).hex() + "00", kh
         for private in ("status/user", "khWifi/list", "khReport/mail"):   # account name, Wi-Fi, an e-mail address
-            assert raw[private]["count"] == 1 and raw[private]["hex"] is None, (private, raw[private])
+            assert raw[private]["count"] == 1 and raw[private]["history"][0]["content"] is None, (private, raw[private])
         print("ok  unknown: messages kept for the diagnostics, account/Wi-Fi content left out")
         await c.async_stop(); task.cancel()
     await runner.cleanup()

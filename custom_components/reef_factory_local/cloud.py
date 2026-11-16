@@ -233,7 +233,13 @@ class CloudDevice:
         self._transport = None
         self.peer: str | None = None          # source address of the current connection
         self.silent_until = 0.0               # cloud replacement does not answer this device until then
+        # device type not supported yet: what goes to the cloud and comes back, for the diagnostics
+        self.raw = pr.RawLog(render=lambda frame: frame_dump(frame, 600))
         self.listeners: list[Callable[[CloudDevice], None]] = []
+
+    @property
+    def unknown(self) -> bool:
+        return self.kind in (None, pr.DEVICE_UNKNOWN)
 
     @property
     def silenced(self) -> bool:
@@ -656,7 +662,8 @@ class ReefCloudServer:
         if (info := pr.parse_login(frame)):
             device.firmware = info.get("firmware") or device.firmware
             return
-        if device.kind is None:
+        if device.unknown:
+            device.raw.note(frame, "to_cloud")
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 _LOGGER.debug("cloud: unknown device %s -> cloud %s/%s %s", device.serial, frame.topic, frame.subtopic, frame_dump(frame))
             return
@@ -680,6 +687,8 @@ class ReefCloudServer:
                         continue
                     await ws.send_bytes(raw)
                     frame = pr.parse_frame(raw)
+                    if frame and device.unknown:
+                        device.raw.note(frame, "to_device")
                     if frame and _LOGGER.isEnabledFor(logging.DEBUG):
                         _LOGGER.debug("cloud -> %s %s/%s %s", device.serial, frame.topic, frame.subtopic, frame_dump(frame))
                 elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED):

@@ -646,6 +646,33 @@ def test_unknown_device_type():
     assert pr.prefix_type("RFLK012304200017") == pr.DEVICE_LEVEL_KEEPER
 
 
+def test_raw_log_keeps_changes_not_secrets():
+    serial = "RFKH012345678901"
+    def fr(topic, sub, blob):
+        return pr.parse_frame(pr.build_frame(topic, sub, blob, serial))
+    log = pr.RawLog()
+    for blob in (b"\x01", b"\x01", b"\x02", b"\x01"):         # before, unchanged, changed, back
+        log.note(fr("khRefresh", "all", blob))
+    kh = log.kinds["khRefresh/all"]
+    assert kh["count"] == 4 and [(h["content"], h["times"]) for h in kh["history"]] == [("0100", 2), ("0200", 1), ("0100", 1)], kh
+    for i in range(30):                                          # only the last HISTORY different ones are kept
+        log.note(fr("khRefresh", "status", bytes([i])))
+    st = log.kinds["khRefresh/status"]
+    assert st["count"] == 30 and len(st["history"]) == pr.RawLog.HISTORY and st["history"][-1]["content"] == "1d00", st
+    log.note(fr("khReport", "values", bytes(1000)))              # long messages are cut
+    assert len(log.kinds["khReport/values"]["history"][0]["content"]) == 2 * pr.RawLog.HEX_BYTES
+    # account and Wi-Fi: counted, content never kept - by name or by an @ in the content
+    for topic, sub, blob in (("user", "login", b"a\x00b"), ("status", "user", b"n\x00\x01"), ("wifi", "list", b"net"),
+                             ("khSet", "password", b"x"), ("khReport", "info", b"me@example.org")):
+        log.note(fr(topic, sub, blob), "to_cloud")
+        entry = log.kinds[f"to_cloud {topic}/{sub}"]
+        assert entry["count"] == 1 and entry["history"][0]["content"] is None, entry
+    big = pr.RawLog()
+    for i in range(200):                                         # the number of kinds is limited
+        big.note(fr("t%d" % i, "x", b""))
+    assert len(big.kinds) == pr.RawLog.KINDS_MAX
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

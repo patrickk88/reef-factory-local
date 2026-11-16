@@ -52,6 +52,18 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
             }
             for c in rt.coordinators.values()
         ]
+        # devices of a type that is not supported yet: what they send to the cloud and what comes back
+        out["unknown_devices"] = [
+            {
+                "serial": d.serial,
+                "connected": d.connected,
+                "real_cloud_connected": d.cloud_connected,
+                "firmware": d.firmware,
+                "seconds_since_seen": round(time.monotonic() - d.last_seen, 1) if d.last_seen else None,
+                "raw_frames": d.raw.kinds,
+            }
+            for d in server.devices.values() if d.unknown
+        ]
     else:
         client = rt.client
         out["device"] = {

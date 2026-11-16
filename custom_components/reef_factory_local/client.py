@@ -29,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
 USER_POLL_SECONDS = 300  # get/user: wifi/cloud status
 UNKNOWN_POLL_SECONDS = 30  # unknown device type: ask for the config again (the only thing ever sent to it)
-RAW_KINDS_MAX = 80  # unknown device type: so many different messages are kept for the diagnostics
-RAW_HEX_BYTES = 256
 RETRY_SECONDS = 5  # first wait after a failed connection attempt ...
 RETRY_MAX_SECONDS = 60  # ... doubling up to this
 RETRY_BUSY_SECONDS = 10  # wait between attempts while they are refused with 429 or the device is restarting ...
@@ -121,7 +119,7 @@ class ReefClient:
         self._productive = False  # diese Sitzung wurde angenommen -> Wartezeit zuruecksetzen
         self.last_error: str | None = None  # letzter Verbindungsfehler, fuer die Diagnose
         self.last_error_at: float | None = None
-        self.raw_frames: dict[str, dict] = {}  # unknown device type: what it sends, for the diagnostics
+        self.raw = pr.RawLog()  # unknown device type: what it sends, for the diagnostics
 
     def _set_busy(self, value: bool) -> None:
         if value != self.busy:
@@ -244,7 +242,7 @@ class ReefClient:
             return
         if self.kind == pr.DEVICE_UNKNOWN:
             self.last_data = time.monotonic()
-            self._note_raw(frame)
+            self.raw.note(frame)
         if info := pr.parse_config(frame):
             if info["serial"] != self.serial:
                 _LOGGER.error(
@@ -267,20 +265,9 @@ class ReefClient:
             self.last_data = time.monotonic()
             self._on_data(data)
 
-    def _note_raw(self, frame: pr.Frame) -> None:
-        """Unknown device type: keep the latest message of every kind for the diagnostics download. Messages
-        that may carry account or Wi-Fi data are counted, their content is not kept."""
-        key = f"{frame.topic}/{frame.subtopic}"
-        entry = self.raw_frames.get(key)
-        if entry is None:
-            if len(self.raw_frames) >= RAW_KINDS_MAX:
-                return
-            entry = self.raw_frames[key] = {"count": 0}
-        name = key.lower()
-        private = any(word in name for word in ("user", "wifi", "login", "pass", "register")) or b"@" in frame.blob
-        entry["count"] += 1
-        entry["length"] = len(frame.blob)
-        entry["hex"] = None if private else frame.blob[:RAW_HEX_BYTES].hex()
+    @property
+    def raw_frames(self) -> dict[str, dict]:
+        return self.raw.kinds
 
     async def async_send(self, raw: bytes) -> None:
         if self._ws is None or self._ws.closed:

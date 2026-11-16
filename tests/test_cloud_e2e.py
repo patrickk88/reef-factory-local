@@ -249,6 +249,36 @@ async def main():
     await srv.async_stop()
     await ws.close(); await ws2.close(); await session.close()
     print("ok  silence: no pong, no answer, new connections reset after login, normal again afterwards")
+
+    # --- round 9: a device of a type that is not supported yet - both directions are kept for the diagnostics
+    real = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(15442, 15444))
+    await real.async_start(); assert not real.listen_errors
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_PASSTHROUGH, upstream_ips=["127.0.0.1"], ports=(16442, 16444))
+    srv.upstream_ports = (15442, 15444); srv.upstream_verify = False
+    await srv.async_start(); assert not srv.listen_errors
+    other = "RFKH012345678901"
+    session = aiohttp.ClientSession()
+    ws = await session.ws_connect("wss://127.0.0.1:16444/hardware32", ssl=False, autoping=False)
+    await ws.send_bytes(pr.build_frame("geConnect", "login", json.dumps({"key": "k", "token": "t", "email": "e", "version": "3.0.0"}).encode(), other))
+    await asyncio.sleep(0.8)
+    for value in (8.1, 8.1, 8.3):                                  # the same twice, then a change
+        await ws.send_bytes(pr.build_frame("khReport", "all", json.dumps({"kh": value, "token": "secret"}).encode(), other))
+    await ws.send_bytes(pr.build_frame("wifi", "list", b"MyNetwork", other))
+    await asyncio.sleep(0.8)
+    dev = srv.devices[other]
+    assert dev.unknown and dev.kind is None and dev.firmware == "3.0.0" and not dev.data, (dev.kind, dev.firmware, dev.data)
+    raw = dev.raw.kinds
+    kh = raw["to_cloud khReport/all"]
+    assert kh["count"] == 3 and [h["times"] for h in kh["history"]] == [2, 1], kh
+    assert kh["history"][0]["content"] == '{"kh":8.1,"token":"***"}' and "8.3" in kh["history"][1]["content"], kh
+    assert raw["to_cloud wifi/list"]["history"][0]["content"] is None, raw["to_cloud wifi/list"]
+    assert "to_device geSet/time" in raw and raw["to_device geSet/time"]["history"][0]["content"], sorted(raw)
+    assert raw["to_device geReport/login"]["history"][0]["content"] is None       # named like a login: not kept
+    assert not any("geConnect" in key for key in raw), sorted(raw)                 # the login itself is never kept
+    assert real.devices[other].raw.kinds["to_cloud khReport/all"]["count"] == 3    # passed on unchanged
+    await ws.close(); await session.close()
+    await srv.async_stop(); await real.async_stop()
+    print("ok  unknown device on the cloud replacement: both directions kept, changes visible, secrets left out")
     print("cloud e2e passed")
 
 def test_lan_addresses():

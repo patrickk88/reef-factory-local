@@ -6,6 +6,11 @@
   firmware; at setup also once whether it is a Smart Roller, as before), subscribes to nothing and offers no values or controls, just *Last report*. The point is the
   diagnostics download: it now holds the device's messages as they came (content of messages that may
   carry account or Wi-Fi data is left out), which is what is needed to support the device.
+- The same for cloud-only devices of an unknown type that connect to the cloud replacement: what they send
+  to the cloud and what the cloud sends to them is kept for the diagnostics download of the cloud
+  replacement entry (`unknown_devices`). They are passed through as before and get no entities.
+- For every kind of message the last ten different contents are kept with their times, so a setting changed
+  in the app shows as before and after.
 - Setup: a device that does not answer like a Reef Factory device gets a clearer message.
 
 ## 1.3.4 - 2026-11-16
