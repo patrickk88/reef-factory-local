@@ -55,7 +55,7 @@ async def main():
         await asyncio.sleep(pr.WATCHDOG_SECONDS * 2 + 0.5)
         assert c.connected and conn == [True], conn
         assert set(got) == {("get", "config")} and len(got) >= 4, got      # nothing else was ever sent
-        assert data == [], data                                           # no values are made up
+        assert data and not any(data), data                               # "something came", but no values are made up
         print("ok  unknown: only get/config is sent (%d times), connection stays up, no values" % len(got))
 
         raw = c.raw_frames

@@ -253,9 +253,13 @@ class ReefClient:
                 )
             if self._on_config:
                 self._on_config(info)
+            if self.kind == pr.DEVICE_UNKNOWN:
+                self._on_data({})  # no values, but "Last report" should move
             return
         if self.kind == pr.DEVICE_UNKNOWN:
-            return  # nothing of an unknown device type is decoded - its messages are only kept as they came
+            # nothing of an unknown device type is decoded - its messages are only kept as they came
+            self._on_data({})
+            return
         if user := pr.parse_user(frame):
             self._on_data(user)
             return
