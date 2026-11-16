@@ -622,6 +622,30 @@ def test_writes_never_fill_in_unknown_values():
     assert pr.frame_rf_manual_update("RFRFS62403220038", presets).endswith(bytes([50, 0]) + b"\x00")
 
 
+def test_unknown_device_type():
+    # a serial that looks like Reef Factory but has no known prefix can be added read only
+    for good in ("RFLK012304200017", "RFRFS62403220038", "RFSRL12310160024", "RFBP052309210012", "RFKH012345678901"):
+        assert pr.looks_like_serial(good), good
+    for bad in ("", "ESP-12345", "RFLK0123", "rflk012304200017", "RF12012304200017", "RFLK01230420001X", "XXLK012304200017"):
+        assert not pr.looks_like_serial(bad), bad
+    serial = "RFKH012345678901"
+    assert pr.prefix_type(serial) is None and pr.device_type(serial) is None
+    pr.register_device_type(serial, pr.DEVICE_UNKNOWN)
+    assert pr.device_type(serial) == pr.DEVICE_UNKNOWN and pr.prefix_type(serial) is None
+    assert pr.MODEL_NAME[pr.DEVICE_UNKNOWN]
+    # nothing can be subscribed or decoded for it
+    try:
+        pr.frame_subscribe(serial)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("subscription built for an unknown device type")
+    frame = pr.parse_frame(pr.build_frame("khRefresh", "all", b"\x01\x02", serial, "join_x"))
+    assert pr.decode(pr.DEVICE_UNKNOWN, frame) is None
+    # a prefix that is known wins over a stored "unknown" only through prefix_type (see __init__)
+    assert pr.prefix_type("RFLK012304200017") == pr.DEVICE_LEVEL_KEEPER
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "Keine Antwort. Prüfe die IP-Adresse und ob schon ein anderes Programm mit dem Gerät verbunden ist.",
-      "unsupported_device": "Gerät {serial} wird nicht unterstützt (bisher: Level keeper, Thermo control, Reef Flare, Smart Roller).",
+      "unsupported_device": "Gerät {serial} meldet sich nicht wie ein Reef-Factory-Gerät.",
       "wrong_device": "Unter dieser Adresse antwortet ein anderes Reef-Factory-Gerät."
     },
     "abort": {

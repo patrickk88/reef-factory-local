@@ -4,7 +4,17 @@ Bug reports, captures of unsupported devices and pull requests are welcome.
 
 ## A device that is not supported yet
 
-The integration logs frames of unknown devices at debug level. To help:
+**With a local port (it shows its own page at `http://<device-ip>`):** from version 1.4.0 on, add it like
+any other device by its IP address. It appears as *Unknown Reef Factory device*: read only, nothing is
+subscribed or written, the integration only asks it for its config (and once, at setup, whether it is a
+Smart Roller). Let it run for a few minutes, use the
+device's own page or the app meanwhile (change a setting, press a button), then *menu -> Download
+diagnostics* on the entry and attach the file to an issue. It holds the device's messages as they came;
+the content of messages that may carry account or Wi-Fi data is left out - still, have a look through
+the file before you post it.
+
+**Without a local port (cloud only), or if the above shows too little:** the integration logs frames of
+unknown devices at debug level. To help:
 
 1. Enable debug logging for `custom_components.reef_factory_local` (Settings → Devices & services →
    Reef Factory Local → Enable debug logging), let the device run for a few minutes, disable it again

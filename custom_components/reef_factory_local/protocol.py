@@ -34,6 +34,7 @@ DEVICE_FLARE = "reef_flare"
 DEVICE_FEEDER = "smart_feeder"  # cloud-only device (no local port), served by the cloud replacement
 DEVICE_BASE_PUMP = "base_pump"      # cloud-only, Reef Base pump (return pump)
 DEVICE_DOSING_PUMP = "dosing_pump"  # cloud-only, Dosing pump Pro X4
+DEVICE_UNKNOWN = "unknown"  # answers like a Reef Factory device, type not supported yet: read only, nothing subscribed
 DEVICE_SMART_ROLLER = "smart_roller"  # local; RFSR (seen: RFSRL1..., firmware 1.1.1), else found by PROBE_TYPES
 
 # Cloud channel (what the devices expect from api.reeffactory.com)
@@ -104,6 +105,7 @@ MODEL_NAME = {
     DEVICE_BASE_PUMP: "Base pump",
     DEVICE_DOSING_PUMP: "Dosing pump Pro X4",
     DEVICE_SMART_ROLLER: "Smart Roller",
+    DEVICE_UNKNOWN: "Unknown Reef Factory device",
 }
 # Smart feeder: feeding modes (sfSet/mode) and units
 FEEDER_MODES = {"period": "schedule", "sequence": "interval"}
@@ -173,14 +175,27 @@ def frame_probe(serial: str, kind: str) -> bytes:
     return build_frame(CONNECT_TOPIC[kind], "join", serial.encode() + b"\x00", serial, join_id())
 
 
-def device_type(serial: str) -> str | None:
-    """Return the supported device type for a serial number, or None."""
-    if serial in _TYPE_OVERRIDES:
-        return _TYPE_OVERRIDES[serial]
+_SERIAL_RE = re.compile(r"RF[A-Z]{2,4}\d{10,12}")
+
+
+def looks_like_serial(serial: str) -> bool:
+    """Reef Factory serial numbers: RF, the device letters, digits - 16 characters (RFLK012304200017)."""
+    return len(serial) == 16 and _SERIAL_RE.fullmatch(serial) is not None
+
+
+def prefix_type(serial: str) -> str | None:
+    """The device type the serial prefix stands for, or None."""
     for prefix, kind in _PREFIXES:
         if serial.startswith(prefix):
             return kind
     return None
+
+
+def device_type(serial: str) -> str | None:
+    """Return the device type for a serial number (stored for probed/unknown devices), or None."""
+    if serial in _TYPE_OVERRIDES:
+        return _TYPE_OVERRIDES[serial]
+    return prefix_type(serial)
 
 
 def join_id() -> str:
@@ -205,7 +220,7 @@ def frame_get_config() -> bytes:
 
 def frame_subscribe(serial: str) -> bytes:
     kind = device_type(serial)
-    if kind is None:
+    if kind not in CONNECT_TOPIC:
         raise ValueError(f"unsupported device {serial!r}")
     return build_frame(
         CONNECT_TOPIC[kind], "join", serial.encode() + b"\x00", serial, join_id()
@@ -1315,4 +1330,5 @@ _DECODERS = {
 
 
 def decode(kind: str, frame: Frame) -> dict | None:
-    return _DECODERS[kind](frame)
+    decoder = _DECODERS.get(kind)
+    return decoder(frame) if decoder else None

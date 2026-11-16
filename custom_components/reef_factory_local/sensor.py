@@ -337,7 +337,7 @@ async def async_setup_entry(
 ) -> None:
     def factory(c):
         kind = pr.device_type(c.serial)
-        extra = [ReefLastSeen(c)]
+        extra = [ReefLastSeen(c, enabled=kind == pr.DEVICE_UNKNOWN)]
         if kind == pr.DEVICE_FLARE:
             extra.append(ReefFlareManualEnd(c))
         return [ReefSensor(c, desc) for desc in SENSORS.get(kind, ())] + extra
@@ -409,8 +409,10 @@ class ReefLastSeen(ReefEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:clock-check-outline"
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator, enabled: bool = False) -> None:
         super().__init__(coordinator, "last_seen")
+        if enabled:  # the only entity of an unknown device type
+            self._attr_entity_registry_enabled_default = True
 
     def _monotonic(self) -> float | None:
         source = self.coordinator.client

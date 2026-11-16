@@ -56,6 +56,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
         client = rt.client
         out["device"] = {
             "serial": rt.serial,
+            "kind": client.kind,
             "connected": client.connected,
             "busy": client.busy,
             "firmware": rt.firmware,
@@ -64,4 +65,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
             "seconds_since_error": round(time.monotonic() - client.last_error_at, 1) if client.last_error_at else None,
             "data": async_redact_data(_clean(rt.data or {}), TO_REDACT),
         }
+        if client.raw_frames:  # unknown device type: its messages as they came
+            out["device"]["raw_frames"] = client.raw_frames
     return out

@@ -28,6 +28,9 @@ from . import protocol as pr
 _LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
 USER_POLL_SECONDS = 300  # get/user: wifi/cloud status
+UNKNOWN_POLL_SECONDS = 30  # unknown device type: ask for the config again (the only thing ever sent to it)
+RAW_KINDS_MAX = 80  # unknown device type: so many different messages are kept for the diagnostics
+RAW_HEX_BYTES = 256
 RETRY_SECONDS = 5  # first wait after a failed connection attempt ...
 RETRY_MAX_SECONDS = 60  # ... doubling up to this
 RETRY_BUSY_SECONDS = 10  # wait between attempts while they are refused with 429 or the device is restarting ...
@@ -118,6 +121,7 @@ class ReefClient:
         self._productive = False  # diese Sitzung wurde angenommen -> Wartezeit zuruecksetzen
         self.last_error: str | None = None  # letzter Verbindungsfehler, fuer die Diagnose
         self.last_error_at: float | None = None
+        self.raw_frames: dict[str, dict] = {}  # unknown device type: what it sends, for the diagnostics
 
     def _set_busy(self, value: bool) -> None:
         if value != self.busy:
@@ -195,9 +199,11 @@ class ReefClient:
         stopper = asyncio.create_task(self._stop.wait())
         try:
             self._set_connected(True)
+            known = self.kind != pr.DEVICE_UNKNOWN  # unknown type: get/config only - nothing subscribed, no get/user
             await ws.send_bytes(pr.frame_get_config())
-            await ws.send_bytes(pr.frame_subscribe(self.serial))
-            await ws.send_bytes(pr.frame_get_user(self.serial))
+            if known:
+                await ws.send_bytes(pr.frame_subscribe(self.serial))
+                await ws.send_bytes(pr.frame_get_user(self.serial))
             last_sub = last_user = self.last_data = time.monotonic()
             while True:
                 done, _ = await asyncio.wait({reader, stopper}, timeout=1)
@@ -209,6 +215,11 @@ class ReefClient:
                 now = time.monotonic()
                 if now - self.last_data > pr.WATCHDOG_SECONDS:
                     raise ConnectionError(f"no data for {pr.WATCHDOG_SECONDS} s")
+                if not known:
+                    if now - last_sub >= UNKNOWN_POLL_SECONDS:
+                        await ws.send_bytes(pr.frame_get_config())  # its answer also shows the device is alive
+                        last_sub = now
+                    continue
                 if now - last_sub >= pr.RESUBSCRIBE_SECONDS:
                     await ws.send_bytes(pr.frame_subscribe(self.serial))
                     last_sub = now
@@ -231,6 +242,9 @@ class ReefClient:
         frame = pr.parse_frame(raw)
         if frame is None:
             return
+        if self.kind == pr.DEVICE_UNKNOWN:
+            self.last_data = time.monotonic()
+            self._note_raw(frame)
         if info := pr.parse_config(frame):
             if info["serial"] != self.serial:
                 _LOGGER.error(
@@ -240,12 +254,29 @@ class ReefClient:
             if self._on_config:
                 self._on_config(info)
             return
+        if self.kind == pr.DEVICE_UNKNOWN:
+            return  # nothing of an unknown device type is decoded - its messages are only kept as they came
         if user := pr.parse_user(frame):
             self._on_data(user)
             return
         if self.kind and (data := pr.decode(self.kind, frame)):
             self.last_data = time.monotonic()
             self._on_data(data)
+
+    def _note_raw(self, frame: pr.Frame) -> None:
+        """Unknown device type: keep the latest message of every kind for the diagnostics download. Messages
+        that may carry account or Wi-Fi data are counted, their content is not kept."""
+        key = f"{frame.topic}/{frame.subtopic}"
+        entry = self.raw_frames.get(key)
+        if entry is None:
+            if len(self.raw_frames) >= RAW_KINDS_MAX:
+                return
+            entry = self.raw_frames[key] = {"count": 0}
+        name = key.lower()
+        private = any(word in name for word in ("user", "wifi", "login", "pass", "register")) or b"@" in frame.blob
+        entry["count"] += 1
+        entry["length"] = len(frame.blob)
+        entry["hex"] = None if private else frame.blob[:RAW_HEX_BYTES].hex()
 
     async def async_send(self, raw: bytes) -> None:
         if self._ws is None or self._ws.closed:

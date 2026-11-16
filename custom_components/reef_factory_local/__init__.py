@@ -30,6 +30,7 @@ PLATFORMS: dict[str, list[Platform]] = {
         Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.SELECT, Platform.BUTTON, Platform.NUMBER,
     ],
     pr.DEVICE_FLARE: [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT, Platform.NUMBER],
+    pr.DEVICE_UNKNOWN: [Platform.SENSOR],  # only "last report"; the point is the diagnostics download
     pr.DEVICE_FEEDER: [
         Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SELECT,
         Platform.NUMBER, Platform.SWITCH, Platform.BUTTON, Platform.EVENT,
@@ -66,7 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ReefConfigEntry) -> bool
         return await _async_setup_cloud(hass, entry)
     serial = entry.data[CONF_SERIAL]
     if kind := entry.data.get(CONF_DEVICE_TYPE):
-        pr.register_device_type(serial, kind)
+        # added as unknown, supported by now: the serial prefix says what it is
+        if not (kind == pr.DEVICE_UNKNOWN and pr.prefix_type(serial)):
+            pr.register_device_type(serial, kind)
     coordinator = ReefCoordinator(hass, entry)
     coordinator.clear_busy_issue()  # one left over from before a reload would never go away
     await coordinator.async_restore()

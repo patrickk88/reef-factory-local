@@ -62,6 +62,11 @@ class ReefFactoryLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 serial = info["serial"]
                 kind = info["device_type"]
+                if kind is None and pr.looks_like_serial(serial):
+                    # a Reef Factory device of a type that is not supported yet: added read only, so that
+                    # its diagnostics download shows what it sends
+                    kind = pr.DEVICE_UNKNOWN
+                    info["probed"] = True
                 if kind is None:
                     errors["base"] = "unsupported_device"
                     placeholders["serial"] = serial

@@ -149,6 +149,9 @@ contains the raw report, `report_hex`) and the firmware shown on the device page
 
 </details>
 
+**Another Reef Factory device?** It can be added too, read only, so that its diagnostics file shows what
+it sends - see [Contributing](https://github.com/patrickk88/reef-factory-local/blob/main/CONTRIBUTING.md).
+
 The interface is available in English, German, Dutch, French, Spanish, Italian and Polish.
 
 ## Installation

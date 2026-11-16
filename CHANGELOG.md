@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 - unreleased
+- A Reef Factory device of a type that is not supported yet can be added: it answers like the others, but
+  its serial prefix is unknown. It is read only - the integration only asks it for its config (serial,
+  firmware; at setup also once whether it is a Smart Roller, as before), subscribes to nothing and offers no values or controls, just *Last report*. The point is the
+  diagnostics download: it now holds the device's messages as they came (content of messages that may
+  carry account or Wi-Fi data is left out), which is what is needed to support the device.
+- Setup: a device that does not answer like a Reef Factory device gets a clearer message.
+
 ## 1.3.4 - 2026-11-16
 - Faster reconnect: once a connection has been accepted, a later drop is retried within about five seconds
   again, instead of carrying over the longer wait that builds up from earlier failed attempts.

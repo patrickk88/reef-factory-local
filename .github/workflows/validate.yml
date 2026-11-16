@@ -31,3 +31,4 @@ jobs:
       - run: python tests/test_protocol.py
       - run: python tests/test_cloud_e2e.py
       - run: python tests/test_client_busy.py
+      - run: python tests/test_client_unknown.py
