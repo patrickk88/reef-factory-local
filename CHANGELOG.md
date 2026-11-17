@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 - 2026-11-17
+Packaging only, no change in the code.
+- Releases now carry the integration as a zip file (`reef_factory_local.zip`); HACS / the Marketplace
+  download that file instead of the source tree. The older releases got the same file, so every version
+  can still be installed.
+
 ## 1.4.0 - 2026-11-17
 - A Reef Factory device of a type that is not supported yet can be added: it answers like the others, but
   its serial prefix is unknown. It is read only - the integration only asks it for its config (serial,
