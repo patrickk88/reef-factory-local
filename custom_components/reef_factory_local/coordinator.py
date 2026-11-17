@@ -86,7 +86,7 @@ class ReefCoordinator(DataUpdateCoordinator[dict]):
             self.async_update_listeners()
             return
         server = self._cloud_server()
-        if server is not None and server.silence(self.serial, RECOVER_SILENCE_SECONDS):
+        if server is not None and server.silence(self.serial, RECOVER_SILENCE_SECONDS, self.config_entry.data.get("host")):
             _LOGGER.warning("%s (%s): web server stuck (HTTP 429) - restarting it through the cloud replacement",
                             self.device_name, self.serial)
             self._issue("device_busy_restarting")

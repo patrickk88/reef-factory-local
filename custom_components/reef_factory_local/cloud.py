@@ -41,6 +41,7 @@ RESOLVE_TTL = 600
 UPSTREAM_TIMEOUT = 8
 STOP_TIMEOUT = 10  # per listener when stopping; open connections are reset first
 IDLE_SECONDS = 90  # a device connection without any frame or ping for this long is dead and gets dropped
+NAMELESS_RECENT_SECONDS = 600  # silence() by address: a connection without login from there, open or this recent
 SESSION_LIVE_SECONDS = 60  # a device connection that sent anything within this time is alive (they ping every 20 s)
 UPSTREAM_RETRY_SECONDS = 120  # served locally because the real cloud was away: look again this often
 LOCAL_POLL_SECONDS = 300
@@ -311,6 +312,9 @@ class ReefCloudServer:
         self._session: aiohttp.ClientSession | None = None
         self._upstream_hosts: dict[str, list[str]] = {}  # read by the session's resolver on every connect
         self._transports: set = set()  # every open connection (devices, also before their first frame, and the app)
+        self._nameless: dict = {}  # device connections that have not said who they are yet: transport -> address
+        self._silent_peers: dict[str, float] = {}  # addresses that get no answer until then, see silence()
+        self._nameless_seen: dict[str, float] = {}  # address -> when a connection without login was last open
         self.listen_errors: dict[int, str] = {}
         # where the real cloud listens; only tests change these
         self.upstream_ports = (pr.CLOUD_PORT_PLAIN, pr.CLOUD_PORT_TLS)
@@ -521,6 +525,13 @@ class ReefCloudServer:
         peer = request.remote
         port = request.transport.get_extra_info("sockname")[1] if request.transport else 0
         _LOGGER.debug("cloud: connection from %s on port %s path %s", peer, port, request.path)
+        if self._peer_silenced(peer):
+            reset_transport(transport)  # see silence(): for this address the cloud is gone
+            self._transports.discard(transport)
+            return ws
+        self._nameless[transport] = peer
+        if peer:
+            self._nameless_seen[peer] = time.monotonic()
         device: CloudDevice | None = None
         upstream = None
         local_task: asyncio.Task | None = None
@@ -539,6 +550,9 @@ class ReefCloudServer:
                         aiohttp.WSMsgType.PING, aiohttp.WSMsgType.BINARY, aiohttp.WSMsgType.TEXT):
                     device.last_seen = time.monotonic()
                     continue  # pretend to be gone: no pong, nothing forwarded, nothing answered
+                if device is None and self._peer_silenced(peer) and msg.type in (
+                        aiohttp.WSMsgType.PING, aiohttp.WSMsgType.BINARY, aiohttp.WSMsgType.TEXT):
+                    continue  # the same for a connection that never said who it is
                 if msg.type is aiohttp.WSMsgType.PING:
                     await ws.pong(msg.data)
                     if device:
@@ -571,6 +585,7 @@ class ReefCloudServer:
                                             "is connected from %s", frame.serial, peer, holder)
                         reset_transport(transport)
                         break
+                    self._nameless.pop(transport, None)
                     device = self._device(frame.serial, ws, request.transport, peer)
                     device.mode = MODE_LOCAL
                     if self.mode == MODE_PASSTHROUGH:
@@ -598,6 +613,8 @@ class ReefCloudServer:
                     local_task = asyncio.get_running_loop().create_task(self._poll(device))
         finally:
             self._transports.discard(transport)
+            if self._nameless.pop(transport, None) and peer:
+                self._nameless_seen[peer] = time.monotonic()  # it never logged in
             if local_task:
                 local_task.cancel()
             if retry_task:
@@ -613,18 +630,45 @@ class ReefCloudServer:
             _LOGGER.debug("cloud: %s disconnected", device.serial if device else peer)
         return ws
 
-    def silence(self, serial: str, seconds: float) -> bool:
+    def silence(self, serial: str, seconds: float, host: str | None = None) -> bool:
         """Make a device believe its cloud is gone: its open connection gets no answer at all (pings
         included, nothing forwarded) and new connections are reset after their login. Stuck devices (web
         server answering HTTP 429) restart after about a minute without their cloud - seen 2026-11-14 on two
         Reef Flare S, Level keeper and Thermo control; healthy devices just wait. A restart is the only cure
-        for the stuck web server. False if the device is not connected to the cloud replacement."""
+        for the stuck web server.
+
+        A stuck device may also keep a connection open here without ever logging in (2026-11-17, Level
+        keeper): then it is known only by its address. With host given, such a connection from that address
+        - open now or within the last NAMELESS_RECENT_SECONDS, the cloud replacement drops them after
+        IDLE_SECONDS - is treated the same way: no answer, new connections from there reset at once.
+
+        False if the device is not connected to the cloud replacement in either way."""
         device = self.devices.get(serial)
-        if device is None or not device.connected:
+        if device is not None and device.connected:
+            device.silent_until = time.monotonic() + seconds
+            _LOGGER.warning("Cloud replacement: not answering %s for %d s so that it restarts", serial, seconds)
+            return True
+        if host and (host in self._nameless.values()
+                     or time.monotonic() - self._nameless_seen.get(host, -1e9) < NAMELESS_RECENT_SECONDS):
+            self._silent_peers[host] = time.monotonic() + seconds
+            _LOGGER.warning("Cloud replacement: not answering the connection from %s (%s, not logged in) for %d s "
+                            "so that it restarts", host, serial, seconds)
+            return True
+        return False
+
+    def _peer_silenced(self, peer: str | None) -> bool:
+        until = self._silent_peers.get(peer) if peer else None
+        if until is None:
             return False
-        device.silent_until = time.monotonic() + seconds
-        _LOGGER.warning("Cloud replacement: not answering %s for %d s so that it restarts", serial, seconds)
+        if time.monotonic() >= until:
+            del self._silent_peers[peer]
+            return False
         return True
+
+    @property
+    def nameless_peers(self) -> list[str]:
+        """Addresses of device connections that have not logged in (yet)."""
+        return sorted({p for p in self._nameless.values() if p})
 
     def _silenced(self, serial: str) -> bool:
         device = self.devices.get(serial)

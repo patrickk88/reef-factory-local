@@ -13,6 +13,14 @@ Assistant plus one more connection and every further request got 429, for minute
 a power cycle the same light took nine more connections). While our own connection works, nothing is wrong
 for Home Assistant, and every extra request only uses up what is left. A refused WebSocket connection is
 another matter: that light took every WebSocket connection even while it refused the start page.
+
+The stuck state has a second face (2026-11-17, Level keeper 1.0.0): the start page is refused with 429 at
+once, but the WebSocket request gets no answer at all - the attempt runs into its timeout. So after an
+attempt of our own that got no answer - and only then, never while connected - the client asks for the start
+page once: a 429 there counts like a refused attempt. The same device an hour later took connections and
+answered nothing at all, neither the WebSocket request nor the start page: that counts too, but only when
+it stays like that for SILENT_CONFIRM_SECONDS. The start page coming, or the device not taking the
+connection (off, no Wi-Fi, restarting), ends the row.
 """
 from __future__ import annotations
 
@@ -35,7 +43,9 @@ RETRY_BUSY_SECONDS = 10  # wait between attempts while they are refused with 429
 RETRY_BUSY_FOR_SECONDS = 300  # ... for this long after the first refusal; then the usual waits again
 BUSY_CONFIRM_HITS = 3  # stuck = at least this many connection attempts refused with 429 in a row ...
 BUSY_CONFIRM_SECONDS = 30  # ... over at least this long, with nothing else in between
+SILENT_CONFIRM_SECONDS = 180  # ... or this long when the device took connections but answered nothing at all
 HTTP_BUSY = 429
+START_PAGE_TIMEOUT = 5  # the one request after a WebSocket attempt without answer
 
 
 def _url(host: str) -> str:
@@ -88,6 +98,10 @@ async def _next(ws: aiohttp.ClientWebSocketResponse, pick: Callable) -> object:
     return None
 
 
+class _NoAnswer(Exception):
+    """The WebSocket request got no answer within CONNECT_TIMEOUT."""
+
+
 class ReefClient:
     """Keeps the connection, subscribes every 15 s and pushes decoded data."""
 
@@ -112,6 +126,7 @@ class ReefClient:
         self.busy = False  # web server answers new requests with 429 (stuck until the device restarts)
         self._busy_hits = 0  # refusals in a row
         self._busy_first = 0.0  # when the first of them was seen
+        self._busy_silent = False  # the row holds attempts without any answer: the longer time applies
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._stop = asyncio.Event()
         self.connected = False
@@ -127,19 +142,26 @@ class ReefClient:
             if self._on_busy:
                 self._on_busy(value)
 
-    def _note_busy(self, refused: bool) -> None:
-        """How a connection attempt ended: refused with 429, or taken. A taken connection ends the state at
-        once; refusals only count when they went on long enough (see the module docstring)."""
+    def _note_busy(self, refused: bool, silent: bool = False) -> None:
+        """How a connection attempt ended: refused with 429 (or, silent, taken without any answer), or taken.
+        A taken connection ends the state at once; refusals only count when they went on long enough (see
+        the module docstring)."""
         if not refused:
-            self._busy_hits = 0
+            self._end_row()
             self._set_busy(False)
             return
         now = time.monotonic()
         if self._busy_hits == 0:
             self._busy_first = now
         self._busy_hits += 1
-        if self._busy_hits >= BUSY_CONFIRM_HITS and now - self._busy_first >= BUSY_CONFIRM_SECONDS:
+        self._busy_silent = self._busy_silent or silent
+        need = SILENT_CONFIRM_SECONDS if self._busy_silent else BUSY_CONFIRM_SECONDS
+        if self._busy_hits >= BUSY_CONFIRM_HITS and now - self._busy_first >= need:
             self._set_busy(True)
+
+    def _end_row(self) -> None:
+        self._busy_hits = 0
+        self._busy_silent = False
 
     def _set_connected(self, value: bool) -> None:
         if value != self.connected:
@@ -161,12 +183,25 @@ class ReefClient:
                 if err.status == HTTP_BUSY:
                     self._note_busy(True)
                 else:
-                    self._busy_hits = 0
+                    self._end_row()
                 self.last_error = f"HTTP {err.status}" if err.status else str(err)
                 self.last_error_at = time.monotonic()
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
+            except _NoAnswer:
+                page = await self._start_page()
+                if page == "refused":
+                    self._note_busy(True)
+                    self.last_error = "no answer to the WebSocket request, start page HTTP 429"
+                elif page == "silent":
+                    self._note_busy(True, silent=True)
+                    self.last_error = "connection taken, but no answer to the WebSocket request or the start page"
+                else:
+                    self._end_row()  # the page came, or the device does not take connections: not stuck
+                    self.last_error = "no answer to the WebSocket request"
+                self.last_error_at = time.monotonic()
+                _LOGGER.debug("%s (%s): %s", self.serial, self.host, self.last_error)
             except Exception as err:  # noqa: BLE001 - keep the loop alive whatever happens
-                self._busy_hits = 0  # unreachable is not "refused": the row of refusals starts again
+                self._end_row()  # unreachable is not "refused": the row of refusals starts again
                 self.last_error = f"{type(err).__name__}: {err}"
                 self.last_error_at = time.monotonic()
                 _LOGGER.debug("%s (%s): %s", self.serial, self.host, err)
@@ -186,11 +221,31 @@ class ReefClient:
                 pass
             backoff = min(backoff * 2, RETRY_MAX_SECONDS)
 
+    async def _start_page(self) -> str:
+        """What the device does with a request for its start page: "refused" (HTTP 429), "answered" (anything
+        else), "silent" (took the connection, no answer) or "unreachable" (did not take it). Only asked after
+        a WebSocket attempt of our own that got no answer (see the module docstring)."""
+        timeout = aiohttp.ClientTimeout(total=START_PAGE_TIMEOUT, sock_connect=START_PAGE_TIMEOUT / 2)
+        try:
+            async with self._session.get(f"http://{self.host}/", allow_redirects=False, timeout=timeout) as resp:
+                return "refused" if resp.status == HTTP_BUSY else "answered"
+        except asyncio.CancelledError:
+            raise
+        except (aiohttp.ClientConnectorError, aiohttp.ConnectionTimeoutError):
+            return "unreachable"
+        except TimeoutError:
+            return "silent"
+        except Exception:  # noqa: BLE001 - broken answer, reset: it answered
+            return "answered"
+
     async def _session_once(self) -> None:
-        async with asyncio.timeout(CONNECT_TIMEOUT):
-            ws = await self._session.ws_connect(
-                _url(self.host), protocols=(pr.WS_SUBPROTOCOL,), autoping=True
-            )
+        try:
+            async with asyncio.timeout(CONNECT_TIMEOUT):
+                ws = await self._session.ws_connect(
+                    _url(self.host), protocols=(pr.WS_SUBPROTOCOL,), autoping=True
+                )
+        except TimeoutError:
+            raise _NoAnswer from None
         self._ws = ws
         self._note_busy(False)  # the device took the connection
         reader = asyncio.create_task(self._reader(ws))

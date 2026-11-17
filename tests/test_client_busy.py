@@ -1,6 +1,6 @@
 """ReefClient reports a stuck web server (HTTP 429): only when its own connection attempts are refused for
-the whole confirmation time, never from a single refusal, and without any extra request
-(needs aiohttp; runs in the HA python)."""
+the whole confirmation time, never from a single refusal, and without any extra request - except the one
+for the start page after a WebSocket attempt that got no answer (needs aiohttp; runs in the HA python)."""
 import asyncio, importlib.util, pathlib, sys, time, types
 import aiohttp
 from aiohttp import web
@@ -17,6 +17,7 @@ client.RETRY_SECONDS = 0.2
 client.RETRY_MAX_SECONDS = 0.4
 client.RETRY_BUSY_SECONDS = 0.3
 client.BUSY_CONFIRM_SECONDS = 1.5
+client.SILENT_CONFIRM_SECONDS = 4.0
 
 async def wait_for(cond, seconds):
     end = time.monotonic() + seconds
@@ -29,12 +30,16 @@ async def wait_for(cond, seconds):
 async def main():
     # answer: status for the next connection attempts (None = take the connection); left: how many attempts
     # get that status (-1 = all); other: requests that are not the WebSocket
-    state = {"answer": 429, "left": 1, "other": 0, "attempts": 0}
+    state = {"answer": 429, "left": 1, "other": 0, "attempts": 0, "hang": False, "page": 200}
     async def index(request):
         state["other"] += 1
-        return web.Response(text="ok")
+        if state["page"] is None:
+            await asyncio.sleep(30)
+        return web.Response(text="ok", status=state["page"] or 200)
     async def controler(request):
         state["attempts"] += 1
+        if state["hang"]:
+            await asyncio.sleep(30)
         if state["answer"] is not None and state["left"] != 0:
             if state["left"] > 0:
                 state["left"] -= 1
@@ -91,6 +96,39 @@ async def main():
         # 6 - the client never asks for anything but its WebSocket
         assert state["other"] == 0, state
         print("ok  client: no extra requests (%d connection attempts, 0 others)" % state["attempts"])
+
+        # 7 - the WebSocket request gets no answer (2026-11-17, Level keeper). Start page fine: the device is
+        #     slow or away, not stuck - however long it lasts
+        client.CONNECT_TIMEOUT = 0.3
+        client.START_PAGE_TIMEOUT = 0.4
+        state.update(hang=True, page=200)
+        await asyncio.sleep(client.BUSY_CONFIRM_SECONDS * 2.5)
+        assert events == [True, False] and not c.busy and state["other"] >= 2, (events, state)
+        assert c.last_error == "no answer to the WebSocket request", c.last_error
+        # 8 - no answer and the start page refused with 429: stuck, after the confirmation time
+        state.update(page=429); start = time.monotonic()
+        assert await wait_for(lambda: events == [True, False, True], 10), events
+        assert time.monotonic() - start >= client.BUSY_CONFIRM_SECONDS and c.busy
+        assert c.last_error == "no answer to the WebSocket request, start page HTTP 429", c.last_error
+        # 9 - restarted: the connection is taken, and while connected the start page is never asked for
+        state.update(hang=False, answer=None)
+        assert await wait_for(lambda: events == [True, False, True, False] and c.connected, 10), events
+        before = state["other"]; await asyncio.sleep(1)
+        assert state["other"] == before and not c.busy
+        print("ok  client: no answer to the WebSocket + start page 429 -> busy; start page fine -> not; none while connected")
+
+        # 10 - connections taken, nothing answered at all (2026-11-17 22:47, the same Level keeper): stuck too,
+        #      but only after the longer time
+        state.update(hang=True, page=None)
+        await c._ws.close(); start = time.monotonic()
+        await asyncio.sleep(client.BUSY_CONFIRM_SECONDS * 1.6)
+        assert events == [True, False, True, False] and not c.busy, events
+        assert await wait_for(lambda: events == [True, False, True, False, True], 12), events
+        assert time.monotonic() - start >= client.SILENT_CONFIRM_SECONDS, time.monotonic() - start
+        assert c.last_error == "connection taken, but no answer to the WebSocket request or the start page", c.last_error
+        state.update(hang=False, page=200)
+        assert await wait_for(lambda: events[-1] is False and c.connected, 10), events
+        print("ok  client: connections taken but nothing answered -> busy after the longer time")
         await c.async_stop(); task.cancel()
     await runner.cleanup()
 

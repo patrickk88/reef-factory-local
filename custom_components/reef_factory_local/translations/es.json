@@ -932,11 +932,11 @@
   "issues": {
     "device_busy_restarting": {
       "title": "{name}: servidor web bloqueado – reiniciándolo",
-      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429. El servidor web del dispositivo queda así bloqueado hasta que se reinicia; una conexión abierta puede seguir funcionando, pero Home Assistant no puede volver a conectarse. El sustituto de la nube deja ahora de responder al dispositivo durante unos minutos y el dispositivo se reinicia solo. No hay que hacer nada; este aviso desaparece cuando vuelva a aceptar solicitudes."
+      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429 o no responde. El servidor web del dispositivo queda así bloqueado hasta que se reinicia; una conexión abierta puede seguir funcionando, pero Home Assistant no puede volver a conectarse. El sustituto de la nube deja ahora de responder al dispositivo durante unos minutos y el dispositivo se reinicia solo. No hay que hacer nada; este aviso desaparece cuando vuelva a aceptar solicitudes."
     },
     "device_busy": {
       "title": "{name}: servidor web bloqueado – desconéctalo",
-      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429. El servidor web del dispositivo queda así bloqueado hasta que se reinicia. Desconecta el dispositivo de la corriente durante 10 segundos. Mientras tanto sigue ejecutando su programa.\n\nConsejo: si la conexión a la nube del dispositivo pasa por el sustituto de la nube de esta integración (opción «Reiniciar automáticamente los dispositivos bloqueados» activada), la integración reinicia sola un dispositivo bloqueado (ver el README)."
+      "description": "{name} ({host}) solo responde a nuevas solicitudes con HTTP 429 o no responde. El servidor web del dispositivo queda así bloqueado hasta que se reinicia. Desconecta el dispositivo de la corriente durante 10 segundos. Mientras tanto sigue ejecutando su programa.\n\nConsejo: si la conexión a la nube del dispositivo pasa por el sustituto de la nube de esta integración (opción «Reiniciar automáticamente los dispositivos bloqueados» activada), la integración reinicia sola un dispositivo bloqueado (ver el README)."
     }
   }
 }

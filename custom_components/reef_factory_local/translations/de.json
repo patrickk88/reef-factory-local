@@ -932,11 +932,11 @@
   "issues": {
     "device_busy_restarting": {
       "title": "{name}: Webserver hängt – wird neu gestartet",
-      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429. So hängt der Webserver des Geräts, bis es neu startet; eine offene Verbindung kann weiterlaufen, Home Assistant kann sich aber nicht neu verbinden. Der Cloud-Ersatz antwortet dem Gerät jetzt einige Minuten nicht – das Gerät startet dann von selbst neu. Nichts zu tun; die Meldung verschwindet, sobald es wieder Anfragen annimmt."
+      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429 oder gar nicht. So hängt der Webserver des Geräts, bis es neu startet; eine offene Verbindung kann weiterlaufen, Home Assistant kann sich aber nicht neu verbinden. Der Cloud-Ersatz antwortet dem Gerät jetzt einige Minuten nicht – das Gerät startet dann von selbst neu. Nichts zu tun; die Meldung verschwindet, sobald es wieder Anfragen annimmt."
     },
     "device_busy": {
       "title": "{name}: Webserver hängt – kurz stromlos machen",
-      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429. So hängt der Webserver des Geräts, bis es neu startet. Das Gerät 10 Sekunden vom Strom trennen. Sein Programm läuft bis dahin weiter.\n\nTipp: Läuft die Cloud-Verbindung des Geräts über den Cloud-Ersatz dieser Integration (Option „Hängende Geräte automatisch neu starten“ an), startet die Integration ein hängendes Gerät selbst neu (siehe README)."
+      "description": "{name} ({host}) beantwortet neue Anfragen nur noch mit HTTP 429 oder gar nicht. So hängt der Webserver des Geräts, bis es neu startet. Das Gerät 10 Sekunden vom Strom trennen. Sein Programm läuft bis dahin weiter.\n\nTipp: Läuft die Cloud-Verbindung des Geräts über den Cloud-Ersatz dieser Integration (Option „Hängende Geräte automatisch neu starten“ an), startet die Integration ein hängendes Gerät selbst neu (siehe README)."
     }
   }
 }

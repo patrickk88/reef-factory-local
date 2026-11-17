@@ -52,6 +52,18 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ReefCon
             }
             for c in rt.coordinators.values()
         ]
+        # every device that talks to the cloud through here, also the ones with a local port: this is the
+        # connection the cloud replacement stops answering to make a stuck device restart
+        out["sessions"] = [
+            {
+                "serial": d.serial,
+                "connected": d.connected,
+                "silenced": d.silenced,
+                "seconds_since_seen": round(time.monotonic() - d.last_seen, 1) if d.last_seen else None,
+            }
+            for d in server.devices.values()
+        ]
+        out["connections_without_login"] = len(server.nameless_peers)
         # devices of a type that is not supported yet: what they send to the cloud and what comes back
         out["unknown_devices"] = [
             {

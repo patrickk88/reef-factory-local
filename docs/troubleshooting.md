@@ -15,8 +15,15 @@ while, but once it drops, Home Assistant cannot connect again and the device's e
 The device itself keeps running its program, refill or heating.
 
 The integration notices this through its own connection: when the device refuses Home Assistant's
-connection attempts with 429 three times in a row over half a minute, it is treated as stuck. It sends no
-extra request to find out, and as long as Home Assistant is connected nothing is reported. Then:
+connection attempts with 429 three times in a row over half a minute, it is treated as stuck. As long as
+Home Assistant is connected nothing is reported, and no extra request is sent.
+
+The stuck state has two more faces, both seen on one Level keeper (firmware 1.0.0) on 2026-11-17: the
+start page is refused with 429 while the WebSocket request gets no answer at all, and - an hour later - the
+device takes connections and answers nothing, neither the WebSocket request nor the start page. So after a
+connection attempt of its own that got no answer, the integration asks for the start page once: a 429
+there counts like a refused attempt; no answer at all counts when it stays like that for three minutes. A
+device that is off, restarting or without Wi-Fi does not take connections and is not reported. Then:
 
 - **Device connected through the cloud replacement:** the cloud replacement stops answering that device for
   up to two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on

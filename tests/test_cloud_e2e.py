@@ -250,6 +250,48 @@ async def main():
     await ws.close(); await ws2.close(); await session.close()
     print("ok  silence: no pong, no answer, new connections reset after login, normal again afterwards")
 
+    # --- round 8b: a stuck device keeps a connection open without ever logging in (2026-11-17, Level keeper):
+    #     silence() by its address
+    srv = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(24442, 24444))
+    await srv.async_start()
+    assert srv.silence(SERIAL, 5, "127.0.0.1") is False               # nothing from that address
+    session = aiohttp.ClientSession()
+    ws = await session.ws_connect("ws://127.0.0.1:24442/hardware", autoping=False)   # connects, never logs in
+    await ws.ping(b"a")
+    assert (await ws.receive(timeout=2)).type is aiohttp.WSMsgType.PONG
+    assert srv.nameless_peers == ["127.0.0.1"]
+    assert srv.silence(SERIAL, 2, "10.9.9.9") is False                # another address
+    assert srv.silence(SERIAL, 2, "127.0.0.1") is True
+    await ws.ping(b"b")
+    try:
+        msg = await ws.receive(timeout=1.0)
+        raise AssertionError(f"answered while its address is silenced: {msg.type}")
+    except (asyncio.TimeoutError, TimeoutError):
+        pass
+    try:                                                           # a new connection from there: reset at once
+        ws2 = await session.ws_connect("ws://127.0.0.1:24442/hardware", autoping=False)
+        await ws2.send_bytes(login)
+        msg = await ws2.receive(timeout=2)
+        assert msg.type is not aiohttp.WSMsgType.BINARY, "new connection answered while its address is silenced"
+        await ws2.close()
+    except aiohttp.ClientError:
+        pass
+    await asyncio.sleep(1.2)                                       # silence over
+    await ws.ping(b"c")
+    assert (await ws.receive(timeout=2)).type is aiohttp.WSMsgType.PONG
+    await ws.close(); await asyncio.sleep(0.3)
+    assert srv.nameless_peers == [] and SERIAL not in srv.devices
+    assert srv.silence(SERIAL, 1, "127.0.0.1") is True                # dropped a moment ago: still known
+    await asyncio.sleep(1.2)
+    ws3 = await session.ws_connect("ws://127.0.0.1:24442/hardware", autoping=False)   # restarted: logs in again
+    await ws3.send_bytes(login)
+    first = await ws3.receive(timeout=2)
+    assert first.type is aiohttp.WSMsgType.BINARY and pr.parse_frame(first.data).topic == "geReport"
+    assert srv.silence(SERIAL, 1, "127.0.0.1") is True and srv.devices[SERIAL].silenced   # known by serial again
+    await srv.async_stop()
+    await ws3.close(); await session.close()
+    print("ok  silence by address: connection without login unanswered, new ones reset, also shortly after it was dropped")
+
     # --- round 9: a device of a type that is not supported yet - both directions are kept for the diagnostics
     real = cloud.ReefCloudServer(tmp, mode=cloud.MODE_LOCAL, ports=(15442, 15444))
     await real.async_start(); assert not real.listen_errors

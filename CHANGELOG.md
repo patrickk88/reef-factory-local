@@ -1,7 +1,17 @@
 # Changelog
 
 ## 1.4.1 - 2026-11-17
-Packaging only, no change in the code.
+- Stuck web server: two more forms are recognised, both seen on a Level keeper (firmware 1.0.0) that was
+  unavailable for an hour without any message. (1) The start page is refused with HTTP 429, but the
+  WebSocket request gets no answer at all. (2) The device takes connections and answers nothing. After a
+  connection attempt of its own that got no answer - never while connected - the integration now asks for
+  the start page once; a 429 there counts like a refused attempt, no answer at all counts after three
+  minutes. A device that is off or without Wi-Fi is still not reported.
+- Cloud replacement: a stuck device can keep its cloud connection open without logging in. It is then known
+  only by its address, and *Restart stuck devices automatically* now also works that way (no answer to that
+  connection, new ones from the address reset).
+- Diagnostics of the cloud replacement: `sessions` lists every device that talks to the cloud through it,
+  also the ones with a local port, and how many connections have not logged in.
 - Releases now carry the integration as a zip file (`reef_factory_local.zip`); HACS / the Marketplace
   download that file instead of the source tree. The older releases got the same file, so every version
   can still be installed.
