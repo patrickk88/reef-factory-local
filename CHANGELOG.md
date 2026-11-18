@@ -8,8 +8,10 @@
   the start page once; a 429 there counts like a refused attempt, no answer at all counts after three
   minutes. A device that is off or without Wi-Fi is still not reported.
 - Cloud replacement: a stuck device can keep its cloud connection open without logging in. It is then known
-  only by its address, and *Restart stuck devices automatically* now also works that way (no answer to that
-  connection, new ones from the address reset).
+  only by its address, and *Restart stuck devices automatically* now also tries it that way (no answer to
+  that connection, new ones from the address reset). On a Thermo control that answered nothing at all this
+  did not bring it back, neither did the restart by serial number - there only a power cycle helps, and the
+  repair message says so after five minutes.
 - Diagnostics of the cloud replacement: `sessions` lists every device that talks to the cloud through it,
   also the ones with a local port, and how many connections have not logged in.
 - Releases now carry the integration as a zip file (`reef_factory_local.zip`); HACS / the Marketplace

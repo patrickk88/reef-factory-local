@@ -23,7 +23,12 @@ start page is refused with 429 while the WebSocket request gets no answer at all
 device takes connections and answers nothing, neither the WebSocket request nor the start page. So after a
 connection attempt of its own that got no answer, the integration asks for the start page once: a 429
 there counts like a refused attempt; no answer at all counts when it stays like that for three minutes. A
-device that is off, restarting or without Wi-Fi does not take connections and is not reported. Then:
+device that is off, restarting or without Wi-Fi does not take connections and is not reported.
+
+In the form without any answer the restart through the cloud replacement described below did **not** help
+on a Thermo control (tried twice, 2026-11-17 and 18: the device kept its cloud connection, unanswered for
+two and a half minutes, and went on as before). The integration still tries it and then asks for a power
+cycle - that is what cures it. Then:
 
 - **Device connected through the cloud replacement:** the cloud replacement stops answering that device for
   up to two and a half minutes. A stuck device restarts by itself when its cloud does not answer (seen on
